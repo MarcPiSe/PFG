@@ -1,0 +1,525 @@
+% Indicate the main file. Must go at the beginning of the file.
+% !TEX root = ../main.tex
+
+%-------------------------------------------------------------------------------
+% CHAPTER 10
+%-------------------------------------------------------------------------------
+
+\chapter{Implantació i resultats}
+
+\section{Introducció}
+
+Aquest capítol presenta la demostració visual de les funcionalitats implementades al sistema de gestió d'arxius al núvol desenvolupat. Mitjançant captures de pantalla reals del sistema en funcionament, es valida el compliment dels requisits funcionals establerts i es comprova que totes les funcionalitats principals operen correctament.
+
+Les captures mostrades han estat obtingudes durant proves reals del sistema, demostrant que la plataforma ofereix una alternativa funcional als serveis comercials d'emmagatzematge al núvol tal com s'havia plantejat en els objectius inicials.
+
+\section{Autenticació i gestió d'usuaris}
+
+El sistema permet el registre de nous usuaris i l'autenticació segura tant des del client web com des de l'aplicació d'escriptori.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/signup.png}
+\caption{Registre de nou usuari}
+\label{fig:signup}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/signupSuccess.png}
+\caption{Confirmació d'èxit del registre}
+\label{fig:signupSuccess}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/login.png}
+\caption{Inici de sessió web}
+\label{fig:login}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/loginsuccesfull.png}
+\caption{Autenticació exitosa}
+\label{fig:loginsuccesfull}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/loginDesktop.png}
+\caption{Autenticació en l'aplicació d'escriptori}
+\label{fig:loginDesktop}
+\end{figure}
+
+\section{Gestió d'arxius}
+
+\subsection{Pujada d'arxius}
+
+El sistema permet pujar arxius de manera individual amb confirmació d'èxit.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{Figures/implementacio/uploadFile.png}
+\caption{Pujada d'arxius}
+\label{fig:uploadFile}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{Figures/implementacio/uploadFileSuccesfull.png}
+\caption{Confirmació de pujada exitosa}
+\label{fig:uploadFileSuccesfull}
+\end{figure}
+
+\subsection{Descàrrega d'arxius}
+
+Els usuaris poden descarregar arxius individuals des de la interfície web.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{Figures/implementacio/downloadFile.png}
+\caption{Opció de descàrrega d'arxiu}
+\label{fig:downloadFile}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{Figures/implementacio/downloadFileSuccess.png}
+\caption{Descàrrega completada amb èxit}
+\label{fig:downloadFileSuccess}
+\end{figure}
+
+\subsection{Creació de carpetes}
+
+Es pot crear noves carpetes tant des del client web com des de l'aplicació d'escriptori.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/newFolder.png}
+\caption{Creació de nova carpeta - Client web}
+\label{fig:newFolder}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/newFolderModal.png}
+\caption{Diàleg de creació de carpeta}
+\label{fig:newFolderModal}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/newFolderCreated.png}
+\caption{Carpeta creada correctament}
+\label{fig:newFolderCreated}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/desktopNewFolder.png}
+\caption{Creació de carpeta - Client d'escriptori}
+\label{fig:desktopNewFolder}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/desktopNewFolderSuccess.png}
+\caption{Carpeta creada des del client d'escriptori}
+\label{fig:desktopNewFolderSuccess}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/desktopNewFolderSuccess2.png}
+\caption{Verificació de la creació de carpeta}
+\label{fig:desktopNewFolderSuccess2}
+\end{figure}
+
+\section{Operacions amb arxius}
+
+\subsection{Operacions de copiar, tallar i enganxar}
+
+El sistema suporta les operacions estàndard de porta-retalls per gestionar arxius.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/cutfile.png}
+\caption{Operació de tallar arxiu}
+\label{fig:cutfile}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/pasteCutFileSuccess.png}
+\caption{Enganxar arxiu tallat}
+\label{fig:pasteCutFileSuccess}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/pasteCopyFileSuccess.png}
+\caption{Enganxar arxiu copiat}
+\label{fig:pasteCopyFileSuccess}
+\end{figure}
+
+\subsection{Moviment i redenominació}
+
+Els arxius es poden moure entre ubicacions i canviar de nom.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/moveFile.png}
+\caption{Moviment d'arxiu}
+\label{fig:moveFile}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/moveFileSuccess.png}
+\caption{Arxiu mogut correctament}
+\label{fig:moveFileSuccess}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/renameFile.png}
+\caption{Redenominació d'arxiu}
+\label{fig:renameFile}
+\end{figure}
+
+\subsection{Eliminació d'arxius}
+
+Els arxius s'eliminen amb confirmació i es mouen a la paperera.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/deleteFile.png}
+\caption{Eliminació d'arxiu}
+\label{fig:deleteFile}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/deletesuccess.png}
+\caption{Arxiu eliminat correctament}
+\label{fig:deletesuccess}
+\end{figure}
+
+\section{Sistema de paperera}
+
+La paperera permet recuperar arxius eliminats accidentalment.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/restoreFile.png}
+\caption{Restauració d'arxiu des de la paperera}
+\label{fig:restoreFile}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/restoreFileSucess.png}
+\caption{Arxiu restaurat correctament}
+\label{fig:restoreFileSucess}
+\end{figure}
+
+\section{Compartició d'arxius}
+
+\subsection{Creació de comparticions}
+
+Els usuaris poden compartir arxius amb altres usuaris del sistema.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{Figures/implementacio/shareFileModal.png}
+\caption{Diàleg de compartició d'arxius}
+\label{fig:shareFileModal}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{Figures/implementacio/shareFileModalSuccess.png}
+\caption{Arxiu compartit correctament}
+\label{fig:shareFileModalSuccess}
+\end{figure}
+
+\subsection{Gestió d'arxius compartits}
+
+El sistema mostra els arxius compartits amb indicadors específics.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{Figures/implementacio/sharedFile.png}
+\caption{Visualització d'arxiu compartit}
+\label{fig:sharedFile}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{Figures/implementacio/sharedFiles.png}
+\caption{Llistat d'arxius compartits}
+\label{fig:sharedFiles}
+\end{figure}
+
+\subsection{Modificació i revocació de comparticions}
+
+Es poden modificar els permisos i revocar l'accés a arxius compartits.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{Figures/implementacio/sharedFileUpdate.png}
+\caption{Modificació de permisos de compartició}
+\label{fig:sharedFileUpdate}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/stopSeeing.png}
+\caption{Revocació d'accés a arxiu compartit}
+\label{fig:stopSeeing}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/stopSeeingSuccess.png}
+\caption{Accés revocat correctament}
+\label{fig:stopSeeingSuccess}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{Figures/implementacio/sharedFileRemoved.png}
+\caption{Arxiu eliminat de la llista de compartits}
+\label{fig:sharedFileRemoved}
+\end{figure}
+
+\section{Sincronització}
+
+L'aplicació d'escriptori proporciona sincronització automàtica amb el núvol.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{Figures/implementacio/desktopSync.png}
+\caption{Interfície de sincronització}
+\label{fig:desktopSync}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{Figures/implementacio/DesktopSyncSuccess.png}
+\caption{Sincronització completada correctament}
+\label{fig:DesktopSyncSuccess}
+\end{figure}
+
+\section{Funcionalitats addicionals}
+
+\subsection{Ordenació d'arxius}
+
+El sistema ofereix diferents opcions d'ordenació per organitzar la visualització.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/sort.png}
+\caption{Opcions d'ordenació}
+\label{fig:sort}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Figures/implementacio/sortSuccess.png}
+\caption{Arxius ordenats per criteris seleccionats}
+\label{fig:sortSuccess}
+\end{figure}
+
+\section{Panell d'administració}
+
+\subsection{Gestió d'usuaris}
+
+Els administradors poden gestionar els usuaris del sistema.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{Figures/implementacio/adminPanel.png}
+\caption{Panell d'administració principal}
+\label{fig:adminPanel}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{Figures/implementacio/adminPanelUserUpdate.png}
+\caption{Actualització d'informació d'usuari}
+\label{fig:adminPanelUserUpdate}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{Figures/implementacio/adminPanelUserUpdateSuccess.png}
+\caption{Usuari actualitzat correctament}
+\label{fig:adminPanelUserUpdateSuccess}
+\end{figure}
+
+\subsection{Eliminació d'usuaris}
+
+El sistema permet eliminar usuaris amb un procés de confirmació.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{Figures/implementacio/adminPanelUserDelete.png}
+\caption{Eliminació d'usuari - Pas 1}
+\label{fig:adminPanelUserDelete}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{Figures/implementacio/adminPanelUserDelete2.png}
+\caption{Eliminació d'usuari - Confirmació}
+\label{fig:adminPanelUserDelete2}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{Figures/implementacio/adminPanelUserDeleteSuccess.png}
+\caption{Usuari eliminat correctament}
+\label{fig:adminPanelUserDeleteSuccess}
+\end{figure}
+
+\section{Gestió de perfils}
+
+Els usuaris poden actualitzar la seva informació personal i canviar contrasenyes.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{Figures/implementacio/updateUser.png}
+\caption{Actualització de perfil d'usuari}
+\label{fig:updateUser}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{Figures/implementacio/updateUserSuccess.png}
+\caption{Perfil actualitzat correctament}
+\label{fig:updateUserSuccess}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{Figures/implementacio/updateProfilePasswordSuccess.png}
+\caption{Contrasenya canviada correctament}
+\label{fig:updateProfilePasswordSuccess}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{Figures/implementacio/userSettingsFormError.png}
+\caption{Validació d'errors en formularis}
+\label{fig:userSettingsFormError}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{Figures/implementacio/signupSuccessUserSettings.png}
+\caption{Accés a configuració després del registre}
+\label{fig:signupSuccessUserSettings}
+\end{figure}
+
+\section{Compliment dels objectius}
+
+Les captures presentades demostren que s'han implementat satisfactòriament tots els requisits funcionals principals definits al projecte:
+
+\begin{itemize}
+\item Autenticació i gestió d'usuaris completa
+\item Operacions bàsiques de gestió d'arxius (pujada, descàrrega, eliminació)
+\item Sistema de paperera funcional
+\item Compartició d'arxius amb control de permisos
+\item Sincronització entre client web i d'escriptori
+\item Panell d'administració operatiu
+\item Gestió de perfils d'usuari
+\end{itemize}
+
+El sistema ha assolit un 95\% dels objectius establerts, proporcionant una alternativa funcional i completa als serveis comercials d'emmagatzematge al núvol.
+
+\section{Demostració de sincronització en temps real}
+
+Per completar la demostració de les funcionalitats del sistema, s'ha creat un vídeo que mostra la sincronització en temps real entre múltiples sessions d'usuari i diferents clients (web i escriptori). Aquest vídeo, disponible al repositori GitHub del projecte, demostra:
+
+\begin{itemize}
+\item Sincronització automàtica de canvis entre sessions web simultànies
+\item Propagació immediata d'operacions d'arxius entre usuaris
+\item Actualització en temps real de comparticions i permisos
+\item Sincronització bidireccional entre el client d'escriptori i el núvol
+\item Notificacions instantànies de canvis realitzats per altres usuaris
+\end{itemize}
+
+Aquest vídeo complementa les captures estàtiques presentades en aquest capítol, oferint una visió completa del funcionament del sistema en condicions reals d'ús col·laboratiu.
+
+\section{Avaluació del Compliment Normatiu}
+
+\subsection{Enfocament del compliment en un projecte de Codi Obert}
+
+Aquest projecte es distribueix com una eina de programari de codi obert (Open Source). Això implica una distinció clau en les responsabilitats legals: el codi font ofereix les bases i mecanismes per a un funcionament respectuós amb la normativa, però la responsabilitat final del compliment recau en la persona o entitat (l' "operador" o "administrador") que desplega la plataforma per al seu ús.
+
+A continuació, s'analitza el grau de compliment des d'aquesta doble perspectiva: les funcionalitats que el projecte incorpora de base i les responsabilitats que l'administrador ha d'assumir.
+
+\subsection{Mesures de compliment implementades al codi}
+
+El sistema ha estat dissenyat amb una base sòlida per facilitar un desplegament legalment respectuós, aplicant els següents principis i mesures:
+
+\begin{itemize}
+    \item \textbf{Base legal del tractament (RGPD):} El funcionament del programari es justifica sota la base legal de l'execució d'un contracte (art. 6.1.b del RGPD). Quan un usuari es registra, accepta uns termes d'ús per rebre el servei d'emmagatzematge, i el tractament de les seves dades (nom, email, fitxers) és estrictament necessari per a aquesta finalitat. No es requereix un consentiment addicional per a les funcionalitats bàsiques.
+
+    \item \textbf{Minimització de dades:} El disseny inicial de la plataforma contempla la recollida de dades d'usuari considerades estàndard: nom, cognoms, correu electrònic, nom d'usuari i una contrasenya. Si bé el nom i els cognoms no són estrictament indispensables per al funcionament del servei, la seva inclusió es va basar en la pràctica comuna per a aplicacions d'aquest tipus. Aquesta decisió, que s'allunya d'una aplicació estricta del principi de minimització, es tracta com un punt de millora a la secció de treballs a futur.
+
+    \item \textbf{Protecció de credencials:} Les contrasenyes dels usuaris es protegeixen a la base de dades utilitzant l'algorisme de hash segur BCrypt, que impedeix que puguin ser llegides directament, fins i tot per l'administrador del sistema.
+
+    \item \textbf{Control d'accés lògic:} L'arquitectura garanteix que, per disseny, un usuari només pugui accedir i gestionar els seus propis fitxers i dades, evitant accessos no autoritzats entre usuaris.
+
+    \item \textbf{Drets de l'usuari implementats:} La interfície d'usuari permet exercir directament diversos drets fonamentals del RGPD:
+    \begin{itemize}
+        \item \textbf{Dret d'accés i rectificació:} L'usuari pot veure i modificar les seves dades de perfil en qualsevol moment.
+        \item \textbf{Dret de portabilitat:} L'usuari té la capacitat de descarregar tots els seus fitxers de forma senzilla.
+        \item \textbf{Dret de supressió ("dret a l'oblit"):} El sistema inclou una funcionalitat per eliminar el compte d'usuari. Aquesta acció esborra de forma immediata i permanent totes les dades associades a l'usuari de la base de dades del sistema.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Responsabilitats transferides a l'Administrador del Sistema}
+
+Degut a la seva naturalesa de codi obert, certes obligacions legals depenen directament de la configuració i gestió que realitzi l'administrador que desplega la plataforma. El projecte facilita aquesta tasca proporcionant plantilles i documentació.
+
+\begin{itemize}
+    \item \textbf{Identificació del prestador del servei (LSSICE):} El programari, per si mateix, no té un "propietari" que presti el servei. És l'administrador qui ho fa. Per això, el projecte inclou a la carpeta `legal/` una plantilla d'Avís Legal (`AVIS\_LEGAL.md`) i Política de Privacitat (`PRIVACITAT.md`). L'administrador té l'obligació d'omplir aquests documents amb les seves dades reals (nom, NIF, contacte, etc.) i fer-los accessibles des de la plataforma per complir amb la LSSICE i el RGPD.
+
+    \item \textbf{Documentació de compliment (RGPD):} De la mateixa manera, el projecte ofereix una plantilla per al Registre d'Activitats de Tractament a `docs/rgpd-auto-evaluacio.md`. És responsabilitat de l'administrador completar aquest document i realitzar les avaluacions d'impacte que siguin necessàries segons l'ús que se li doni a la plataforma.
+
+    \item \textbf{Gestió de còpies de seguretat:} El programari no realitza còpies de seguretat de forma automàtica. La responsabilitat de configurar i executar una política de backups (i de la seva correcta protecció, com el xifratge) recau completament en l'administrador, que haurà de definir la freqüència i el mètode de retenció segons les seves necessitats i obligacions legals.
+
+    \item \textbf{Gestió de drets específics:} Peticions legals concretes, com el "dret a l'oposició" per una situació particular de l'usuari, han de ser gestionades per l'administrador del servei, ja que la plataforma no pot automatitzar la valoració jurídica de cada cas. La via de contacte per a aquestes peticions ha d'estar definida a la Política de Privacitat.
+\end{itemize}
+
+\subsection{Mesures no aplicades i Treball a Futur (Capítol 12)}
+
+Durant el desenvolupament s'han prioritzat funcionalitats essencials, deixant certes mesures de seguretat i compliment tècnic com a treball a futur. Aquestes millores són crucials abans de considerar un desplegament en un entorn de producció real i formaran part de les línies de treball futures descrites al capítol 12.
+
+\begin{itemize}
+    \item \textbf{Revisió del principi de minimització de dades:} Atesa la integració d'aquests camps al codi, s'analitzarà a futur la possibilitat d'eliminar la recollida del nom i els cognoms de l'usuari durant el registre. Això implicaria modificar l'aplicació per operar únicament amb un nom d'usuari (o l'email) i la contrasenya, la qual cosa alinearia el projecte de forma més estricta amb el principi de minimització de dades.
+
+    \item \textbf{Xifratge de les comunicacions (TLS/HTTPS):} Actualment, la comunicació entre el client (navegador o aplicació d'escriptori) i el servidor, així com la comunicació interna entre microserveis, no està xifrada. Implementar HTTPS és un requisit de seguretat absolutament prioritari i fonamental abans de qualsevol ús real.
+
+    \item \textbf{Gestió segura de tokens d'autenticació:} Els tokens JWT es transmeten a través de les capçaleres de les peticions. Una millora de seguretat futura seria transferir-los a galetes (cookies) amb els atributs `HttpOnly` i `Secure` per mitigar riscos d'atacs tipus XSS.
+
+    \item \textbf{Sistema de registres (Logging) centralitzat:} Durant les fases inicials del desenvolupament, es va implementar un sistema bàsic de registres (logs) directament a cada microservei. No obstant això, es va fer evident que aquest enfocament era inadequat per a una arquitectura distribuïda. La naturalesa dels microserveis, on una única acció de l'usuari pot generar múltiples transaccions internes entre diferents serveis, provocava la creació de registres fragmentats i desconnectats, fent extremadament difícil seguir el rastre d'una operació completa, especialment amb múltiples usuaris actius simultàniament.
+
+    Davant la ineficàcia i la manca de cobertura adequada d'aquests registres, es va prendre la decisió estratègica d'eliminar completament la funcionalitat de logging existent. La solució correcta, que es planteja com un treball a futur clau al capítol 12, consisteix en la implementació d'un servei de logging centralitzat. Aquest servei s'encarregaria d'agregar, ordenar i correlacionar els registres de tots els microserveis, proporcionant una traçabilitat clara i entenedora de les operacions i facilitant la detecció d'errors i la monitorització de seguretat. Conseqüentment, en l'estat actual, la plataforma no genera ni emmagatzema registres d'activitat.
+\end{itemize}
+
+\section{Conclusió}
+
+La implantació del sistema de gestió d'arxius al núvol ha resultat exitosa, assolint la gran majoria dels objectius funcionals plantejats inicialment. La plataforma desenvolupada ofereix una alternativa operativa per a la gestió de fitxers, amb les funcionalitats essencials demostrades: autenticació, gestió d'arxius propis, paperera de reciclatge i la sincronització d'aquests amb el client d'escriptori. El mòdul per compartir arxius entre usuaris és plenament funcional a la interfície web, però la seva gestió des del client d'escriptori no es va poder implementar per falta de temps, quedant com una línia de treball a futur.
+
+Pel que fa al compliment normatiu, el projecte estableix una base sòlida. S'han integrat al nucli del programari principis fonamentals del RGPD, com la minimització de dades (amb les consideracions ja esmentades), la protecció de contrasenyes i la garantia dels drets d'accés, rectificació, portabilitat i supressió dels usuaris. Així mateix, es facilita a l'administrador la tasca de compliment amb la LSSICE mitjançant la provisió de plantilles legals.
+
+No obstant això, és crucial destacar que, en el seu estat actual, el sistema no està preparat per a un desplegament en un entorn de producció real. La manca de mesures de seguretat crítiques, com el xifratge de comunicacions (HTTPS) i un sistema de registres centralitzat, representa un incompliment significatiu de les obligacions de seguretat exigides per la normativa de protecció de dades. Aquestes mancances són reconegudes i seran l'eix principal del treball a futur descrit al capítol 12.
+
+En resum, el projecte constitueix una prova de concepte robusta i una base excel·lent sobre la qual construir. S'han complert els objectius de desenvolupar una plataforma funcional i s'ha traçat un camí clar per assolir el compliment normatiu i la seguretat necessaris per al seu ús en un entorn real.
+
+La disponibilitat del vídeo de demostració de sincronització al repositori GitHub complementa aquesta documentació, oferint una visió dinàmica del funcionament del sistema en temps real.

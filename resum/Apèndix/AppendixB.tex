@@ -1,0 +1,266 @@
+% !TEX root = ../main.tex
+
+\chapter{Diagrames d'activitat de tots els Casos d'Ús}
+\label{app:diagrames_activitat}
+
+A continuació, es presenten els diagrames d'activitat detallats per a cada un dels casos d'ús definits en el sistema. Cada diagrama il·lustra el flux de treball, les decisions i les interaccions entre serveis.
+
+\subsubsection{UC-01: Registrar-se}
+El flux comença quan l'usuari envia el formulari de registre. El Gateway reenvia la petició a \texttt{UserAuthentication}, que valida el format de les dades, comprova que el nom d'usuari no existeixi i consulta a \texttt{UserManagement} per assegurar que l'email tampoc estigui en ús. Si tot és correcte, orquestra la creació de l'usuari: guarda credencials, demana a \texttt{UserManagement} que creï el perfil, a \texttt{FileManagement} que generi la carpeta arrel i notifica a \texttt{SyncService} via RabbitMQ. Finalment, retorna els tokens per iniciar la sessió.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Figures/ad_UC01.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-01: Registrar-se.}
+    \label{fig:ad_uc01_app}
+\end{figure}
+
+\subsubsection{UC-02: Iniciar sessió}
+L'usuari envia les seves credencials, que el Gateway reenvia a \texttt{UserAuthentication}. El servei busca l'usuari i, si existeix, verifica la contrasenya. Si les credencials són correctes, genera i retorna un nou joc de tokens (accés i refresc) per activar la sessió del client.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/ad_UC02.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-02: Iniciar sessió.}
+    \label{fig:ad_uc02_app}
+\end{figure}
+
+\subsubsection{UC-03: Actualitzar perfil}
+L'usuari envia les seves dades de perfil actualitzades. El Gateway reenvia la petició a \texttt{UserManagement}, que valida que el nou correu electrònic no estigui ja en ús per un altre compte. Si la validació és correcta, actualitza les dades a la base de dades i retorna la informació actualitzada.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Figures/ad_UC03.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-03: Actualitzar perfil.}
+    \label{fig:ad_uc03_app}
+\end{figure}
+
+\subsubsection{UC-04: Cercar usuaris}
+L'usuari introdueix un terme de cerca. \texttt{UserManagement} rep la petició i llança dues cerques en paral·lel: una contra \texttt{UserAuthentication} per nom d'usuari i una altra a la seva pròpia base de dades per correu electrònic. Finalment, combina els resultats i els retorna.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Figures/ad_UC04.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-04: Cercar usuaris.}
+    \label{fig:ad_uc04_app}
+\end{figure}
+
+\subsubsection{UC-05: Llistar usuaris (administració)}
+Un administrador sol·licita la llista completa d'usuaris. \texttt{UserManagement} obté la informació bàsica de la seva base de dades i la complementa amb les dades d'autenticació (rol, nom d'usuari) obtingudes de \texttt{UserAuthentication}. Si el sol·licitant és Superadministrador, la resposta inclou també les contrasenyes.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/ad_UC05.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-05: Llistar usuaris.}
+    \label{fig:ad_uc05_app}
+\end{figure}
+
+\subsubsection{UC-06: Actualitzar usuari (administració)}
+Un administrador modifica les dades d'un altre usuari. \texttt{UserManagement} valida primer la jerarquia de permisos consultant a \texttt{UserAuthentication}. Si l'acció és permesa, actualitza la informació personal i, en paral·lel, demana a \texttt{UserAuthentication} que actualitzi les dades d'autenticació (rol o contrasenya).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/ad_UC06.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-06: Actualitzar usuari.}
+    \label{fig:ad_uc06_app}
+\end{figure}
+
+\subsubsection{UC-07: Eliminar usuari (administració)}
+Després de verificar la jerarquia de permisos amb \texttt{UserAuthentication}, \texttt{UserManagement} inicia el procés d'eliminació enviant un missatge a una cua de RabbitMQ. Això desencadena la purga asíncrona de les dades de l'usuari a tots els serveis del sistema.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/ad_UC07.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-07: Eliminar usuari.}
+    \label{fig:ad_uc07_app}
+\end{figure}
+
+\subsubsection{UC-08: Crear o pujar arxius}
+\texttt{FileManagement} rep la petició i consulta a \texttt{FileAccessControl} si l'usuari té permís d'escriptura. Si és així, crea les metadades, emmagatzema el fitxer (si escau), demana a \texttt{FileAccessControl} que assigni el permís de propietari i finalment notifica \texttt{SyncService} del canvi.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Figures/ad_UC08.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-08: Crear o pujar arxius.}
+    \label{fig:ad_uc08_app}
+\end{figure}
+
+\subsubsection{UC-09A: Renomenar un element}
+\texttt{FileManagement} verifica el permís d'escriptura a \texttt{FileAccessControl}. Si l'usuari té accés, actualitza el nom a la seva base de dades i envia un missatge a \texttt{SyncService} per notificar el canvi als clients.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Figures/ad_UC09A.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-09A: Renomenar.}
+    \label{fig:ad_uc09a_app}
+\end{figure}
+
+\subsubsection{UC-09B: Moure un element}
+El servei \texttt{FileManagement} verifica els permisos d'escriptura tant a l'element d'origen com a la carpeta de destinació. A més, valida que l'operació no creï una dependència circular (moure una carpeta dins d'ella mateixa). Si tot és correcte, actualitza la ubicació i notifica \texttt{SyncService}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Figures/ad_UC09B.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-09B: Moure.}
+    \label{fig:ad_uc09b_app}
+\end{figure}
+
+\subsubsection{UC-09C: Copiar un element}
+\texttt{FileManagement} comprova el permís de lectura a l'origen i d'escriptura a la destinació. Si es compleixen, duplica les metadades i el contingut físic (si és un fitxer), assigna el permís de propietari sobre la còpia a través de \texttt{FileAccessControl} i notifica \texttt{SyncService}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Figures/ad_UC09C.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-09C: Copiar.}
+    \label{fig:ad_uc09c_app}
+\end{figure}
+
+\subsubsection{UC-10: Descarregar}
+Després de verificar el permís de lectura a \texttt{FileAccessControl}, \texttt{FileManagement} recupera el fitxer del sistema d'emmagatzematge (o el comprimeix si és una carpeta) i el retorna al client com un flux de dades.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Figures/ad_UC10.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-10: Descarregar.}
+    \label{fig:ad_uc10_app}
+\end{figure}
+
+\subsubsection{UC-11: Enviar a la paperera}
+\texttt{TrashService} rep la petició, verifica el permís d'escriptura a \texttt{FileAccessControl} i demana a \texttt{FileManagement} que marqui l'element com a eliminat. Finalment, crea un registre a la seva pròpia base de dades per gestionar la caducitat de l'element.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/ad_UC11.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-11: Enviar a la paperera.}
+    \label{fig:ad_uc11_app}
+\end{figure}
+
+\subsubsection{UC-12: Eliminar permanentment}
+Quan un usuari sol·licita l'eliminació permanent, \texttt{TrashService} verifica que n'és el propietari. Si ho és, inicia la saga d'eliminació enviant missatges a la cua perquè \texttt{FileManagement}, \texttt{FileAccessControl} i \texttt{FileSharing} purguin totes les dades associades de forma asíncrona.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/ad_UC12.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-12: Eliminar permanentment.}
+    \label{fig:ad_uc12_app}
+\end{figure}
+
+\subsubsection{UC-13: Compartir arxius}
+El servei \texttt{FileSharing} comprova que el sol·licitant és el propietari de l'element. Després, obté l'ID de l'usuari convidat de \texttt{UserManagement} i demana a \texttt{FileAccessControl} que creï la nova regla d'accés. Finalment, desa un registre de la compartició i notifica \texttt{SyncService}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/ad_UC13.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-13: Compartir arxius.}
+    \label{fig:ad_uc13_app}
+\end{figure}
+
+\subsubsection{UC-13A: Revocar accés a un arxiu}
+El propietari d'un element revoca l'accés a un altre usuari. \texttt{FileSharing} verifica la propietat, demana a \texttt{FileAccessControl} que elimini la regla de permís corresponent, esborra el registre de la seva base de dades i notifica el canvi a \texttt{SyncService}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/ad_UC13A.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-13A: Revocar accés.}
+    \label{fig:ad_uc13a_app}
+\end{figure}
+
+\subsubsection{UC-13B: Deixar de seguir un arxiu}
+Un usuari receptor decideix eliminar un element que li han compartit. El flux és gairebé idèntic a la revocació, però la validació inicial comprova que el sol·licitant és el mateix usuari que perdrà l'accés. \texttt{FileSharing} elimina la regla d'accés i el registre de compartició.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/ad_UC13B.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-13B: Deixar de seguir.}
+    \label{fig:ad_uc13b_app}
+\end{figure}
+
+\subsubsection{UC-14: Actualització en temps real}
+El client estableix una connexió WebSocket amb \texttt{SyncService} a través del Gateway. Quan un altre servei publica un canvi a RabbitMQ, \texttt{SyncService} consumeix el missatge, actualitza l'estat intern de l'usuari afectat i li envia la notificació corresponent a través de la connexió oberta.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Figures/ad_UC14.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-14: Actualització en temps real.}
+    \label{fig:ad_uc14_app}
+\end{figure}
+
+\subsubsection{UC-15: Canviar contrasenya}
+\texttt{UserAuthentication} rep la petició, verifica que la contrasenya antiga sigui correcta i, si és així, valida que la nova compleixi els requisits de seguretat. Si tot és correcte, la xifra i l'actualitza a la base de dades.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/ad_UC15.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-15: Canviar contrasenya.}
+    \label{fig:ad_uc15_app}
+\end{figure}
+
+\subsubsection{UC-16: Eliminar compte}
+L'usuari sol·licita eliminar el seu propi compte. \texttt{UserAuthentication} esborra l'entitat d'autenticació i immediatament envia un missatge a RabbitMQ, iniciant el procés de purga asíncrona de totes les dades de l'usuari a la resta de serveis.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Figures/ad_UC16.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-16: Eliminar compte.}
+    \label{fig:ad_uc16_app}
+\end{figure}
+
+\subsubsection{UC-17: Restaurar des de la paperera}
+\texttt{TrashService} verifica que el sol·licitant és el propietari. Si ho és, demana a \texttt{FileManagement} que restableixi l'estat de l'element, elimina el registre de la seva pròpia base de dades i notifica \texttt{SyncService} perquè els clients actualitzin la seva vista.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/ad_UC17.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-17: Restaurar des de la paperera.}
+    \label{fig:ad_uc17_app}
+\end{figure}
+
+\subsubsection{UC-18: Modificar contrasenya d'un altre usuari}
+Un Superadministrador canvia la contrasenya d'un altre usuari. \texttt{UserManagement} valida el rol del sol·licitant i, si té permís, envia l'ordre a \texttt{UserAuthentication}, que valida el format de la nova contrasenya, la xifra i la desa.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Figures/ad_UC18.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-18: Modificar contrasenya d'altri.}
+    \label{fig:ad_uc18_app}
+\end{figure}
+
+\subsubsection{UC-19: Modificar un administrador}
+El Superadministrador modifica un usuari amb rol d'Administrador. El flux és similar a l'UC-06, però la validació de jerarquia a \texttt{UserAuthentication} comprova específicament que un Superadministrador estigui modificant un Administrador.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Figures/ad_UC19.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-19: Modificar un administrador.}
+    \label{fig:ad_uc19_app}
+\end{figure}
+
+\subsubsection{UC-20: Eliminar un administrador}
+El flux és idèntic a l'UC-07, però la comprovació de permisos que realitza \texttt{UserManagement} amb \texttt{UserAuthentication} valida que un Superadministrador estigui eliminant un usuari amb rol d'Administrador.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/ad_UC20.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-20: Eliminar un administrador.}
+    \label{fig:ad_uc20_app}
+\end{figure}
+
+\subsubsection{UC-21: Modificar rol d'un usuari}
+El Superadministrador canvia el nivell de permisos d'un usuari. \texttt{UserManagement} demana a \texttt{UserAuthentication} que validi si l'operació és permesa (p. ex., un Superadministrador no pot rebaixar-se el seu propi rol). Si és vàlid, \texttt{UserAuthentication} actualitza el rol a la base de dades.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/ad_UC21.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-21: Modificar rol d'usuari.}
+    \label{fig:ad_uc21_app}
+\end{figure}
+
+\subsubsection{UC-22: Sincronitzar arxius compartits}
+Aquest flux es desencadena quan un usuari en comparteix un altre (UC-13). \texttt{FileSharing} envia un missatge a RabbitMQ. \texttt{SyncService} el rep i, si el client del receptor és web, li envia una ordre genèrica de refresc. La funcionalitat completa per al client d'escriptori no es va arribar a implementar.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/ad_UC22.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-22: Sincronitzar arxius compartits.}
+    \label{fig:ad_uc22_app}
+\end{figure} 

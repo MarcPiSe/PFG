@@ -15,7 +15,7 @@ En síntesi, el sistema comprèn:
 
 \subsection{1. Gestió d'usuaris}
 \begin{itemize}
-  \item Registre de nous usuaris amb validació de correu electrònic.
+  \item Registre de nous usuaris.
   \item Inici de sessió segur mitjançant autenticació amb JWT.
   \item Edició i actualització de perfils d'usuari.
   \item Control d'accés basat en rols: usuari estàndard i administrador.
@@ -62,7 +62,7 @@ En síntesi, el sistema comprèn:
 \subsection{1. Rendiment}
 \begin{itemize}
   \item Temps de resposta inferior a 2 segons en operacions habituals. \textbf{(Prioritat mitjana)}
-  \item Suport per a la manipulació d'arxius grans (>1GB). \textbf{(Prioritat baixa)}
+  \item Suport per a la manipulació d'arxius grans (\>1GB). \textbf{(Prioritat baixa)}
   \item Optimització de la transferència de dades entre client i servidor. \textbf{(Prioritat mitjana)}
   \item Escalabilitat horitzontal per suportar més càrrega. \textbf{(Prioritat alta)}
 \end{itemize}
@@ -125,4 +125,4 @@ Per tal d'executar la solució completa –format microserveis basats en Spring 
 \end{itemize}
 
 \section{Resum}
-Aquest capítol ha recollit tots els requisits –funcionals i no funcionals– que defineixen el producte. S'han desglossat les funcionalitats clau, els estàndards de seguretat i els objectius de rendiment, així com els requisits concrets de maquinari i programari obtinguts de l'anàlisi del codi dels directoris \texttt{@server} i \texttt{@ui-new}. Els capítols posteriors de disseny i implementació demostren com s'han abordat aquests requisits, tot i que algun objectiu, com la gestió d'arxius compartits al client d'escriptori, es va haver de descartar per la seva complexitat i falta de temps.
+Aquest capítol ha recollit tots els requisits –funcionals i no funcionals– que defineixen el producte. S'han desglossat les funcionalitats clau, els estàndards de seguretat i els objectius de rendiment. Els capítols posteriors de disseny i implementació demostren com s'han abordat aquests requisits, tot i que algun objectiu, com la gestió d'arxius compartits al client d'escriptori, es va haver de descartar per la seva complexitat i falta de temps.

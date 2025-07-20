@@ -1,0 +1,759 @@
+
+\section{Implementació del client de escriptori}
+
+\subsection{Introducció}
+El client d'escriptori s'ha dissenyat com un component de servei, el propòsit principal del qual és la sincronització automàtica i contínua de fitxers entre l'entorn local de l'usuari i el servidor central. A diferència del client web, orientat a la interacció directa, aquesta aplicació opera de manera predominant en segon pla, minimitzant la intervenció de l'usuari i funcionant com un agent de sincronització desatès que s'integra a la safata del sistema.
+
+L'arquitectura es basa en el framework \textbf{Tauri}, una elecció tecnològica que permet una clara separació entre el nucli de lògica de negoci i la interfície d'usuari. El backend de l'aplicació s'ha implementat íntegrament en \textbf{Rust} per aprofitar-ne el rendiment, la seguretat en la gestió de memòria i les capacitats de concurrència, aspectes crítics per a operacions intensives com la monitorització del sistema d'arxius i la gestió de processos de transferència de dades. Per a la interfície d'usuari, s'ha optat per \textbf{Svelte 5}, un compilador que genera codi JavaScript altament optimitzat, resultant en una aplicació lleugera i amb uns requisits de recursos mínims. Les vistes es presenten a l'usuari únicament en situacions necessàries, com la configuració inicial o la consulta de l'estat.
+
+El sistema resultant és una aplicació híbrida que executa la lògica de sincronització com un procés natiu mentre ofereix una experiència de configuració i monitorització a través d'una interfície web renderitzada localment. Aquest capítol analitza el disseny d'aquesta solució, detallant l'estructura de les seves finestres i el funcionament intern del motor de sincronització basat en esdeveniments.
+
+\subsection{Disseny Visual i Gestió de Finestres}
+L'aplicació d'escriptori està dissenyada per guiar l'usuari a través d'un flux lògic, presentant diferents finestres segons l'estat de configuració i autenticació. La gestió d'aquestes finestres es coordina des del mòdul \texttt{windows.rs}, que s'encarrega d'orquestrar quina vista mostrar en cada moment, assegurant una transició fluida i contextual.
+
+\subsubsection{Flux Inicial: Configuració i Autenticació}
+Tal com vaig esbossar en la fase de disseny, el primer contacte de l'usuari amb l'aplicació és un procés de configuració guiat. En executar-la per primera vegada, el sistema comprova si ja està configurada. Si no ho està, es presenta la finestra de configuració inicial.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-desktop/initial_config.png}
+        \caption{Finestra de configuració inicial.}
+        \label{fig:desktop-initial-config-impl}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-desktop/initial_config_select_folder.png}
+        \caption{Diàleg natiu per a la selecció de carpeta.}
+        \label{fig:desktop-initial-config-select-impl}
+    \end{minipage}
+\end{figure}
+
+Aquesta finestra (\textbf{Figura \ref{fig:desktop-initial-config-impl}}) és una implementació fidel del concepte presentat a la \textbf{Figura 8.40}. El seu propòsit és recollir les dues dades essencials per al funcionament: l'URL del servidor i la carpeta local a sincronitzar. Per a la selecció de la carpeta, es va seguir la intenció del disseny original d'invocar el diàleg natiu del sistema operatiu (\textbf{Figura \ref{fig:desktop-initial-config-select-impl}}), la qual cosa ofereix una experiència més familiar i intuïtiva per a l'usuari.
+
+Un cop l'usuari omple i envia el formulari, s'invoca el comandament \texttt{save\_initial\_config}. Aquesta funció de Rust primer valida que el servidor sigui accessible i que la carpeta seleccionada existeixi. Si les comprovacions són correctes, desa les dades en un fitxer \texttt{config.json}, tanca la finestra de configuració i obre la finestra de login per continuar amb el flux.
+
+\begin{lstlisting}[language=Rust, caption={Comandament per desar la configuració inicial a \texttt{main.rs}}]
+#[tauri::command]
+async fn save_initial_config(
+    app: AppHandle,
+    folder_path: String,
+    server_url: String,
+) -> Result<(), HashMap<String, String>> {
+    // Validar que el servidor és accessible
+    let resp = client
+        .get(format!("{server_url}/actuator/health"))
+        .send()
+        .await;
+        
+    // Validar que la carpeta existeix
+    let folder_exists = Path::new(&folder_path).exists();
+    
+    if resp.is_err() || !folder_exists {
+        // Retornar errors a la interfície si alguna validació falla
+        return Err(error_map);
+    }
+    
+    // Desar la configuració al fitxer JSON
+    config.folder_path = folder_path;
+    config.server_url = server_url;
+    config.is_configured = true;
+    std::fs::write(config_path, serde_json::to_string_pretty(&config).unwrap()).unwrap();
+    
+    // Tancar finestra actual i obrir la de login
+    window.close().unwrap();
+    windows::open_login_window(app.clone());
+    Ok(())
+}
+\end{lstlisting}
+
+És important mencionar una consideració tècnica sobre la validació del servidor. Com es pot veure al codi, actualment es fa una petició a l'endpoint `/actuator/health` per comprovar si el servidor està actiu. Tot i que funcional, aquest és un endpoint estàndard de Spring Boot. Això introdueix un petit risc: si l'usuari, per error, apunta a una URL on hi ha una altra aplicació Spring Boot funcionant, el client podria interpretar-ho com una connexió vàlida. Per a solucionar això, queda plantejat com a treball futur la creació d'un endpoint personalitzat i únic al servidor, per exemple `/api/v1/ping`, que retorni una cadena de text específica. D'aquesta manera, el client podria verificar no només que hi ha un servei actiu, sinó que es tracta, inequívocament, del servidor correcte del projecte.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\textwidth]{Figures/ui-desktop/login.png}
+  \caption{Finestra d'inici de sessió del client d'escriptori.}
+  \label{fig:desktop-login-impl}
+\end{figure}
+
+Un cop desada aquesta configuració, l'aplicació presenta la finestra d'inici de sessió (\textbf{Figura \ref{fig:desktop-login-impl}}), que correspon directament amb l'esbós de la \textbf{Figura 8.41}. Igual que la seva contrapart web, el disseny és minimalista i funcional, centrat exclusivament a facilitar l'autenticació de l'usuari. El codi d'aquesta funcionalitat envia les credencials al servidor i, si la resposta és correcta, extreu els tokens JWT de les capçaleres de la resposta, els desa a la configuració local i inicia el motor de sincronització.
+
+\begin{lstlisting}[language=Rust, caption={Comandament per a l'inici de sessió a \texttt{main.rs}}]
+#[tauri::command]
+async fn login(app: AppHandle, username: String, password: String) -> Result<(), String> {
+    let server = CONFIG.lock().unwrap().server_url.to_owned();
+    let client = Client::new();
+    let resp = client
+        .post(format!("{server}/users/auth/login"))
+        .json(&json!({"username": username, "password": password}))
+        .send()
+        .await
+        .unwrap();
+
+    if !resp.status().is_success() {
+        return Err("Username or password incorrect".to_string());
+    }
+
+    // Extreure tokens de les capçaleres de la resposta
+    let token = resp.headers().get("authorization").unwrap().to_str().unwrap();
+    let refresh_token = resp.headers().get("x-refresh-token").unwrap().to_str().unwrap();
+
+    // Desar els tokens i dades d'usuari a la configuració
+    let mut config = CONFIG.lock().unwrap();
+    config.username.replace(username);
+    config.token.replace(Token { value: token.to_string(), .. });
+    config.refresh_token.replace(Token { value: refresh_token.to_string(), .. });
+    
+    // Iniciar serveis en segon pla i obrir la finestra principal
+    login_window.close().unwrap();
+    tokio::spawn(token::watch_tokens(app.clone()));
+    windows::open_main_window(app);
+    Ok(())
+}
+\end{lstlisting}
+
+
+\subsubsection{Interfície Principal i Menú del Sistema}
+Un cop l'usuari està autenticat, el sistema fa la transició a l'estat operacional normal: les finestres de configuració es tanquen i s'inicia la finestra principal (\textbf{Figura \ref{fig:desktop-main-impl}}), alhora que apareix la icona de l'aplicació a la safata del sistema.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/ui-desktop/main_window.png}
+    \caption{Finestra principal de transferències.}
+    \label{fig:desktop-main-impl}
+\end{figure}
+
+La implementació d'aquesta finestra principal és una traducció directa del disseny conceptual mostrat a la \textbf{Figura 8.42}. Es va mantenir la disposició original, ja que complia eficaçment el seu propòsit de ser un monitor d'activitat clar i concís. La interfície mostra dues llistes per a les transferències (en curs i completades) i inclou a la capçalera els quatre botons d'accés ràpid que s'havien previst. La idea original de que aquesta finestra es tanqués automàticament en perdre el focus es va mantenir. No obstant això, durant les proves vaig descobrir un bug documentat a la llibreria Tauri per a entorns GNOME a Linux \cite{tauri_focus_bug}. Aquest error impedeix que la finestra obtingui el focus automàticament en mostrar-se, la qual cosa obliga a l'usuari a fer un clic inicial per poder interactuar-hi i perquè, posteriorment, el mecanisme de tancament en perdre el focus funcioni com s'esperava.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{Figures/ui-desktop/tray_options.png}
+    \caption{Menú de la safata del sistema.}
+    \label{fig:desktop-tray-impl}
+\end{figure}
+
+Paral·lelament, el menú de la safata del sistema (\textbf{Figura \ref{fig:desktop-tray-impl}}) també es va implementar seguint fidelment el disseny de la \textbf{Figura 8.44}. Aquest menú proporciona un punt d'accés persistent a les funcionalitats essencials, assegurant que l'aplicació sigui controlable fins i tot amb la finestra principal tancada.
+
+\subsubsection{Finestra de Configuració}
+L'aplicació ofereix una finestra de configuració detallada, accessible tant des de la finestra principal com des del menú de la safata del sistema.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Figures/ui-desktop/configuration_desktop.png}
+    \caption{Finestra de configuració amb les seves tres pestanyes.}
+    \label{fig:desktop-config-impl}
+\end{figure}
+
+Aquesta finestra (\textbf{Figura \ref{fig:desktop-config-impl}}), implementada a \texttt{config/+page.svelte}, utilitza un sistema de pestanyes per organitzar les diferents opcions:
+\begin{itemize}
+    \item \textbf{User Authentication}: Permet a l'usuari veure el seu nom d'usuari i tancar la sessió actual.
+    \item \textbf{Folders}: Mostra la ruta de la carpeta local sincronitzada i permet canviar-la.
+    \item \textbf{Connection}: Mostra l'URL del servidor i permet modificar-la.
+\end{itemize}
+La implementació final de la finestra de configuració (\textbf{Figura \ref{fig:desktop-config-impl}}) segueix l'estructura de pestanyes que ja s'havia esbossat al disseny original 
+(\textbf{Figura 8.43}), que separava les opcions en grups lògics.
+
+La principal decisió de disseny que vaig prendre durant la implementació es troba a la pestanya d'autenticació. En lloc de crear una funcionalitat per canviar les credencials 
+directament des d'aquí, vaig optar per una solució més simple i segura: un botó de "logout". Aquesta decisió força a l'usuari a passar de nou per la finestra de login principal per 
+canviar de compte, la qual cosa reutilitza un flux de treball ja validat i redueix la complexitat.
+
+La comunicació entre la interfície de Svelte i el nucli de Rust es realitza a través de la funció \texttt{invoke} de l'API de Tauri, que permet cridar a funcions de Rust exposades com a comandaments. Per exemple, quan l'usuari modifica l'URL del servidor i prem el botó "Save", s'executa el següent codi del component de Svelte.
+
+\begin{lstlisting}[language=javascript, caption={Exemple de crida al backend des de Svelte a \texttt{Connection.svelte}}]
+<script lang="ts">
+	import { config } from '$lib/store.svelte';
+	import { update_config } from '$lib/utils';
+	let error = $state('');
+</script>
+
+<p class="mb-3 ...">Server URL</p>
+<div class="w-ful flex gap-2">
+	<input
+		bind:value={config.server_url}
+		class="..."
+		placeholder="Server URL ex. http://127.0.0.1:8080"
+	/>
+	<button
+		onclick={() => {
+			error = '';
+			update_config().catch((e) => (error = e.server));
+		}}
+		class="..."
+	>
+		Save
+	</button>
+</div>
+\end{lstlisting}
+
+En aquest fragment, l'esdeveniment \texttt{onclick} del botó crida a la funció \texttt{update\_config()}. Aquesta funció, definida a \texttt{lib/utils.ts}, és una abstracció que internament utilitza \texttt{invoke('update\_config', \{ config, restart: true \})}. Aquesta crida executa la funció \texttt{update\_config} de Rust, passant-li l'objecte de configuració actualitzat des de la interfície perquè sigui validat i desat de forma persistent.
+
+Cal destacar que aquesta finestra representa una primera versió. Per limitacions de temps, no vaig poder implementar totes les opcions de configuració avançada que tenia previstes per donar a l'usuari un control més granular. Algunes de les funcionalitats que van quedar pendents són, per exemple, la capacitat de limitar el nombre de pujades i baixades concurrents, establir límits d'ample de banda per a la sincronització, o configurar quines notificacions es volen rebre, o un sistema de prioritats per decidir si es queden els canvis desde servidor o local en cas de conflicte.
+
+Aquestes millores, juntament amb la funcionalitat de sincronitzar els fitxers de la secció "Compartits amb mi" —una característica clau que tampoc es va poder completar—, queden registrades com a treballs futurs per a properes versions de l'aplicació, tal com s'explicara en el \textbf{Capítol 12}.
+
+\subsection{Motor de Sincronització: El Nucli Reactiu}
+El cor del client d'escriptori és el seu motor de sincronització, implementat al mòdul \texttt{synchronizer} de Rust. Aquest component opera en segon pla i la seva responsabilitat és mantenir la carpeta local i el seu equivalent al núvol en perfecte sincronia. Per aconseguir-ho, el seu disseny es basa en un model de doble vigilància: monitoritza activament el sistema d'arxius local i, simultàniament, escolta els canvis provinents del servidor a través d'una connexió WebSocket.
+
+El punt de partida del procés és la funció \texttt{start}, que s'executa en un fil de fons quan l'aplicació s'inicia. Aquesta funció orquestra la posada en marxa de dues tasques asíncrones principals: la que gestiona la connexió WebSocket i la que vigila el sistema de fitxers local.
+
+La primera tasca que s'inicia és la connexió amb el servidor, encapsulada dins d'un bucle per garantir la reconnexió automàtica en cas de pèrdua de connexió.
+
+\begin{lstlisting}[language=Rust, caption={Establiment de la connexió WebSocket a \texttt{synchronizer.rs}}]
+let socket_task = async move {
+    loop {
+        let config = CONFIG.lock().unwrap().clone();
+        let token = config.token.as_ref().unwrap().value.clone();
+
+        let socket_url = format!(
+            "{}/websocket",
+            config.server_url.replace("http://", "ws://")
+        );
+        let uri: Uri = socket_url.parse().unwrap();
+
+        let request = ClientRequestBuilder::new(uri).with_header("authorization", &token);
+        match connect_async(request).await {
+            Ok((mut socket, _response)) => {
+                println!("Connected to server");
+                *IS_CONNECTED.lock().unwrap() = true;
+                app.emit_all("is_connected", true).unwrap();
+                while let Some(msg) = socket.next().await {
+                    // ... Processament de missatges
+                }
+            }
+            Err(e) => {
+                // ... Gestionar error i reintentar connexio
+                tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+            }
+        }
+    }
+};
+\end{lstlisting}
+
+Un cop connectat, el motor necessita un punt de referència per saber quin és l'estat inicial del directori local. Per a això, utilitza un fitxer anomenat \texttt{tree.json}, que actua com una fotografia o \textit{snapshot} de l'estructura de fitxers local de l'última execució. Si el fitxer no existeix, el motor el crea recorrent tota la carpeta de sincronització i calculant els hashes de cada fitxer. Aquesta estructura d'arbre es carrega en memòria i servirà com a base per a totes les comparacions futures.
+
+\subsubsection{Sincronització Local-a-Remot: Vigilant el Sistema d'Arxius}
+La sincronització des del client cap al servidor s'inicia gràcies a la vigilància constant del sistema d'arxius. Per a aquesta tasca, es va utilitzar la llibreria \texttt{notify}, que monitoritza de forma eficient qualsevol canvi a la carpeta seleccionada.
+
+Quan es produeix un canvi (creació, modificació, eliminació), \texttt{notify} genera un esdeveniment que és capturat per la funció \texttt{handle\_event}. Aquesta funció actualitza l'arbre en memòria i, per evitar una allau de peticions al servidor, passa la lògica de comparació a un \textit{debouncer}. Aquest component agrupa tots els canvis que ocorren en un breu interval i llança una única acció quan detecta que l'activitat s'ha aturat.
+
+Un cop el \textit{debouncer} activa l'acció, es desencadena el nucli de la lògica de comparació:
+\begin{enumerate}
+    \item \textbf{Recuperació de l'estat previ}: Es llegeix l'estat de l'última sincronització correcta des del fitxer \texttt{tree.json}.
+    \item \textbf{Detecció de diferències}: L'arbre en memòria (que representa l'estat actual) es compara amb l'arbre llegit de \texttt{tree.json} mitjançant la funció \texttt{fstree::diff\_trees}. Aquesta funció recorre recursivament tots dos arbres i, comparant noms i hashes de contingut, genera una llista precisa de canvis.
+    \item \textbf{Detecció de canvis de nom}: Es processa la llista de canvis amb \texttt{fstree::detect\_renames}. Si un fitxer eliminat i un d'afegit tenen el mateix hash, s'infereix que ha estat un canvi de nom, optimitzant l'operació.
+    \item \textbf{Execució d'accions}: Finalment, es recorre la llista de canvis i s'invoca la funció corresponent del mòdul \texttt{api.rs}. Per il·lustrar com es gestionen aquestes operacions de xarxa, s'utilitzarà com a exemple la funció de descàrrega, ja que mostra clarament el procés de \textit{streaming} i el càlcul de progrés. Per a garantir la integritat de les dades i evitar fitxers corruptes, la descàrrega es realitza primer a un directori temporal. Un cop la transferència s'ha completat correctament, el fitxer es mou a la seva ubicació final.
+\end{enumerate}
+
+\begin{lstlisting}[language=Rust, caption={Gestió de la descàrrega amb progrés a \texttt{api.rs}}]
+pub async fn download(
+    app: tauri::AppHandle,
+    root_path: &PathBuf,
+    path: String,
+    id: Arc<Mutex<Option<String>>>,
+    hash: String,
+    local_tree: Arc<Mutex<fstree::Node>>,
+) {
+    // ...
+    // Es crea un fitxer temporal per a la descàrrega
+    let temp_file_path = temp_dir.join(temp_name);
+    // ...
+    let response = client.get(format!("{server}/files/{id}/download"))
+        // ...
+        .send().await;
+    // ...
+    let total_size = resp.content_length().unwrap_or(0);
+    let mut file = fs::File::create(&temp_file_path).unwrap();
+    let mut downloaded: u64 = 0;
+    let mut stream = resp.bytes_stream();
+
+    while let Some(chunk_result) = stream.next().await {
+        let chunk = chunk_result.unwrap();
+        file.write_all(&chunk).unwrap();
+        downloaded += chunk.len() as u64;
+
+        let progress = (downloaded as f64 / total_size as f64) * 100.0;
+        
+        // Emet un esdeveniment amb el progrés per a la UI
+        if let Some(ref window) = window {
+            window.emit("transfer", &transfer).unwrap();
+        }
+    }
+    
+    // Un cop descarregat, es mou el fitxer a la seva destinació final
+    let _ = fs::copy(&temp_file_path, &destination);
+    let _ = fs::remove_file(&temp_file_path);
+
+    // S'actualitza l'arbre local amb el nou node
+    if let Ok(Some(node)) = fstree::build_node(&root_path, &destination).map(Some) {
+        local_tree.lock().unwrap().add_node(node).unwrap();
+        fstree::save_tree(&local_tree.lock().unwrap(), "tree.json").unwrap();
+    }
+    // ...
+}
+\end{lstlisting}
+
+Com es pot observar en el fragment de codi anterior, la comunicació entre el nucli de Rust i la interfície d'usuari és un dels punts forts de Tauri i és clau per a l'experiència en temps real. Dins del bucle de descàrrega, un cop calculat el progrés, la línia `window.emit("transfer", \&transfer).unwrap()` és la que fa tota la màgia. Aquesta funció emet un esdeveniment anomenat `"transfer"` des del backend. El frontend, que està construït amb Svelte, té un `listener` configurat específicament per a aquest esdeveniment. Quan el frontend rep l'esdeveniment `"transfer"`, també rep la càrrega útil associada —en aquest cas, l'objecte `transfer` que conté el percentatge de progrés actualitzat. Això provoca una actualització reactiva a la interfície, i la barra de progrés es redibuixa a la pantalla de l'usuari de manera instantània. Aquest patró d'esdeveniments és el que permet que el backend, que gestiona tota la lògica pesada, pugui notificar a la vista de manera eficient sense necessitat d'un acoblament directe.
+
+Després de processar tots els canvis, el nou arbre en memòria es desa al fitxer \texttt{tree.json}, establint així el nou punt de partida per a la propera detecció de canvis.
+
+\subsubsection{Lògica de Comparació i Detecció de Canvis}
+El cor del motor de sincronització resideix en les funcions \texttt{diff\_trees} i \texttt{detect\_renames} del mòdul \texttt{fstree.rs}. Aquestes funcions són les responsables d'identificar de manera eficient les diferències entre l'estat local i el remot.
+
+La funció \texttt{diff\_trees} implementa un algorisme de comparació recursiva. Com es pot veure al codi, navega simultàniament per dos arbres (l'antic i el nou) i compara els nodes a cada nivell.
+
+\begin{lstlisting}[language=Rust, caption={Lògica de la funció \texttt{diff\_trees} a \texttt{fstree.rs}}]
+pub fn diff_trees(
+    path: &str,
+    node_1: Option<&Node>, // Arbre antic (o local)
+    node_2: Option<&Node>, // Arbre nou (o remot)
+    changes: &mut Vec<Change>,
+) {
+    match (node_1, node_2) {
+        (Some(node_1), Some(node_2)) => {
+            // Si els hashes són diferents i és un fitxer, es marca com a modificat
+            if node_1.hash != node_2.hash && node_1.node_type == NodeType::File {
+                changes.push(Change {
+                    id: node_2.id.clone(),
+                    path: path.to_string(),
+                    change_type: ChangeType::Modified,
+                    // ... altres camps
+                });
+            }
+
+            // Si són carpetes, es comparen els seus continguts
+            if let (Some(old_children), Some(new_children)) = (&node_1.content, &node_2.content) {
+                // Es crea un conjunt amb totes les claus (noms de fitxer) dels dos directoris
+                let all_keys: std::collections::BTreeSet<_> =
+                    old_children.keys().chain(new_children.keys()).collect();
+
+                // Es recorren totes les claus i es fa una crida recursiva
+                for key in all_keys {
+                    let old_child = old_children.get(key);
+                    let new_child = new_children.get(key);
+                    let full_path = Path::new(path).join(key).to_str().unwrap().to_string();
+                    diff_trees(&full_path, old_child, new_child, changes);
+                }
+            }
+        }
+        (None, Some(new)) => {
+            // El node només existeix al nou arbre -> s'ha afegit
+            changes.push(Change { change_type: ChangeType::Added, path: path.to_string(), ..Default::default() });
+        }
+        (Some(old), None) => {
+            // El node només existeix a l'arbre antic -> s'ha eliminat
+            changes.push(Change { change_type: ChangeType::Deleted, path: path.to_string(), ..Default::default() });
+        }
+        (None, None) => {} // No hi ha canvis
+    }
+}
+\end{lstlisting}
+
+Un cop \texttt{diff\_trees} ha generat la llista inicial de canvis (addicions i eliminacions), aquesta es passa a \texttt{detect\_renames}. Aquesta funció implementa una optimització clau: en lloc de tractar un canvi de nom com una eliminació i una addició, busca coincidències basades en el contingut.
+
+\begin{lstlisting}[language=Rust, caption={Fragment clau de \texttt{detect\_renames} a \texttt{fstree.rs}}]
+pub fn detect_renames(mut changes: Vec<Change>) -> Vec<Change> {
+    // ... separa els canvis en llistes 'added' i 'deleted'
+    
+    while let Some(add) = added.pop() {
+        if let Some(add_hash) = &add.hash {
+            // Busca a la llista d'eliminats un element amb el mateix hash
+            if let Some(pos) = deleted.iter().position(|del| {
+                del.node_type == add.node_type && del.hash == Some(add_hash.clone())
+            }) {
+                // Si es troba, es tracta d'un canvi de nom
+                let del = deleted.remove(pos);
+                final_changes.push(Change {
+                    change_type: ChangeType::Renamed { from: del.path },
+                    // ...
+                });
+                continue;
+            }
+        }
+        // Si no hi ha coincidència, és una addició real
+        final_changes.push(add);
+    }
+    // ... afegeix les eliminacions reals restants
+    final_changes
+}
+\end{lstlisting}
+
+\subsubsection{Sincronització Remot-a-Local: Escoltant el Servidor}
+Per a la sincronització en sentit contrari, el motor es basa en els missatges rebuts a través de la connexió WebSocket. El servidor envia un missatge de tipus \texttt{snapshot} cada cop que es produeix un canvi en els fitxers de l'usuari des d'una altra font. Aquest \textit{snapshot} conté l'estructura de fitxers actualitzada del servidor. El missatge és processat per la funció \texttt{handle\_msg}.
+
+\begin{lstlisting}[language=Rust, caption={Processament de missatges WebSocket a \texttt{synchronizer.rs}}]
+async fn handle_msg(
+    local_tree: &Arc<Mutex<fstree::Node>>,
+    root_path: &PathBuf,
+    app: &tauri::AppHandle,
+    msg: tungstenite::Message,
+) {
+    let text = msg.to_string();
+    println!("Received new tree");
+    let mut changes: Vec<fstree::Change> = Vec::new();
+    let resp: SocketResponse = serde_json::from_str(&text).unwrap();
+    let mut remote_tree = resp.data;
+    {
+        let local = local_tree.lock().unwrap();
+        fstree::diff_trees("", Some(&local), Some(&remote_tree), &mut changes);
+    }
+    let mut futures = vec![];
+    let changes = fstree::detect_renames(changes);
+    
+    for change in changes {
+        match change.change_type {
+            fstree::ChangeType::Added => {
+                if let fstree::NodeType::File = change.node_type {
+                    // S'afegeix una nova tasca de descàrrega al vector de futures
+                    futures.push(api::download(
+                        app.app_handle().clone(),
+                        root_path,
+                        change.path,
+                        change.id,
+                        change.hash.unwrap(),
+                        local_tree.clone(),
+                    ));
+                } else {
+                    // ... Crear carpeta localment
+                }
+                // ...
+            },
+            // ... Gestionar altres tipus de canvis (Deleted, Renamed, Modified)
+        }
+    }
+    // S'executen totes les tasques de descàrrega en paralel
+    join_all(futures).await;
+    // ... Actualitzar l'arbre local si no hi ha conflictes
+}
+\end{lstlisting}
+
+El flux de processament és simètric a l'anterior:
+\begin{enumerate}
+    \item Es deserialitza el JSON del missatge per obtenir l'arbre de fitxers remot (\texttt{remote\_tree}).
+    \item Es torna a utilitzar la funció \texttt{fstree::diff\_trees}, però aquest cop per comparar l'arbre local actual amb l'arbre remot rebut.
+    \item La llista de canvis resultant indica les accions que el client ha de prendre. Per exemple, un canvi de tipus \texttt{Added} significa que un fitxer existeix al servidor però no en local, per la qual cosa s'ha de descarregar mitjançant la funció \texttt{api::download}, el funcionament de la qual ja s'ha detallat.
+    \item S'executen totes les operacions de forma asíncrona amb \texttt{join\_all} per maximitzar el rendiment. Per aconseguir-ho, en lloc d'executar cada operació de descàrrega de manera seqüencial (una darrere l'altra), el sistema primer recorre tots els canvis detectats i crea una tasca asíncrona (\textit{future}) per a cada fitxer que s'ha de descarregar. Totes aquestes tasques s'emmagatzemen en un vector. Finalment, s'utilitza la funció \texttt{join\_all}, que executa totes aquestes tasques de manera concurrent. El programa esperarà en aquest punt fins que l'última de les descàrregues hagi finalitzat. Aquest enfocament millora dràsticament el rendiment, especialment quan s'han de sincronitzar múltiples fitxers, ja que el temps total de l'operació depèn del fitxer més lent, no de la suma de tots ells.
+\end{enumerate}
+
+\begin{lstlisting}[language=Rust, caption={Execució concurrent de descàrregues amb \texttt{join\_all} a \texttt{synchronizer.rs}}]
+    // ...
+    let mut futures = vec![];
+    let changes = fstree::detect_renames(changes);
+    
+    for change in changes {
+        match change.change_type {
+            fstree::ChangeType::Added => {
+                if let fstree::NodeType::File = change.node_type {
+                    // S'afegeix una nova tasca de descàrrega al vector de futures
+                    futures.push(api::download(
+                        app.app_handle().clone(),
+                        root_path,
+                        // ... arguments de la funcio
+                    ));
+                }
+                // ...
+            },
+            // ...
+        }
+    }
+    // S'executen totes les tasques de descàrrega en paralel
+    join_all(futures).await;
+\end{lstlisting}
+
+Aquesta arquitectura de doble canal, combinant la vigilància proactiva local amb l'escolta passiva de canvis remots, crea un sistema de sincronització robust. Tanmateix, cal destacar que la gestió de conflictes actual és bàsica: si un canvi es produeix al mateix temps en local i en remot, el darrer a ser processat sobreescriurà l'altre. Com ja he esmentat, la implementació d'un sistema de resolució de conflictes més sofisticat, que permeti a l'usuari decidir quina versió conservar, és una de les millores clau plantejades com a treball futur.
+
+\subsection{Proves d'integració manuals}
+Donada la naturalesa iterativa del desenvolupament, l'estratègia de proves es va centrar en la validació funcional contínua a través de casos d'ús definits. Per a sistematitzar aquest procés, des de les primeres fases d'implementació del client web, vaig mantenir un document de seguiment, \texttt{tests/test.md}, que funcionava com una llista de verificació (\textit{checklist}). Aquest fitxer recollia cadascuna de les funcionalitats implementades, des del registre d'usuaris fins a les operacions complexes com la compartició d'arxius o la sincronització en temps real. Cada vegada que s'introduïa un canvi significatiu o es completava un nou component, es realitzava una ronda de proves manuals seguint els punts d'aquesta llista per verificar que el comportament esperat es mantenia.
+
+No obstant això, he d'admetre les limitacions inherents a aquest enfocament. La dependència exclusiva de proves manuales, sense el suport d'un sistema de tests automatitzats, va demostrar ser un punt feble en el cicle de desenvolupament. En diverses ocasions, canvis introduïts en una part del sistema van provocar regressions —errades en funcionalitats prèviament estables— que no van ser detectades immediatament. Aquests errors només sortien a la llum durant les "rondes" de proves més exhaustives, realitzades abans de consolidar una nova versió, la qual cosa generava un sobrecost de temps en la depuració.
+
+Encara que es va fer un esforç per cobrir tots els casos d'ús y funcionalitats de l'aplicació documentats a la llista de verificació, la falta d'un marc de proves més rigorós implica que no es pot garantir al 100\% la cobertura de tots els possibles casos límit (\textit{edge cases}). La validació es basava en l'execució dels fluxos de treball principals, però la complexitat de les interaccions, especialment en un sistema distribuït, deixa oberta la possibilitat que existeixin escenaris no contemplats que puguin generar comportaments inesperats.
+
+Aquesta experiència subratlla una lliçó apresa fonamental: la necessitat d'integrar proves automatitzades des de l'inici del projecte. La creació de tests unitaris i d'integració hauria proporcionat una xarxa de seguretat, permetent identificar regressions de forma instantània i garantint una major robustesa del codi. Per tant, la implementació d'un pla d'automatització de proves queda establerta com una de les principals prioritats per al treball futur, tal com es detallarà més endavant en el \textbf{Capítol 12}.
+
+\section{Implementació dels sistemes d'instal·lació i desplegament}
+
+Per a facilitar la implantació del sistema per part d'usuaris finals, es van desenvolupar un conjunt d'eines i scripts destinats a automatitzar el procés de desplegament. Aquesta secció detalla la implementació de la infraestructura basada en Docker Compose, que orquestra tots els microserveis, bases de dades i components auxiliars. L'arxiu principal \texttt{server/compose.yml} defineix tota la infraestructura necessària per a un desplegament complet, mentre que \texttt{server/test.yaml} proporciona una configuració mínima per a proves i desenvolupament. Aquest últim fitxer conté només els contenidors mínims necessaris (PostgreSQL i RabbitMQ) descomentats, facilitant que futurs contribuïdors puguin aixecar un entorn de proves local ràpidament sense llançar tot el sistema, i depurar els serveis individualment des del seu IDE. En cas de voler-se provar nomes un o un numero reduit de microserveis es poden descomntar aquests i engegar en mode debug el microserveis necessaris, ja que s'expossen utilitzant els mateixos ports que en mode debug, facilitant les proves i utilitzant menys recursos.
+
+\subsection{Desplegament mitjançant Docker Compose}
+
+\subsubsection{Arquitectura de desplegament}
+
+El sistema es desplega mitjançant Docker Compose, que orquestra el conjunt complet de microserveis, bases de dades i components auxiliars. L'arxiu principal \texttt{server/compose.yml} defineix tota la infraestructura necessària per a un desplegament complet, mentre que \texttt{server/test.yaml} proporciona una configuració mínima per a proves i desenvolupament. Aquest últim fitxer conté només els contenidors mínims necessaris (PostgreSQL i RabbitMQ) descomentats, facilitant que futurs contribuïdors puguin aixecar un entorn de proves local ràpidament sense llançar tot el sistema, i depurar els serveis individualment des del seu IDE. En cas de voler-se provar nomes un o un numero reduit de microserveis es poden descomntar aquests i engegar en mode debug el microserveis necessaris, ja que s'expossen utilitzant els mateixos ports que en mode debug, facilitant les proves i utilitzant menys recursos.
+
+L'elecció de Docker Compose enfront de solucions més complexes com Kubernetes es justifica per la senzillesa de desplegament i la idoneïtat per a instal·lacions de mida petita i mitjana, que constitueixen el públic objectiu principal del projecte. Com a treball futur, es planteja la creació d'un conjunt de fitxers Helm que permetin una configuració senzilla a Kubernetes. No obstant això, donat el temps disponible i el públic objectiu principal —usuaris que busquen una solució de gestió de fitxers al núvol sense coneixements tècnics avançats—, es va prioritzar el desenvolupament de l'aplicació i un mètode de desplegament simple. Kubernetes representa una solució de gestió més avançada, orientada a entorns de major complexitat que els previstos inicialment per al projecte.
+
+\subsubsection{Estructura de l'arxiu compose.yml}
+
+L'arxiu \texttt{server/compose.yml} defineix els serveis següents:
+
+\paragraph{Serveis d'infraestructura}
+
+A la base de l'ecosistema es troben els serveis que proporcionen la persistència de dades i la comunicació asíncrona.
+
+\begin{lstlisting}[language=yaml, caption={Serveis d'infraestructura a compose.yml}, label={lst:infra-services}]
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin}
+      POSTGRES_DB: ${POSTGRES_DB:-mydb}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  rabbitmq:
+    image: rabbitmq:management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-admin}
+\end{lstlisting}
+
+Com es mostra al llistat \ref{lst:infra-services}, la configuració és flexible:
+
+\begin{itemize}
+    \item \textbf{postgres}: Base de dades PostgreSQL. El fitxer \texttt{compose.yml} permet configurar el nom d'usuari (\texttt{POSTGRES\_USER}), la contrasenya (\texttt{POSTGRES\_PASSWORD}) i el nom de la base de dades (\texttt{POSTGRES\_DB}) mitjançant variables d'entorn externes, amb valors per defecte \texttt{admin}, \texttt{admin} i \texttt{mydb} respectivament.
+    
+    \item \textbf{rabbitmq}: Broker de missatgeria. De manera similar, les credencials d'accés (\texttt{RABBITMQ\_DEFAULT\_USER}, \texttt{RABBITMQ\_DEFAULT\_PASS}) són configurables des de l'exterior, amb \texttt{admin}/\texttt{admin} com a valors per defecte.
+    
+    \item \textbf{pgadmin}: Interfície web per a l'administració de PostgreSQL, les credencials de la qual (\texttt{PGADMIN\_DEFAULT\_EMAIL}, \texttt{PGADMIN\_DEFAULT\_PASSWORD}) també són configurables amb valors per defecte. Aquest servei no es mostra al fragment per brevetat.
+\end{itemize}
+
+Actualment, els ports dels serveis són fixos. La possibilitat de configurar-los es contempla com una línia de treball futur, tal com es detalla al capítol 12.
+
+\paragraph{Registre i enrutament}
+
+Aquests serveis són el nucli de la comunicació dins de l'arquitectura de microserveis. El seu funcionament es defineix de la següent manera al fitxer \texttt{compose.yml}:
+
+\begin{lstlisting}[language=yaml, caption={Definició d'Eureka i Gateway a compose.yml}, label={lst:eureka-gateway}]
+  eureka:
+    build: ./Eureka
+    container_name: eureka
+    ports:
+      - "8761:8761"
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "-O", "-", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  gateway:
+    container_name: gateway
+    build: ./Gateway
+    ports:
+      - "8762:8762"
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+    depends_on:
+      eureka:
+        condition: service_healthy
+\end{lstlisting}
+
+Com es pot observar al llistat \ref{lst:eureka-gateway}:
+
+\begin{itemize}
+  \item \textbf{eureka}: Servei de descobriment que permet als microserveis registrar-se i localitzar-se mútuament. S'exposa al port \texttt{8761} i inclou un \texttt{healthcheck} que verifica la disponibilitat abans de permetre que altres serveis s'hi connectin. Aquest mecanisme és crucial per garantir una arrencada estable del sistema.
+  
+  \item \textbf{gateway}: Punt d'entrada únic que exposa l'API REST al port \texttt{8762} i gestiona l'enrutament cap als microserveis apropiats. La directiva \texttt{depends\_on} assegura que no s'iniciarà fins que el servei Eureka estigui saludable (\texttt{service\_healthy}). També proporciona l'endpoint WebSocket per a la sincronització en temps real.
+\end{itemize}
+
+\paragraph{Microserveis de negoci}
+
+El cor de la lògica de l'aplicació resideix en un conjunt de microserveis que s'encarreguen de funcions específiques. Tots comparteixen una configuració similar, com es pot veure en l'exemple del servei \texttt{file-manager}:
+
+\begin{lstlisting}[language=yaml, caption={Exemple de microservei de negoci a compose.yml}, label={lst:business-service}]
+  file-manager:
+    build: ./FileManagement
+    container_name: fiulemanagement
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+    depends_on:
+      eureka:
+        condition: service_healthy
+    volumes:
+      - ./storage_data:/app/files
+\end{lstlisting}
+
+La configuració, exemplificada en el llistat \ref{lst:business-service}, és anàloga per a tots els serveis de negoci:
+\begin{itemize}
+  \item \textbf{build}: Especifica el directori on es troba el Dockerfile per construir la imatge del servei (p. ex., \texttt{./FileManagement}).
+  \item \textbf{environment}: Activa el perfil \texttt{docker} de Spring Boot, que carrega la configuració específica per a l'entorn de contenidors (connexió a Eureka, RabbitMQ i PostgreSQL).
+  \item \textbf{depends\_on}: Garanteix que cada microservei només s'iniciarà quan Eureka estigui operatiu.
+  \item \textbf{volumes}: En el cas de \texttt{file-manager}, s'utilitza per mapejar el directori local \texttt{./storage\_data} amb el directori \texttt{/app/files} dins del contenidor, assegurant la persistència dels fitxers pujats.
+\end{itemize}
+
+Els serveis inclosos en aquesta categoria són: \textbf{user-auth}, \textbf{user-management}, \textbf{file-access}, \textbf{file-sharing}, \textbf{trash}, \textbf{file-manager} i \textbf{sync}.
+
+\paragraph{Interfície d'usuari}
+
+El component final del sistema és la interfície web, que es defineix de la següent manera:
+
+\begin{lstlisting}[language=yaml, caption={Definició de la UI a compose.yml}, label={lst:ui-service}]
+  ui-new:
+    build:
+      context: ../ui-new
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://gateway:8762
+        VITE_WS_URL: ws://gateway:8762/websocket/web
+    container_name: ui-new
+    ports:
+      - "8080:80"
+    depends_on:
+      gateway:
+        condition: service_started
+\end{lstlisting}
+
+Del llistat \ref{lst:ui-service} es desprèn que:
+\begin{itemize}
+  \item El servei \textbf{ui-new} es construeix a partir del directori \texttt{../ui-new}.
+  \item Mitjançant \texttt{args}, es passen les variables d'entorn \texttt{VITE\_API\_URL} i \texttt{VITE\_WS\_URL} al procés de construcció de Vite. Aquestes variables configuren la connexió amb el gateway utilitzant el nom de servei \texttt{gateway}, que és resolt per la xarxa interna de Docker.
+  \item El servei exposa el port intern 80 al port \texttt{8080} del host.
+  \item La directiva \texttt{depends\_on} amb la condició \texttt{service\_started} assegura que la interfície no s'iniciarà fins que el gateway estigui disponible.
+\end{itemize}
+
+
+Tots els microserveis utilitzen el perfil \texttt{docker} de Spring Boot i depenen que Eureka estigui funcionant abans d'iniciar-se, assegurant una arrencada ordenada del sistema.
+
+\subsubsection{Configuració de xarxa i volums}
+Per garantir la persistència de les dades més enllà del cicle de vida dels contenidors, s'utilitzen volums de Docker, que desacoblen les dades del contenidor mitjançant un mapeig entre un directori de l'amfitrió i un d'intern. Aquesta arquitectura és fonamental per assegurar la integritat i durabilitat de la informació, ja que fitxers crítics romanen intactes al sistema amfitrió encara que els contenidors siguin eliminats o recreats. En aquest projecte, el volum \texttt{postgres\_data} garanteix la persistència de la base de dades, mentre que el directori \texttt{./storage\_data} emmagatzema els arxius dels usuaris.
+
+Addicionalment, Docker Compose crea una xarxa interna que permet la comunicació entre serveis utilitzant els seus noms com a \textit{hostnames}. 
+
+Serà responsabilitat de l'administrador del sistema assegurar que les dades persistides no es conservin més enllà de l'ús previst de l'aplicació.
+
+\subsection{Scripts d'instal·lació automatitzada}
+
+Per simplificar el desplegament, s'han desenvolupat scripts d'instal·lació que automatitzen tot el procés, des de la descàrrega de dependències fins a la creació de l'usuari administrador inicial.
+
+\subsubsection{Script per a Linux (setup.sh)}
+
+L'script \texttt{setup.sh} proporciona les funcionalitats següents:
+
+\begin{itemize}
+  \item \texttt{-i}: Instal·lació completa que inclou Docker, Node.js, Rust, compilació del codi (backend, web i aplicació d'escriptori), arrencada del sistema i creació obligatòria del superadministrador.
+  \item \texttt{-u}: Inicia el sistema sense reinstal·lar les dependències.
+  \item \texttt{-d}: Atura tots els serveis.
+  \item \texttt{-r}: Elimina completament el sistema i totes les dades.
+  \item \texttt{-b}: Actualitza el sistema recompilant els serveis, incloent-hi la regeneració dels instal·ladors de l'aplicació d'escriptori.
+  \item \texttt{-t}: Configura el sistema amb dades de prova (només vàlid amb \texttt{-i}). Utilitza el fitxer \texttt{init.sql} que conté usuaris, carpetes, fitxers i comparticions preconfigurats per facilitar les proves de l'aplicació.
+\end{itemize}
+
+\paragraph{Dependències i construcció automàtica}
+
+L'script s'encarrega automàticament d'instal·lar totes les dependències necessàries:
+
+\begin{itemize}
+  \item \textbf{Docker}: Per a l'orquestració dels microserveis.
+  \item \textbf{Node.js i pnpm}: Per a la construcció de la interfície web i l'aplicació d'escriptori.
+  \item \textbf{Rust}: Per a la construcció del backend natiu de l'aplicació Tauri.
+\end{itemize}
+
+Durant el procés de construcció, l'script executa seqüencialment:
+
+\begin{enumerate}
+  \item Compilació dels microserveis Java mitjançant Maven (\texttt{./mvnw clean install})
+  \item Instal·lació de dependències del client web (\texttt{npm install})
+  \item Construcció completa de l'aplicació Tauri (\texttt{pnpm tauri build})
+\end{enumerate}
+
+La construcció de l'aplicació Tauri genera automàticament els instal·ladors natius per a la plataforma actual i els mou a la carpeta \texttt{installers/} a l'arrel del projecte per facilitar l'accés. Els formats generats inclouen \texttt{.deb} i \texttt{.AppImage} per a Linux, \texttt{.msi} per a Windows, i \texttt{.dmg} per a macOS. En cas d'error durant la construcció, l'script continua amb la resta del procés però mostra un missatge d'advertència.
+
+\paragraph{Compilació multiplataforma}
+
+Per defecte, Tauri només genera instal·ladors per al sistema operatiu on s'executa la construcció. No obstant això, els scripts intenten configurar suport de compilació creuada quan és possible:
+
+\begin{itemize}
+  \item \textbf{Linux}: Plataforma més flexible per a la compilació creuada. Pot generar instal·ladors per a Windows amb les eines adequades instal·lades.
+  \item \textbf{Windows}: Suport limitat per a compilació creuada. Genera principalment instal·ladors natius de Windows.
+  \item \textbf{macOS}: Pot generar instal·ladors per a diferents arquitectures de Mac (Intel i Apple Silicon) però no per a altres sistemes operatius.
+\end{itemize}
+
+Per obtenir instal·ladors per a totes les plataformes, es recomana:
+\begin{enumerate}
+  \item Executar la construcció en un sistema Linux amb eines de compilació creuada.
+  \item Executar manualment en cada plataforma objectiu o amb màquines virtuals.
+\end{enumerate}
+
+Els scripts mostren informació sobre la plataforma actual i les limitacions de compilació creuada per orientar l'usuari.
+
+Com a treball futur, es preveu automatitzar aquest procés mitjançant GitHub Actions. Aquesta solució utilitzaria \textit{runners} per a cada sistema operatiu (Linux, Windows i macOS), permetent generar instal·ladors natius i signats digitalment per a totes les plataformes de manera fiable. Els binaris generats no s'emmagatzemarien al repositori de Git, ja que no és una pràctica recomanada per a fitxers grans, sinó que es publicarien a través de GitHub Releases, facilitant-ne la distribució als usuaris finals.
+
+\paragraph{Configuració de credencials}
+
+L'script permet personalitzar les credencials dels serveis d'infraestructura mitjançant paràmetres de línia d'ordres, que només es poden utilitzar amb l'opció \texttt{-i}:
+
+\begin{itemize}
+  \item \texttt{-up <usuari>}: Nom d'usuari de PostgreSQL
+  \item \texttt{-pp <contrasenya>}: Contrasenya de PostgreSQL
+  \item \texttt{-dp <base\_dades>}: Nom de la base de dades PostgreSQL
+  \item \texttt{-ur <usuari>}: Nom d'usuari de RabbitMQ
+  \item \texttt{-pr <contrasenya>}: Contrasenya de RabbitMQ
+  \item \texttt{-ea <email>}: Email de pgAdmin
+  \item \texttt{-pa <contrasenya>}: Contrasenya de pgAdmin
+\end{itemize}
+
+Exemple d'ús:
+\begin{lstlisting}[language=bash]
+./setup.sh -i -up myuser -pp mypass -dp mydb
+\end{lstlisting}
+
+\paragraph{Mode de proves amb dades preconfigurades}
+
+L'opció \texttt{-t} permet iniciar el sistema amb un conjunt de dades de prova predefinides, facilitant la validació de funcionalitats sense necessitat de crear manualment usuaris, carpetes i fitxers. Quan s'utilitza aquesta opció:
+
+\begin{itemize}
+  \item Es substitueix el fitxer d'inicialització de base de dades buit (\texttt{init-creation.sql}) pel fitxer \texttt{init.sql}, que conté dades de mostra.
+  \item El sistema es configura automàticament amb usuaris de prova, carpetes, fitxers i relacions de compartició preestablertes.
+  \item Es continua amb la creació del superadministrador de forma normal, afegint-se als usuaris de prova existents.
+\end{itemize}
+
+Aquest mode és especialment útil per a desenvolupadors, proves d'integració o demonstrations de l'aplicació, ja que proporciona un entorn preonfigurat que permet provar immediatament totes les funcionalitats sense haver de crear manualment el contingut necessari.
+
+Exemple d'ús amb dades de prova:
+\begin{lstlisting}[language=bash]
+./setup.sh -i -t -up myuser -pp mypass -dp mydb
+\end{lstlisting}
+
+\paragraph{Persistència de la configuració}
+
+Quan s'utilitzen paràmetres personalitzats durant la instal·lació, l'script genera automàticament un fitxer \texttt{.env} a l'arrel del projecte que conté totes les credencials configurades. Aquest fitxer:
+
+\begin{itemize}
+  \item Es carrega automàticament en futures execucions dels scripts (operacions \texttt{-u}, \texttt{-b}).
+  \item Garanteix que les credencials personalitzades es mantinguin consistents entre reinicis.
+\end{itemize}
+
+Si no es proporcionen paràmetres personalitzats, el sistema utilitza els valors per defecte (\texttt{admin}/\texttt{admin} per als serveis, \texttt{mydb} per a la base de dades i \texttt{admin@admin.com}/\texttt{admin} per a pgAdmin).
+
+En cas de utilitzar alguna d'aquestes opcions per generar credencials personalitzades es mostra un avís per pantalla indicant la importància del fitxer que es genera i que no s'ha d'eliminar.
+
+\subsubsection{Script per a Windows (setup.ps1)}
+
+L'script PowerShell \texttt{setup.ps1} replica exactament la funcionalitat de l'script de Linux, incloent-hi:
+
+\begin{itemize}
+  \item Instal·lació automàtica de dependències (Docker Desktop, Node.js, Rust) mitjançant gestors de paquets disponibles
+  \item Construcció completa de tots els components del sistema
+  \item Generació dels instal·ladors de l'aplicació d'escriptori per a Windows (\texttt{.msi} i \texttt{.exe})
+  \item Opcions de configuració de credencials idèntiques
+  \item Generació i càrrega automàtica del fitxer \texttt{.env}
+  \item Suport per al mode de dades de prova amb l'opció \texttt{-t}
+\end{itemize}
+
+L'script utilitza \texttt{winget} com a gestor de paquets preferit, amb \texttt{chocolatey} com a alternativa, i proporciona instruccions manuals si cap dels dos està disponible.
+
+\subsubsection{Procés de creació del superadministrador}
+
+La creació del superadministrador s'ha integrat com a part obligatòria del procés d'instal·lació inicial (opció \texttt{-i}). Aquesta decisió de disseny garanteix que sempre existeixi almenys un administrador amb permisos complets per gestionar el sistema des del primer moment. El procés utilitza les credencials de PostgreSQL configurades (ja siguin personalitzades o per defecte) per connectar-se a la base de dades i crear els registres necessaris.
+
+Existeix la possibilitat de que un usuari mes avançat pugui crear mes superadministradors directament a la base de dades, però no es contempla com a part de l'instal·lació automatica ja que aixo incompleix el disseny inicial de l'aplicació, però tampoc s'han fet comprovacions ni limitacions en el codi per evitar-ho, es deixa com a responsabilitat de l'administrador del sistema, que es qui tindra les credencials d'instal·lació, la gestió d'aquesta casoistica concreta.
+

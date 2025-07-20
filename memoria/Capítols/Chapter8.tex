@@ -6,6 +6,25 @@ Aquest cap\'itol presenta l'an\`alisi funcional i estructural del sistema desenv
 
 \section{An\`alisi funcional}
 
+\subsection{Diagrama de casos d'ús}
+A continuació es mostra el diagrama general de casos d'ús, que resumeix la interacció dels actors principals (Usuari i Administrador) amb les funcionalitats clau del sistema.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{Figures/use_case_diagram.png}
+\caption{Diagrama de casos d'ús}
+\end{figure}
+
+Tal com mostra el diagrama, el sistema té diferents tipus d'usuaris (actors). El punt de partida és el \texttt{Client Tauri} l'aplicació d'escriptori pensada per a una integració total amb el sistema de fitxers local. L'\texttt{Usuari web} hereta d'aquest les funcions bàsiques de gestió d'arxius, com pujar-ne, descarregar-ne o compartir-los, però operant des del navegador. 
+
+El que els diferencia és la sincronització. Tot i que tots dos clients en tenen, la seva funció és distinta. El client \texttt{Tauri} busca la \texttt{rèplica de fitxers}, és a dir, que una carpeta local sigui un mirall del que hi ha al servidor. En canvi, a l'\texttt{aplicació web} la sincronització s'utilitza per refrescar l'estat de la interfície. D'aquesta manera, si un altre usuari, o el mateix usuari en un altre instancia de l'aplicació, fa un canvi, aquest es reflecteix a la pantalla al moment, sense haver de recarregar la pàgina. Cal dir que, tot i que el disseny inicial preveia la sincronització d'arxius compartits a Tauri, aquesta funció no es va poder implementar per falta de temps, com ja s'explica al capítol 4.
+
+Per sobre del usuari normal, tenim l'\texttt{Administrador}. Aquest rol, a part de fer el mateix que un usuari normal, té la capacitat de gestionar altres comptes d'usuari: pot consultar la llista, modificar-ne les dades o directament eliminar-los.
+
+Finalment, tenim el \texttt{Superadministrador}. És el rol amb més privilegis, ja que fa tot el que fan els altres i, a més, pot gestionar els comptes dels propis administradors, i tambe la capacitat de modificar les contrasenyes d'altres usuaris (independentment del seu rol) o modificar el rol d'un altre usuari. Això garanteix un control absolut sobre el sistema.
+
+El disseny d'aquesta jerarquia respon a una filosofia de control centralitzat. La figura del \texttt{Superadministrador} es concep com un rol únic, amb autoritat sobre tot el sistema, que es crea exclusivament durant el procés d'instal·lació mitjançant scripts, no des de l'aplicació. Això garanteix un punt de control segur. A partir d'aquí, el Superadministrador pot delegar funcions nomenant altres \texttt{Administradors}, creant una estructura piramidal. No obstant això, les accions més sensibles —com modificar contrasenyes alienes o canviar rols— queden reservades per a ell. Aquesta concentració de poder en una única figura el converteix en el màxim responsable de la seguretat i la integritat de la plataforma. Al ser un rol generat durant el procés d'instal·lació, també s'asumeig que sera el gestor principal de la aplicacio (qui inicia el procès d'instal·lació) qui asumira aquest rol al ser tambe el major responsable del manteniment de les dades y la seguretat del sistema.
+
 \subsection{Actors i m\`oduls}
 Els principals actors identificats en el sistema, ordenats per jerarquia, s\'on:
 \begin{itemize}
@@ -36,20 +55,20 @@ A continuació es descriuen diversos casos d'\'us extrets de les fitxes funciona
   \item \textbf{Postcondicions}: Compte creat i sessió iniciada.
   \item \textbf{Escenari principal}:
     \begin{enumerate}
-        \item El client envia una sol·licitud de registre al servei **UserAuthentication** a través del Gateway.
+        \item El client envia una sol·licitud de registre al servei \texttt{UserAuthentication} a través del Gateway.
         \item El servei valida les dades rebudes:
             \begin{itemize}
                 \item Comprova que el format del nom d'usuari, contrasenya i email siguin correctes.
                 \item Verifica que el nom d'usuari no estigui ja en ús.
-                \item Consulta a **UserManagement** per assegurar que l'email no estigui registrat.
+                \item Consulta a \texttt{UserManagement} per assegurar que l'email no estigui registrat.
             \end{itemize}
-        \item Si les validacions són correctes, **UserAuthentication** guarda les credencials (nom d'usuari i contrasenya xifrada) i inicia la creació de dades en altres serveis:
+        \item Si les validacions són correctes, \texttt{UserAuthentication} guarda les credencials (nom d'usuari i contrasenya xifrada) i inicia la creació de dades en altres serveis:
             \begin{itemize}
-                \item Fa una crida a **UserManagement** per guardar la informació personal de l'usuari (email, nom i cognoms).
-                \item Crida a **FileManagement** per crear la carpeta arrel de l'usuari.
-                \item Finalment, envia un missatge asíncron a través de RabbitMQ a **SyncService** per generar l'estat inicial de sincronització (\emph{snapshot}) amb la carpeta arrel.
+                \item Fa una crida a\texttt{UserManagement} per guardar la informació personal de l'usuari (email, nom i cognoms).
+                \item Crida a\texttt{FileManagement} per crear la carpeta arrel de l'usuari.
+                \item Finalment, envia un missatge asíncron a través de RabbitMQ a\texttt{SyncService} per generar l'estat inicial de sincronització (\emph{snapshot}) amb la carpeta arrel.
             \end{itemize}
-        \item Un cop finalitzat el procés, **UserAuthentication** retorna els tokens d'accés i de refresc per iniciar la sessió automàticament.
+        \item Un cop finalitzat el procés,\texttt{UserAuthentication} retorna els tokens d'accés i de refresc per iniciar la sessió automàticament.
     \end{enumerate}
 \end{itemize}
 
@@ -61,7 +80,7 @@ A continuació es descriuen diversos casos d'\'us extrets de les fitxes funciona
   \item \textbf{Postcondicions}: Sessió activa.
   \item \textbf{Escenari principal}:
     \begin{enumerate}
-        \item El client envia el nom d'usuari i la contrasenya al servei **UserAuthentication**.
+        \item El client envia el nom d'usuari i la contrasenya al servei\texttt{UserAuthentication}.
         \item El servei busca l'usuari a la base de dades a partir del seu nom.
         \item Si l'usuari existeix, compara la contrasenya rebuda amb la versió xifrada emmagatzemada.
         \item Si les credencials són correctes, genera un nou token d'accés (JWT) de curta durada i un token de refresc de llarga durada.
@@ -154,53 +173,6 @@ A continuació es descriuen diversos casos d'\'us extrets de les fitxes funciona
 
 (\emph{La resta de fitxes completes es poden consultar a l'Apèndix \ref{app:casos_us}})
 
-\subsection{Matriu de traçabilitat entre requisits i casos d'ús}
-Per garantir que tots els requisits funcionals descrits al Capítol 6 estan coberts per la funcionalitat del sistema, es presenta a la Taula \ref{tab:traceability_matrix} una matriu de traçabilitat detallada. Aquesta relaciona cada requisit funcional amb els casos d'ús individuals (detallats a l'Apèndix \ref{app:casos_us}) que l'implementen.
-
-\begin{sidewaystable}[htbp]
-\centering
-\caption{Matriu de traçabilitat detallada entre requisits funcionals i casos d'ús.}
-\label{tab:traceability_matrix}
-\resizebox{\textheight}{!}{%
-\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
-\hline
-\textbf{Requisit Funcional} & \rotatebox{90}{UC-01} & \rotatebox{90}{UC-02} & \rotatebox{90}{UC-03} & \rotatebox{90}{UC-04} & \rotatebox{90}{UC-05} & \rotatebox{90}{UC-06} & \rotatebox{90}{UC-07} & \rotatebox{90}{UC-08} & \rotatebox{90}{UC-09A} & \rotatebox{90}{UC-09B} & \rotatebox{90}{UC-09C} & \rotatebox{90}{UC-10} & \rotatebox{90}{UC-11} & \rotatebox{90}{UC-12} & \rotatebox{90}{UC-13} & \rotatebox{90}{UC-13A} & \rotatebox{90}{UC-13B} & \rotatebox{90}{UC-14} & \rotatebox{90}{UC-15} & \rotatebox{90}{UC-16} & \rotatebox{90}{UC-17} & \rotatebox{90}{UC-18} & \rotatebox{90}{UC-19} & \rotatebox{90}{UC-20} & \rotatebox{90}{UC-21} & \rotatebox{90}{UC-22} \\
-\hline
-1. Gestió d'usuaris & X & X & X & & & & & & & & & & & & & & & & X & X & & & & & & \\
-\hline
-2. Gestió d'arxius & & & & & & & & X & X & X & X & X & X & & X & X & X & & & & X & & & & & \\
-\hline
-3. Sistema de paperera & & & & & & & & & & & & & X & X & & & & & & & X & & & & & \\
-\hline
-4. Compartició d'arxius & & & & & & & & & & & & & & & X & X & X & & & & & & & & & \\
-\hline
-5. Sincronització en temps real & & & & & & & & & & & & & & & & & & X & & & & & & & & X \\
-\hline
-6. Panell d'administració & & & & X & X & X & X & & & & & & & & & & & & & & & X & X & X & X & \\
-\hline
-\end{tabular}%
-}
-\end{sidewaystable}
-
-\subsection{Diagrama de casos d'ús}
-A continuació es mostra el diagrama general de casos d'ús, que resumeix la interacció dels actors principals (Usuari i Administrador) amb les funcionalitats clau del sistema.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{Figures/use_case_diagram.png}
-\caption{Diagrama de casos d'ús}
-\end{figure}
-
-Tal com mostra el diagrama, el sistema té diferents tipus d'usuaris (actors). El punt de partida és el **Client Tauri**, l'aplicació d'escriptori pensada per a una integració total amb el sistema de fitxers local. L'**Usuari web** hereta d'aquest les funcions bàsiques de gestió d'arxius, com pujar-ne, descarregar-ne o compartir-los, però operant des del navegador. 
-
-El que els diferencia és la sincronització. Tot i que tots dos clients en tenen, la seva funció és distinta. El client **Tauri** busca la **rèplica de fitxers**, és a dir, que una carpeta local sigui un mirall del que hi ha al servidor. En canvi, a l'**aplicació web** la sincronització s'utilitza per refrescar l'estat de la interfície. D'aquesta manera, si un altre usuari, o el mateix usuari en un altre instancia de l'aplicació, fa un canvi, aquest es reflecteix a la pantalla al moment, sense haver de recarregar la pàgina. Cal dir que, tot i que el disseny inicial preveia la sincronització d'arxius compartits a Tauri, aquesta funció no es va poder implementar per falta de temps, com ja s'explica al capítol 4.
-
-Per sobre del usuari normal, tenim l'**Administrador**. Aquest rol, a part de fer el mateix que un usuari normal, té la capacitat de gestionar altres comptes d'usuari: pot consultar la llista, modificar-ne les dades o directament eliminar-los.
-
-Finalment, tenim el **Superadministrador**. És el rol amb més privilegis, ja que fa tot el que fan els altres i, a més, pot gestionar els comptes dels propis administradors, i tambe la capacitat de modificar les contrasenyes d'altres usuaris (independentment del seu rol) o modificar el rol d'un altre usuari. Això garanteix un control absolut sobre el sistema.
-
-El disseny d'aquesta jerarquia respon a una filosofia de control centralitzat. La figura del **Superadministrador** es concep com un rol únic, amb autoritat sobre tot el sistema, que es crea exclusivament durant el procés d'instal·lació mitjançant scripts, no des de l'aplicació. Això garanteix un punt de control segur. A partir d'aquí, el Superadministrador pot delegar funcions nomenant altres **Administradors**, creant una estructura piramidal. No obstant això, les accions més sensibles —com modificar contrasenyes alienes o canviar rols— queden reservades per a ell. Aquesta concentració de poder en una única figura el converteix en el màxim responsable de la seguretat i la integritat de la plataforma. Al ser un rol generat durant el procés d'instal·lació, també s'asumeig que sera el gestor principal de la aplicacio (qui inicia el procès d'instal·lació) qui asumira aquest rol al ser tambe el major responsable del manteniment de les dades y la seguretat del sistema.
-
 \subsection{Diagrames d'activitat dels Casos d'Ús Principals}
 A continuació, es presenten els diagrames d'activitat per als casos d'ús més representatius del sistema. Cada diagrama il·lustra el flux de treball, les decisions i les interaccions entre serveis.
 
@@ -275,6 +247,34 @@ El servei \texttt{FileSharing} comprova que el sol·licitant és el propietari d
 \end{figure}
 
 \par\noindent(\emph{La resta de diagrames d'activitat detallats per a cada cas d'ús es poden consultar a l'Apèndix \ref{app:diagrames_activitat}}).
+
+\subsection{Matriu de traçabilitat entre requisits i casos d'ús}
+Per garantir que tots els requisits funcionals descrits al Capítol 6 estan coberts per la funcionalitat del sistema, es presenta a la Taula \ref{tab:traceability_matrix} una matriu de traçabilitat detallada. Aquesta relaciona cada requisit funcional amb els casos d'ús individuals (detallats a l'Apèndix \ref{app:casos_us}) que l'implementen.
+
+\begin{sidewaystable}[htbp]
+\centering
+\caption{Matriu de traçabilitat detallada entre requisits funcionals i casos d'ús.}
+\label{tab:traceability_matrix}
+\resizebox{\textheight}{!}{%
+\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{Requisit Funcional} & \rotatebox{90}{UC-01} & \rotatebox{90}{UC-02} & \rotatebox{90}{UC-03} & \rotatebox{90}{UC-04} & \rotatebox{90}{UC-05} & \rotatebox{90}{UC-06} & \rotatebox{90}{UC-07} & \rotatebox{90}{UC-08} & \rotatebox{90}{UC-09A} & \rotatebox{90}{UC-09B} & \rotatebox{90}{UC-09C} & \rotatebox{90}{UC-10} & \rotatebox{90}{UC-11} & \rotatebox{90}{UC-12} & \rotatebox{90}{UC-13} & \rotatebox{90}{UC-13A} & \rotatebox{90}{UC-13B} & \rotatebox{90}{UC-14} & \rotatebox{90}{UC-15} & \rotatebox{90}{UC-16} & \rotatebox{90}{UC-17} & \rotatebox{90}{UC-18} & \rotatebox{90}{UC-19} & \rotatebox{90}{UC-20} & \rotatebox{90}{UC-21} & \rotatebox{90}{UC-22} \\
+\hline
+1. Gestió d'usuaris & X & X & X & & & & & & & & & & & & & & & & X & X & & & & & & \\
+\hline
+2. Gestió d'arxius & & & & & & & & X & X & X & X & X & X & & X & X & X & & & & X & & & & & \\
+\hline
+3. Sistema de paperera & & & & & & & & & & & & & X & X & & & & & & & X & & & & & \\
+\hline
+4. Compartició d'arxius & & & & & & & & & & & & & & & X & X & X & & & & & & & & & \\
+\hline
+5. Sincronització en temps real & & & & & & & & & & & & & & & & & & X & & & & & & & & X \\
+\hline
+6. Panell d'administració & & & & X & X & X & X & & & & & & & & & & & & & & & X & X & X & X & \\
+\hline
+\end{tabular}%
+}
+\end{sidewaystable}
 
 \section{Arquitectura del sistema}
 
@@ -365,7 +365,7 @@ Per optimitzar el rendiment de les consultes, s'ha creat un índex a la columna 
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.5\textwidth]{Figures/diagrama_bd_filemanager.png.png}
+    \includegraphics[width=0.5\textwidth]{Figures/diagrama_bd_filemanager.png}
     \caption{Diagrama de la base de dades del servei FileManagement.}
     \label{fig:filemgmt_db}
 \end{figure}

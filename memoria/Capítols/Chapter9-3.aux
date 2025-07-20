@@ -1,0 +1,220 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\@writefile{toc}{\contentsline {section}{\numberline {9.6}Implementació del client de escriptori}{191}{section.2430}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.6.1}Introducció}{191}{subsection.2431}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.6.2}Disseny Visual i Gestió de Finestres}{191}{subsection.2432}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Flux Inicial: Configuració i Autenticació}{191}{section*.2433}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.83}{\ignorespaces Finestra de configuració inicial.\relax }}{192}{figure.caption.2434}\protected@file@percent }
+\newlabel{fig:desktop-initial-config-impl}{{9.83}{192}{Finestra de configuració inicial.\relax }{figure.caption.2434}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9.84}{\ignorespaces Diàleg natiu per a la selecció de carpeta.\relax }}{192}{figure.caption.2434}\protected@file@percent }
+\newlabel{fig:desktop-initial-config-select-impl}{{9.84}{192}{Diàleg natiu per a la selecció de carpeta.\relax }{figure.caption.2434}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.86}Comandament per desar la configuració inicial a \texttt  {main.rs}}{192}{lstlisting.2435}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.85}{\ignorespaces Finestra d'inici de sessió del client d'escriptori.\relax }}{193}{figure.caption.2467}\protected@file@percent }
+\newlabel{fig:desktop-login-impl}{{9.85}{193}{Finestra d'inici de sessió del client d'escriptori.\relax }{figure.caption.2467}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.87}Comandament per a l'inici de sessió a \texttt  {main.rs}}{193}{lstlisting.2468}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Interfície Principal i Menú del Sistema}{194}{section*.2500}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.86}{\ignorespaces Finestra principal de transferències.\relax }}{195}{figure.caption.2501}\protected@file@percent }
+\newlabel{fig:desktop-main-impl}{{9.86}{195}{Finestra principal de transferències.\relax }{figure.caption.2501}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9.87}{\ignorespaces Menú de la safata del sistema.\relax }}{196}{figure.caption.2502}\protected@file@percent }
+\newlabel{fig:desktop-tray-impl}{{9.87}{196}{Menú de la safata del sistema.\relax }{figure.caption.2502}{}}
+\@writefile{toc}{\contentsline {subsubsection}{Finestra de Configuració}{196}{section*.2503}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.88}{\ignorespaces Finestra de configuració amb les seves tres pestanyes.\relax }}{196}{figure.caption.2504}\protected@file@percent }
+\newlabel{fig:desktop-config-impl}{{9.88}{196}{Finestra de configuració amb les seves tres pestanyes.\relax }{figure.caption.2504}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.88}Exemple de crida al backend des de Svelte a \texttt  {Connection.svelte}}{197}{lstlisting.2505}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.6.3}Motor de Sincronització: El Nucli Reactiu}{198}{subsection.2529}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.89}Establiment de la connexió WebSocket a \texttt  {synchronizer.rs}}{198}{lstlisting.2530}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Sincronització Local-a-Remot: Vigilant el Sistema d'Arxius}{199}{section*.2559}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.90}Gestió de la descàrrega amb progrés a \texttt  {api.rs}}{199}{lstlisting.2564}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Lògica de Comparació i Detecció de Canvis}{201}{section*.2610}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.91}Lògica de la funció \texttt  {diff\_trees} a \texttt  {fstree.rs}}{201}{lstlisting.2611}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.92}Fragment clau de \texttt  {detect\_renames} a \texttt  {fstree.rs}}{202}{lstlisting.2656}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Sincronització Remot-a-Local: Escoltant el Servidor}{202}{section*.2681}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.93}Processament de missatges WebSocket a \texttt  {synchronizer.rs}}{202}{lstlisting.2682}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.94}Execució concurrent de descàrregues amb \texttt  {join\_all} a \texttt  {synchronizer.rs}}{204}{lstlisting.2730}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.6.4}Proves d'integració manuals}{204}{subsection.2753}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {9.7}Implementació dels sistemes d'instal·lació i desplegament}{205}{section.2754}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.7.1}Desplegament mitjançant Docker Compose}{205}{subsection.2755}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Arquitectura de desplegament}{205}{section*.2756}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Estructura de l'arxiu compose.yml}{206}{section*.2757}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Serveis d'infraestructura}{206}{section*.2758}\protected@file@percent }
+\newlabel{lst:infra-services}{{9.95}{206}{Serveis d'infraestructura a compose.yml}{lstlisting.2759}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.95}Serveis d'infraestructura a compose.yml}{206}{lstlisting.2759}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Registre i enrutament}{207}{section*.2780}\protected@file@percent }
+\newlabel{lst:eureka-gateway}{{9.96}{207}{Definició d'Eureka i Gateway a compose.yml}{lstlisting.2781}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.96}Definició d'Eureka i Gateway a compose.yml}{207}{lstlisting.2781}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Microserveis de negoci}{207}{section*.2806}\protected@file@percent }
+\newlabel{lst:business-service}{{9.97}{207}{Exemple de microservei de negoci a compose.yml}{lstlisting.2807}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.97}Exemple de microservei de negoci a compose.yml}{207}{lstlisting.2807}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Interfície d'usuari}{208}{section*.2818}\protected@file@percent }
+\newlabel{lst:ui-service}{{9.98}{208}{Definició de la UI a compose.yml}{lstlisting.2819}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.98}Definició de la UI a compose.yml}{208}{lstlisting.2819}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Configuració de xarxa i volums}{209}{section*.2833}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.7.2}Scripts d'instal·lació automatitzada}{209}{subsection.2834}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Script per a Linux (setup.sh)}{209}{section*.2835}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Dependències i construcció automàtica}{209}{section*.2836}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Compilació multiplataforma}{210}{section*.2840}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Configuració de credencials}{210}{section*.2843}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Mode de proves amb dades preconfigurades}{211}{section*.2846}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Persistència de la configuració}{211}{section*.2849}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Script per a Windows (setup.ps1)}{212}{section*.2850}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Procés de creació del superadministrador}{212}{section*.2851}\protected@file@percent }
+\@setckpt{Capítols/Chapter9-3}{
+\setcounter{page}{213}
+\setcounter{equation}{0}
+\setcounter{enumi}{2}
+\setcounter{enumii}{0}
+\setcounter{enumiii}{0}
+\setcounter{enumiv}{0}
+\setcounter{footnote}{0}
+\setcounter{mpfootnote}{0}
+\setcounter{part}{0}
+\setcounter{chapter}{9}
+\setcounter{section}{7}
+\setcounter{subsection}{2}
+\setcounter{subsubsection}{0}
+\setcounter{paragraph}{0}
+\setcounter{subparagraph}{0}
+\setcounter{figure}{88}
+\setcounter{table}{0}
+\setcounter{LT@tables}{0}
+\setcounter{LT@chunks}{0}
+\setcounter{caption@flags}{0}
+\setcounter{continuedfloat}{0}
+\setcounter{parentequation}{0}
+\setcounter{subfigure}{0}
+\setcounter{subtable}{0}
+\setcounter{nlinenum}{0}
+\setcounter{AM@survey}{0}
+\setcounter{@todonotes@numberoftodonotes}{0}
+\setcounter{tcbbreakpart}{0}
+\setcounter{tcblayer}{0}
+\setcounter{tcolorbox@number}{0}
+\setcounter{lstnumber}{2}
+\setcounter{tabx@nest}{0}
+\setcounter{listtotal}{0}
+\setcounter{listcount}{0}
+\setcounter{liststart}{0}
+\setcounter{liststop}{0}
+\setcounter{citecount}{0}
+\setcounter{citetotal}{0}
+\setcounter{multicitecount}{0}
+\setcounter{multicitetotal}{0}
+\setcounter{instcount}{15}
+\setcounter{maxnames}{3}
+\setcounter{minnames}{1}
+\setcounter{maxitems}{3}
+\setcounter{minitems}{1}
+\setcounter{citecounter}{0}
+\setcounter{maxcitecounter}{0}
+\setcounter{savedcitecounter}{0}
+\setcounter{uniquelist}{0}
+\setcounter{uniquename}{0}
+\setcounter{refsection}{0}
+\setcounter{refsegment}{0}
+\setcounter{maxextratitle}{0}
+\setcounter{maxextratitleyear}{0}
+\setcounter{maxextraname}{2}
+\setcounter{maxextradate}{0}
+\setcounter{maxextraalpha}{0}
+\setcounter{abbrvpenalty}{50}
+\setcounter{highnamepenalty}{50}
+\setcounter{lownamepenalty}{25}
+\setcounter{maxparens}{3}
+\setcounter{parenlevel}{0}
+\setcounter{blx@maxsection}{0}
+\setcounter{blx@maxsegment@0}{0}
+\setcounter{blx@sectionciteorder@0}{15}
+\setcounter{mincomprange}{10}
+\setcounter{maxcomprange}{100000}
+\setcounter{mincompwidth}{1}
+\setcounter{afterword}{0}
+\setcounter{savedafterword}{0}
+\setcounter{annotator}{0}
+\setcounter{savedannotator}{0}
+\setcounter{author}{0}
+\setcounter{savedauthor}{0}
+\setcounter{bookauthor}{0}
+\setcounter{savedbookauthor}{0}
+\setcounter{commentator}{0}
+\setcounter{savedcommentator}{0}
+\setcounter{editor}{0}
+\setcounter{savededitor}{0}
+\setcounter{editora}{0}
+\setcounter{savededitora}{0}
+\setcounter{editorb}{0}
+\setcounter{savededitorb}{0}
+\setcounter{editorc}{0}
+\setcounter{savededitorc}{0}
+\setcounter{foreword}{0}
+\setcounter{savedforeword}{0}
+\setcounter{holder}{0}
+\setcounter{savedholder}{0}
+\setcounter{introduction}{0}
+\setcounter{savedintroduction}{0}
+\setcounter{namea}{0}
+\setcounter{savednamea}{0}
+\setcounter{nameb}{0}
+\setcounter{savednameb}{0}
+\setcounter{namec}{0}
+\setcounter{savednamec}{0}
+\setcounter{translator}{0}
+\setcounter{savedtranslator}{0}
+\setcounter{shortauthor}{0}
+\setcounter{savedshortauthor}{0}
+\setcounter{shorteditor}{0}
+\setcounter{savedshorteditor}{0}
+\setcounter{labelname}{0}
+\setcounter{savedlabelname}{0}
+\setcounter{institution}{0}
+\setcounter{savedinstitution}{0}
+\setcounter{lista}{0}
+\setcounter{savedlista}{0}
+\setcounter{listb}{0}
+\setcounter{savedlistb}{0}
+\setcounter{listc}{0}
+\setcounter{savedlistc}{0}
+\setcounter{listd}{0}
+\setcounter{savedlistd}{0}
+\setcounter{liste}{0}
+\setcounter{savedliste}{0}
+\setcounter{listf}{0}
+\setcounter{savedlistf}{0}
+\setcounter{location}{0}
+\setcounter{savedlocation}{0}
+\setcounter{organization}{0}
+\setcounter{savedorganization}{0}
+\setcounter{origlocation}{0}
+\setcounter{savedoriglocation}{0}
+\setcounter{origpublisher}{0}
+\setcounter{savedorigpublisher}{0}
+\setcounter{publisher}{0}
+\setcounter{savedpublisher}{0}
+\setcounter{language}{0}
+\setcounter{savedlanguage}{0}
+\setcounter{origlanguage}{0}
+\setcounter{savedoriglanguage}{0}
+\setcounter{pageref}{0}
+\setcounter{savedpageref}{0}
+\setcounter{textcitecount}{0}
+\setcounter{textcitetotal}{0}
+\setcounter{textcitemaxnames}{0}
+\setcounter{biburlbigbreakpenalty}{100}
+\setcounter{biburlbreakpenalty}{200}
+\setcounter{biburlnumpenalty}{0}
+\setcounter{biburlucpenalty}{0}
+\setcounter{biburllcpenalty}{0}
+\setcounter{smartand}{1}
+\setcounter{bbx:relatedcount}{0}
+\setcounter{bbx:relatedtotal}{0}
+\setcounter{cbx@tempcnta}{0}
+\setcounter{cbx@tempcntb}{10}
+\setcounter{cbx@tempcntc}{0}
+\setcounter{cbx@tempcntd}{-1}
+\setcounter{r@tfl@t}{4}
+\setcounter{float@type}{16}
+\setcounter{Item}{93}
+\setcounter{Hfootnote}{0}
+\setcounter{bookmark@seq@number}{191}
+\setcounter{lstlisting}{98}
+\setcounter{section@level}{3}
+}

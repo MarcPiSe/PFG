@@ -1,0 +1,126 @@
+\chapter{Manual d’instal·lació}
+\label{chap:manual_instalacio}
+
+Aquest capítol final serveix com a guia pràctica per a la instal·lació i posada en marxa de tot el sistema en un entorn local. Lluny de ser un manual exhaustiu, pretén descriure els passos essencials que qualsevol usuari tècnic —o un company valent— hauria de seguir per replicar l'entorn de desenvolupament. Per simplificar al màxim aquest procés, s'han creat dos scripts d'automatització, un per a sistemes basats en Unix (`setup.sh`) i un altre per a Windows (`setup.ps1`), que encapsulen tota la complexitat de la compilació, configuració i desplegament dels diferents components que conformen l'arquitectura descrita al Capítol \ref{chap:analisi_disseny}.
+
+\section{Requisits previs}
+Abans d'executar l'script d'instal·lació, és altament recomanable assegurar-se de tenir instal·lades les següents dependències a l'equip. Tot i que els scripts intentaran instal·lar-les automàticament si no les detecten, una instal·lació manual prèvia pot evitar possibles problemes de permisos o de configuració de l'entorn, especialment en sistemes Windows.
+
+\begin{itemize}
+    \item \textbf{Git}: Per clonar el repositori del projecte.
+    \item \textbf{Docker i Docker Compose}: Indispensable per orquestrar i executar l'ecosistema de microserveis en contenidors aïllats.
+    \item \textbf{Java (JDK 17 o superior)}: Necessari per compilar els microserveis del backend desenvolupats amb Spring Boot.
+    \item \textbf{Node.js (v18 o superior) i pnpm}: Per construir la interfície web desenvolupada amb Svelte. L'script instal·larà `pnpm` globalment si no el troba.
+    \item \textbf{Rust i Cargo}: Requerits per compilar l'aplicació d'escriptori desenvolupada amb Tauri.
+\end{itemize}
+
+\section{Procés d'instal·lació automatitzada}
+El procés d'instal·lació s'ha dissenyat per ser el més senzill possible, realitzant-se gairebé íntegrament amb una única comanda.
+
+\subsection{Obtenció del codi font}
+El primer pas és descarregar el codi font del projecte clonant el repositori amb Git i accedir a la carpeta arrel:
+\begin{verbatim}
+git clone <URL_DEL_REPOSITORI>
+cd <NOM_DE_LA_CARPETA_DEL_PROJECTE>
+\end{verbatim}
+
+\subsection{Execució de l'script}
+Un cop a la carpeta arrel, s'ha d'executar l'script corresponent al sistema operatiu amb l'indicador d'instal·lació (\texttt{-i}). És important executar-lo amb privilegis d'administrador, ja que instal·larà dependències i gestionarà contenidors de Docker.
+
+\paragraph{Per a Linux/macOS:}
+\begin{verbatim}
+sudo bash setup.sh -i
+\end{verbatim}
+
+\paragraph{Per a Windows (des d'una terminal PowerShell com a Administrador):}
+\begin{verbatim}
+powershell -ExecutionPolicy Bypass -File .\\setup.ps1 -i
+\end{verbatim}
+
+\paragraph{Mode de dades de prova:}
+Per facilitar les proves de l'aplicació, es pot utilitzar l'opció \texttt{-t} juntament amb \texttt{-i} per iniciar el sistema amb dades preconfigurades (usuaris, carpetes, fitxers i comparticions de mostra):
+
+\begin{verbatim}
+# Linux/macOS
+sudo bash setup.sh -i -t
+
+# Windows
+powershell -ExecutionPolicy Bypass -File .\\setup.ps1 -i -t
+\end{verbatim}
+
+Aquesta comanda iniciarà un procés completament automatitzat que realitzarà les següents accions:
+\begin{enumerate}
+    \item \textbf{Configuració de credencials}: L'script utilitzarà un conjunt de credencials per defecte per als serveis de base de dades (PostgreSQL) i missatgeria (RabbitMQ). Opcionalment, es poden personalitzar passant paràmetres addicionals a la comanda. Totes les credencials, ja siguin les predeterminades o les personalitzades, es desaran en un fitxer `.env` a l'arrel del projecte. És de vital importància no eliminar aquest fitxer, ja que garanteix que les mateixes credencials es reutilitzin en futures execucions.
+    
+    \item \textbf{Instal·lació de dependències}: Comprovarà si les eines necessàries (Docker, Node, Rust) estan instal·lades i, si no ho estan, intentarà instal·lar-les.
+    
+    \item \textbf{Compilació dels projectes}:
+    \begin{itemize}
+        \item Compilarà tots els microserveis del backend (Java) amb Maven.
+        \item Construirà l'aplicació web (Svelte).
+        \item Compilarà l'aplicació d'escriptori (Tauri) i generarà els instal·ladors natius per al sistema operatiu actual, desant-los a la carpeta `/installers` a l'arrel del projecte.
+    \end{itemize}
+
+    \item \textbf{Aixecament dels serveis}: Utilitzarà `docker-compose` per aixecar tota l'arquitectura de serveis del backend en contenidors.
+
+    \item \textbf{Creació del Superadministrador}: Un cop els serveis estiguin actius, l'script sol·licitarà per terminal la creació d'un usuari i contrasenya per al primer compte de Superadministrador, que tindrà control total sobre la plataforma.
+\end{enumerate}
+
+Quan s'utilitza l'opció \texttt{-t}, a més dels passos anteriors, el sistema es configura amb dades de prova predefinides que inclouen usuaris de mostra, carpetes, fitxers i relacions de compartició, permetent provar immediatament totes les funcionalitats sense haver de crear manualment el contingut.
+
+\textbf{Nota sobre les dades de prova:} El mode de proves carrega un conjunt d'usuaris fictius amb carpetes, fitxers i configuracions de compartició preestablertes. Això permet avaluar funcionalitats com la gestió d'arxius, el control d'accés, la compartició entre usuaris i la sincronització sense necessitat de configurar manualment un entorn de proves. Els usuaris de prova creats tenen diferents nivells de permisos per permetre provar tots els aspectes del sistema de control d'accés.
+
+Un cop finalitzat el procés, tot el sistema estarà completament operatiu.
+
+\section{Gestió del sistema}
+Els mateixos scripts permeten realitzar altres tasques de gestió sobre l'entorn desplegat.
+
+\begin{itemize}
+    \item \textbf{Iniciar el sistema}: Si el sistema està aturat, es pot tornar a iniciar amb:
+    \begin{verbatim}
+# Linux/macOS
+sudo bash setup.sh -u
+# Windows
+powershell -File .\\setup.ps1 -u
+\end{verbatim}
+
+    \item \textbf{Aturar el sistema}: Per aturar tots els contenidors:
+    \begin{verbatim}
+# Linux/macOS
+sudo bash setup.sh -d
+# Windows
+powershell -File .\\setup.ps1 -d
+\end{verbatim}
+
+    \item \textbf{Actualitzar el sistema}: Per reconstruir les imatges dels serveis després de canvis en el codi i reiniciar els contenidors:
+    \begin{verbatim}
+# Linux/macOS
+sudo bash setup.sh -b
+# Windows
+powershell -File .\\setup.ps1 -b
+\end{verbatim}
+
+    \item \textbf{Eliminar totes les dades}: Aquesta és una operació destructiva que atura el sistema i elimina permanentment totes les dades (volums de Docker, fitxers emmagatzemats). S'ha d'utilitzar amb precaució.
+    \begin{verbatim}
+# Linux/macOS
+sudo bash setup.sh -r
+# Windows
+powershell -File .\\setup.ps1 -r
+\end{verbatim}
+\end{itemize}
+
+\section{Accés a les aplicacions}
+Un cop el sistema està en funcionament, es pot accedir als diferents components:
+
+\begin{itemize}
+    \item \textbf{Client Web}: La interfície web principal estarà disponible a través del navegador a l'adreça \href{http://localhost:8080}{http://localhost:8080}.
+    
+    \item \textbf{Client d'Escriptori}: S'ha d'anar a la carpeta `/installers` i executar l'instal·lador corresponent al sistema operatiu. Un cop instal·lat, es podrà iniciar l'aplicació de forma nativa.
+    
+    \item \textbf{Eines d'administració del backend}:
+    \begin{itemize}
+        \item \textbf{RabbitMQ Management}: Per monitorar les cues de missatges, disponible a \href{http://localhost:15672}{http://localhost:15672}.
+        \item \textbf{Eureka Server}: Per visualitzar l'estat i el registre de tots els microserveis, disponible a \href{http://localhost:8761}{http://localhost:8761}.
+    \end{itemize}
+    Les credencials per accedir a aquestes eines són les que es van definir durant la instal·lació i que es troben al fitxer `.env`.
+\end{itemize}

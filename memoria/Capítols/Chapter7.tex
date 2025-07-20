@@ -18,7 +18,9 @@ Aquestes directrius em van permetre dissenyar una arquitectura coherent i alinea
 \section{Pila Tecnològica del Backend}
 Per al backend, vaig decidir implementar una arquitectura de microserveis. Aquesta elecció es fonamenta en la necessitat de construir un sistema modular, escalable i fàcil de mantenir, on cada servei tingui una responsabilitat única. Vaig escollit l'ecosistema de Java i Spring per la seva coneguda maduresa, estabilitat i ampli suport en entorns empresarials. 
 
-\subsection{Spring Boot}
+\newcommand{\springlogo}{\includegraphics[height=8ex]{Figures/logos/springboot.png}}
+
+\subsection{\springlogo\hspace{0.5em}Spring Boot}
 \textit{Spring Boot és un framework que simplifica la creació d'aplicacions Java autònomes i llestes per a producció}. Facilita la configuració i el desplegament de microserveis gràcies a la seva filosofia de "convenció sobre configuració" i a la inclusió de servidors web embeguts. 
 
 Abans de prendre una decisió, vaig analitzar alternatives modernes a Spring Boot altament considerades en el desenvolupament de microserveis per la seva eficiència \cite{baeldung-spring-alternatives}. A continuació, es presenta una taula comparativa que resumeix els factors clau.
@@ -69,13 +71,17 @@ Abans de prendre una decisió, vaig analitzar alternatives modernes a Spring Boo
 \paragraph{Justificació de l'elecció}
 Vaig basar la meva elecció principalment en l'experiència prèvia que ja tenia amb l'ecosistema Spring. Aquesta familiaritat em va permetre assolir una alta productivitat des de l'inici del projecte. Tot i que vaig considerar alternatives modernes com Quarkus o Micronaut, que prometen millors temps d'arrencada, la corba d'aprenentatge associada hauria suposat un risc per al compliment dels terminis. Spring Boot representava, doncs, la via més pragmàtica i segura per al meu cas.
 
-\subsection{Spring Data JPA}
+\newcommand{\jpalogo}{\includegraphics[height=8ex]{Figures/logos/springdatajpa.png}}
+
+\subsection{\jpalogo\hspace{0.5em}Spring Data JPA}
 \textit{Spring Data JPA facilita la implementació de la capa de persistència de dades en aplicacions Spring, abstraient gran part del codi necessari per a les operacions de base de dades}. La seva capacitat més destacada és la generació automàtica de consultes a partir de la signatura dels mètodes en una interfície de repositori.
 
 \paragraph{Justificació de l'elecció}
 Vaig adoptar Spring Data JPA per la seva integració nativa i sense fricció amb Spring Boot. L'objectiu era accelerar el desenvolupament de la capa de dades, i la seva capacitat per generar repositoris em permetia eliminar una gran quantitat de codi repetitiu en comparació amb l'ús de JPA estàndard o JDBC. A més, en fomentar l'ús de consultes parametritzades de manera inherent, proporciona una capa de seguretat fonamental en prevenir atacs de tipus injecció SQL, un requisit indispensable per garantir la integritat de les dades segons el RGPD.
 
-\subsection{PostgreSQL}
+\newcommand{\postgresslogo}{\includegraphics[height=8ex]{Figures/logos/PostgreSQL.png}}
+
+\subsection{\postgresslogo\hspace{0.5em}PostgreSQL}
 \textit{PostgreSQL és un sistema de gestió de bases de dades relacional d'objectes, reconegut per la seva robustesa, extensibilitat i compliment estricte de l'estàndard SQL i les propietats ACID}.
 
 Per a la selecció del sistema de gestió de bases de dades, vaig comparar les opcions més consolidades del mercat \cite{dbengines-comparison}, tenint en compte tant requisits tècnics com factors pràctics.
@@ -127,10 +133,13 @@ Per a la selecció del sistema de gestió de bases de dades, vaig comparar les o
 \paragraph{Justificació de l'elecció}
 Vaig escollir PostgreSQL no només per la seva reputació com a base de dades fiable i de codi obert, sinó també perquè és el sistema amb el qual tinc més experiència, la qual cosa em va permetre ser més productiu. A més, la seva coneguda robustesa en la gestió de rols i permisos s'alineava perfectament amb les exigències del RGPD per assegurar la confidencialitat i la integritat de les dades dels usuaris, sent aquest un factor clau en la decisió.
 
+\FloatBarrier
 \subsection{Ecosistema Spring Cloud}
 Una arquitectura de microserveis requereix un conjunt d'eines per gestionar la comunicació, el descobriment i l'enrutament de serveis. Vaig optar per la suite de Spring Cloud per garantir una \textbf{màxima cohesió i compatibilitat}, ja que les seves eines estan dissenyades per funcionar conjuntament de manera nativa.
 
-\subsubsection{Spring Cloud Gateway}
+\newcommand{\gatewaylogo}{\includegraphics[height=8ex]{Figures/logos/SpringCloudGateway.png}}
+
+\subsubsection{\gatewaylogo\hspace{0.5em}Spring Cloud Gateway}
 \textit{Spring Cloud Gateway actua com la porta d'enllaç (API Gateway) del sistema.} La seva funció principal és ser l'únic punt d'entrada per a totes les peticions externes. Aquesta centralització és clau per a la seguretat i l'organització de l'arquitectura.
 
 \paragraph{Justificació i ús en el projecte}
@@ -141,7 +150,9 @@ En aquest projecte, el Gateway s'encarrega de:
 \end{itemize}
 L'elecció del Gateway va ser fonamental per crear una barrera de seguretat robusta i mantenir l'ordre en un sistema distribuït.
 
-\subsubsection{Eureka}
+\newcommand{\eureka}{\includegraphics[height=4ex]{Figures/logos/eureka.png}}
+
+\subsubsection{\eureka\hspace{0.5em}Eureka}
 \textit{Eureka és un servidor de descobriment de serveis (Service Discovery).} En un entorn de microserveis, les instàncies poden aparèixer i desaparèixer dinàmicament. Eureka soluciona el problema de com un servei pot trobar la ubicació de xarxa (IP i port) d'un altre.
 
 \paragraph{Justificació i ús en el projecte}
@@ -162,13 +173,17 @@ En lloc d'escriure manualment el codi per a peticions HTTP, OpenFeign ho automat
 \end{itemize}
 L'ús d'OpenFeign va accelerar el desenvolupament i va millorar la mantenibilitat del codi de comunicació interna.
 
-\subsection{Spring Security}
+\newcommand{\springsecurity}{\includegraphics[height=8ex]{Figures/logos/springSecurity.png}}
+
+\subsection{\springsecurity\hspace{0.5em}Spring Security}
 \textit{Spring Security és un framework potent i altament personalitzable que proporciona funcionalitats d'autenticació i control d'accés per a aplicacions Java.}
 
 \paragraph{Justificació de l'elecció}
 La implementació d'un sistema d'autenticació robust era un requisit no funcional crític, directament lligat al compliment del RGPD. Vaig escollit Spring Security per la seva maduresa i la seva integració completa amb Spring Boot. La seva implementació en el servei \texttt{UserAuthentication}, juntament amb el filtre del gateway, em va permetre configurar un flux d'autenticació segur basat en JWT, amb emmagatzematge de contrasenyes mitjançant l'algorisme BCrypt, garantint que les dades d'accés dels usuaris estiguin protegides en tot moment.
 
-\subsection{RabbitMQ}
+\newcommand{\rabbit}{\includegraphics[height=8ex]{Figures/logos/rabbitmq.png}}
+
+\subsection{\rabbit\hspace{0.5em}RabbitMQ}
 \textit{RabbitMQ és un intermediari de missatges (message broker) que implementa el protocol AMQP, dissenyat per gestionar la comunicació asíncrona entre diferents components d'un sistema}.
 
 Per a la comunicació asíncrona, vaig avaluar dos dels intermediaris de missatges més populars \cite{cloudamqp-rabbitmq-kafka}.
@@ -213,7 +228,9 @@ L'objectiu no era aplicar la comunicació asíncrona a tot el sistema, sinó uti
 \section{Pila Tecnològica del Frontend Web}
 Per al client web, necessitava una solució moderna que permetés construir una interfície d'usuari interactiva i eficient.
 
-\subsection{React}
+\newcommand{\react}{\includegraphics[height=8ex]{Figures/logos/react.jpeg}}
+
+\subsection{\react\hspace{0.5em}React}
 \textit{React és una biblioteca de JavaScript per construir interfícies d'usuari, basada en un model de components reutilitzables i un flux de dades unidireccional}. El seu ús del \textit{Virtual DOM} optimitza les actualitzacions de la interfície i millora el rendiment en aplicacions complexes.
 
 A l'hora de seleccionar la tecnologia per al frontend, vaig comparar les biblioteques i frameworks més rellevants del mercat.
@@ -265,13 +282,18 @@ A l'hora de seleccionar la tecnologia per al frontend, vaig comparar les bibliot
 \paragraph{Justificació de l'elecció}
 L'elecció de React, tot i basar-se en una familiaritat prèvia, no va ser una decisió superficial. Més enllà de l'experiència inicial, vaig valorar positivament la seva \textbf{flexibilitat} i el seu \textbf{enfocament en el rendiment}. L'arquitectura basada en components i l'ús del Virtual DOM s'alineaven amb el meu objectiu de construir una interfície eficient i modular. A diferència d'Angular, que imposa una estructura més rígida, React em proporcionava la llibertat de seleccionar les millors eines per a cada necessitat específica (com React Query per a l'estat del servidor i Zustand per a l'estat global). A més, el seu vast ecosistema de llibreries i el gran suport de la comunitat em donava la confiança necessària per afrontar els reptes del projecte, sabent que disposaria de solucions provades per la indústria.
 
-\subsection{React Query (TanStack Query)}
+\FloatBarrier
+\newcommand{\reactquery}{\includegraphics[height=8ex]{Figures/logos/reactQuery.png}}
+
+\subsection{\reactquery\hspace{0.5em}React Query (TanStack Query)}
 \textit{React Query és una llibreria per a la gestió de l'estat del servidor (server state) en aplicacions React}. S'encarrega de la consulta, la gestió de memòria cache i la sincronització de dades amb fonts externes com una API.
 
 \paragraph{Justificació de l'elecció}
 Per a la comunicació amb el backend, vaig voler evitar la gestió manual de l'estat de les dades amb \textit{hooks} com \texttt{useState} i \texttt{useEffect}, ja que pot portar a codi complex i propens a errors. Vaig triar React Query amb la intenció de disposar d'una solució més robusta i declarativa. El meu objectiu en adoptar-la era simplificar la lògica de peticions asíncrones, millorar l'experiència d'usuari amb estratègies de memòria cache intel·ligents i, en definitiva, mantenir la interfície sincronitzada amb el backend de manera eficient.
 
-\subsection{Zustand}
+\newcommand{\zustand}{\includegraphics[height=8ex]{Figures/logos/zustand.png}}
+
+\subsection{\zustand\hspace{0.5em}Zustand}
 \textit{Zustand és una llibreria minimalista per a la gestió d'estat global (client state) en React, basada en una API senzilla de hooks}.
 
 \paragraph{Justificació de l'elecció}
@@ -281,10 +303,28 @@ Per l'estat global de la interfície (elements no dependents del servidor, com l
 Per al client d'escriptori, el requisit principal era aconseguir una aplicació multiplataforma que fos nativa en rendiment i consum de recursos.
 
 \subsection{Tauri i Svelte}
-\textit{Tauri és un framework que permet construir aplicacions d'escriptori utilitzant tecnologies web per a la interfície i un backend natiu escrit en Rust}. \textit{Svelte, per la seva banda, és un compilador que transforma components d'interfície en codi JavaScript imperatiu altament optimitzat}.
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.5\textwidth}
+        \centering
+        \includegraphics[width=0.5\linewidth]{Figures/logos/tauri.png}
+        \caption{Logo tauri.}
+        \label{fig:react-login-impl}
+    \end{minipage}\hfill
+    \begin{minipage}{0.5\textwidth}
+        \centering
+        \includegraphics[width=0.5\linewidth]{Figures/logos/svelte.png}
+        \caption{Logo svelte.}
+        \label{fig:react-registre-impl}
+    \end{minipage}
+\end{figure}
+\textit{Tauri és un framework que permet construir aplicacions d'escriptori utilitzant tecnologies web per a la interfície i un backend natiu escrit en Rust}. 
+\textit{Svelte, per la seva banda, és un compilador que transforma components d'interfície en codi JavaScript imperatiu altament optimitzat}.
 
 \paragraph{Justificació de l'elecció}
 La meva decisió clau en aquest àmbit va ser \textbf{prioritzar el rendiment i la lleugeresa}. Vaig descartar l'alternativa més estesa, Electron, a causa del seu conegut alt consum de memòria i la gran mida dels binaris que genera. Vaig escollit \textbf{Tauri} perquè la seva arquitectura, basada en la \textit{WebView} nativa del sistema operatiu, em permetia crear una aplicació molt més eficient i amb una mida final significativament menor.
+
+Una de les capacitats clau implementades a Rust és la monitorització del sistema d'arxius local mitjançant la llibreria \texttt{notify}. Aquesta eina permet detectar en temps real qualsevol canvi que es produeixi a la carpeta sincronitzada (creació, modificació o eliminació de fitxers i directoris). Quan es detecta un esdeveniment, el backend de Rust ho comunica a la interfície i inicia el procés de sincronització amb el servidor, garantint així que l'estat local i remot es mantinguin sempre consistents, una funcionalitat essencial per a una experiència d'usuari fluida i fiable.
 
 De manera complementària, per a la interfície d'aquesta aplicació d'escriptori, vaig optar per \textbf{Svelte} en lloc de React. Atès que Svelte és un compilador, genera un codi final molt més petit i eficient, sense la sobrecàrrega d'un DOM virtual en temps d'execució. Aquesta combinació de Tauri i Svelte em sembla la idònia per assolir el meu objectiu d'una aplicació d'escriptori ràpida, lleugera i amb una experiència d'usuari fluida.
 

@@ -1,0 +1,351 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\@writefile{toc}{\contentsline {chapter}{\numberline {9}Implementació i proves}{86}{chapter.292}\protected@file@percent }
+\@writefile{lof}{\addvspace {10\p@ }}
+\@writefile{lot}{\addvspace {10\p@ }}
+\@writefile{toc}{\contentsline {section}{\numberline {9.1}Visió general de la implementació}{86}{section.293}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {9.2}Entorn de desenvolupament i desplegament}{87}{section.294}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.1}Fragment del fitxer `compose.yml` definint un servei}{87}{lstlisting.295}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {9.3}Implementació del backend}{88}{section.306}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.3.1}Gateway i filtre de JWT}{88}{subsection.307}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.2}Exemples de definició de rutes a `GatewayConfig`}{88}{lstlisting.308}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.3}Implementació del filtre `JwtAuthenticationFilter`}{89}{lstlisting.322}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.3.2}Gestió d'usuaris i autenticació}{91}{subsection.390}\protected@file@percent }
+\newlabel{lst:exception_handlers_user_controller}{{9.4}{92}{Exemple de gestors d'excepcions al UserController}{lstlisting.391}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.4}Exemple de gestors d'excepcions al UserController.}{92}{lstlisting.391}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{UC-01: Registrar-se}{92}{section*.404}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.1}{\ignorespaces Flux de dades per al registre d'un nou usuari (UC-01).\relax }}{93}{figure.caption.405}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.5}Endpoint de registre a `AuthenticationController`}{93}{lstlisting.406}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{UC-02: Iniciar sessió}{94}{section*.423}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.2}{\ignorespaces Flux de dades per a l'inici de sessió (UC-02).\relax }}{94}{figure.caption.424}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.6}Endpoint de login a `AuthenticationController`}{94}{lstlisting.425}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.7}Generació de tokens a la classe `JwtTokenUtil`}{94}{lstlisting.434}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{UC-15: Canviar contrasenya}{95}{section*.443}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.3}{\ignorespaces Flux de dades per al canvi de contrasenya (UC-15).\relax }}{95}{figure.caption.444}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.8}Implementació del canvi de contrasenya a UserService}{95}{lstlisting.445}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{UC-16 i UC-07: Eliminació de comptes d'usuari}{96}{section*.458}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.4}{\ignorespaces Flux de dades centralitzat per a l'eliminació d'un compte (UC-16).\relax }}{96}{figure.caption.459}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.9}Rutes d'eliminació a `GatewayConfig.java`}{96}{lstlisting.460}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.10}Inici del procés d'eliminació a `UserDeletionService`}{97}{lstlisting.476}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.3.3}Gestió d'arxius (FileManagement)}{99}{subsection.502}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{UC-08: Crear i pujar elements}{99}{section*.503}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.5}{\ignorespaces Flux del cas d'us UC-08.\relax }}{100}{figure.caption.504}\protected@file@percent }
+\newlabel{fig:c08-flow}{{9.5}{100}{Flux del cas d'us UC-08.\relax }{figure.caption.504}{}}
+\@writefile{toc}{\contentsline {paragraph}{Endpoint Multipart per al client web.}{100}{section*.505}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.11}Endpoint per a la creació d'elements amb `MultipartFile` a `ElementController`}{100}{lstlisting.506}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Endpoint de Streaming per al client d'escriptori.}{101}{section*.553}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.12}Endpoint per a la pujada de fitxers amb `InputStream` a `ElementController`}{101}{lstlisting.554}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Estratègia d'emmagatzematge i ofuscació.}{103}{section*.600}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{UC-09: Modificar elements}{103}{section*.603}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{UC-09A: Renomenar un element}{103}{section*.604}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.13}Endpoint per a l'actualització de metadades a `ElementController`}{104}{lstlisting.606}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{UC-09B: Moure un element}{105}{section*.629}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.14}Endpoint específic per moure un element a `ElementController`}{105}{lstlisting.631}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.15}Validació de dependències circulars a `FolderService`}{106}{lstlisting.654}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{UC-09C: Copiar un element}{107}{section*.682}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.6}{\ignorespaces Flux de dades per copiar un element, destacat la doble validació de permisos i la naturalesa recursiva del procés.\relax }}{107}{figure.caption.683}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.16}Endpoint per a la còpia d'elements a `ElementController`}{107}{lstlisting.684}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.17}Lògica de còpia recursiva a `FolderService`}{108}{lstlisting.712}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{UC-10: Descarregar elements}{109}{section*.731}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.18}Endpoint per a la descàrrega d'elements a `ElementController`}{109}{lstlisting.736}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.3.4}Compartició (FileSharing)}{110}{subsection.759}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.19}Gestió de permisos en crear un fitxer a `FileService`}{111}{lstlisting.760}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{UC-13: Compartir un element}{111}{section*.772}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.20}Lògica per determinar si una compartició és arrel a `FileSharingService`}{112}{lstlisting.778}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.21}Lògica principal per compartir un element a `FileSharingService`}{112}{lstlisting.791}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.7}{\ignorespaces Diagrama de flux per obtenir la carpeta virtual d'elements compartits.\relax }}{114}{figure.caption.823}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.22}Endpoint per obtenir la carpeta arrel compartida a `FileSharingController`}{114}{lstlisting.824}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.23}Construcció de la carpeta virtual d'elements compartits a `FileSharingService`}{114}{lstlisting.830}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{UC-13A i UC-13B: Revocar accés i Deixar de compartir}{115}{section*.857}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.8}{\ignorespaces Diagrama de flux per revocar o deixar de seguir un element (UC-13A/B).\relax }}{115}{figure.caption.858}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.24}Lògica per revocar un accés a `FileSharingService`}{116}{lstlisting.863}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.3.5}Papelera i eliminació asíncrona (TrashService)}{117}{subsection.889}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{UC-11 i UC-17: Borrat lògic i restauració d'elements}{117}{section*.890}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.25}Mètode per moure un element a la paperera a `TrashService`}{117}{lstlisting.894}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{UC-12: Eliminació permanent i orquestració asíncrona}{118}{section*.922}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.26}Inici de l'eliminació permanent a `TrashService`}{119}{lstlisting.925}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.27}Lògica de processament de pendents a `TrashService`}{120}{lstlisting.950}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.28}Receptor de confirmacions a `TrashService`}{120}{lstlisting.967}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.3.6}Servei de sincronització (SyncService)}{121}{subsection.976}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Flux de connexió WebSocket}{121}{section*.977}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.29}Configuració del WebSocket a `SyncService`}{121}{lstlisting.979}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.30}Interceptor per extreure IDs d'usuari a `UserIdHandshakeInterceptor`}{122}{lstlisting.1003}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.31}Exclusió de la connexió origen a `RawWebSocketHandler`}{123}{lstlisting.1020}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Processament d'esdeveniments i actualització de l'estat}{123}{section*.1034}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.32}Listener de RabbitMQ per processar comandes a `Receiver`}{123}{lstlisting.1035}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.33}Recàlcul recursiu de hashes a `SnapshotService`}{124}{lstlisting.1053}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Estratègies de difusió i punts clau}{124}{section*.1080}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.34}Enviament del snapshot complet al client d'escriptori a `WebSocketService`}{125}{lstlisting.1081}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.35}Enviament d'una comanda de refresc al client web a `WebSocketService`}{125}{lstlisting.1093}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.3.7}Refactor del codi}{126}{subsection.1115}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {9.4}Implementació del client web}{127}{section.1116}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.4.1}Introducció}{127}{subsection.1117}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Estructura de directoris del client web}{127}{section*.1118}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.4.2}Disseny Visual i Components de la Interfície}{129}{subsection.1119}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Autenticació}{129}{section*.1120}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.9}{\ignorespaces Pantalla d'inici de sessió.\relax }}{129}{figure.caption.1121}\protected@file@percent }
+\newlabel{fig:react-login-impl}{{9.9}{129}{Pantalla d'inici de sessió.\relax }{figure.caption.1121}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9.10}{\ignorespaces Pantalla de registre.\relax }}{129}{figure.caption.1121}\protected@file@percent }
+\newlabel{fig:react-registre-impl}{{9.10}{129}{Pantalla de registre.\relax }{figure.caption.1121}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9.11}{\ignorespaces Exemple de validació nativa del navegador en el formulari de registre.\relax }}{129}{figure.caption.1122}\protected@file@percent }
+\newlabel{fig:react-error-signup-impl}{{9.11}{129}{Exemple de validació nativa del navegador en el formulari de registre.\relax }{figure.caption.1122}{}}
+\@writefile{toc}{\contentsline {subsubsection}{Escriptori Principal i Navegació}{130}{section*.1123}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.12}{\ignorespaces Detall de l'arbre de navegació.\relax }}{130}{figure.caption.1124}\protected@file@percent }
+\newlabel{fig:react-arbre-carpetes-impl}{{9.12}{130}{Detall de l'arbre de navegació.\relax }{figure.caption.1124}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9.13}{\ignorespaces Diàleg del sistema per a la selecció d'arxius.\relax }}{130}{figure.caption.1125}\protected@file@percent }
+\newlabel{fig:react-upload-file-impl}{{9.13}{130}{Diàleg del sistema per a la selecció d'arxius.\relax }{figure.caption.1125}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9.14}{\ignorespaces Notificació emergent o toast.\relax }}{130}{figure.caption.1125}\protected@file@percent }
+\newlabel{fig:react-notification-impl}{{9.14}{130}{Notificació emergent o toast.\relax }{figure.caption.1125}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9.15}{\ignorespaces Modal de configuració del perfil d'usuari.\relax }}{131}{figure.caption.1126}\protected@file@percent }
+\newlabel{fig:react-user-settings-impl}{{9.15}{131}{Modal de configuració del perfil d'usuari.\relax }{figure.caption.1126}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9.16}{\ignorespaces Vista per a un usuari estàndard.\relax }}{131}{figure.caption.1126}\protected@file@percent }
+\newlabel{fig:react-user-settings-user-impl}{{9.16}{131}{Vista per a un usuari estàndard.\relax }{figure.caption.1126}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9.17}{\ignorespaces Modal de configuració del perfil, amb vistes diferenciades per rol.\relax }}{131}{figure.caption.1126}\protected@file@percent }
+\newlabel{fig:react-user-settings-impl}{{9.17}{131}{Modal de configuració del perfil, amb vistes diferenciades per rol.\relax }{figure.caption.1126}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9.18}{\ignorespaces Diàleg modal per a la creació d'una nova carpeta.\relax }}{131}{figure.caption.1127}\protected@file@percent }
+\newlabel{fig:react-new-folder-impl}{{9.18}{131}{Diàleg modal per a la creació d'una nova carpeta.\relax }{figure.caption.1127}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9.19}{\ignorespaces Ordenar.\relax }}{132}{figure.caption.1128}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.20}{\ignorespaces Panell admin.\relax }}{132}{figure.caption.1128}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.21}{\ignorespaces Configuració.\relax }}{132}{figure.caption.1128}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.22}{\ignorespaces Tancar sessió.\relax }}{132}{figure.caption.1128}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.23}{\ignorespaces Controls globals de l'aplicació.\relax }}{132}{figure.caption.1128}\protected@file@percent }
+\newlabel{fig:react-global-controls-impl}{{9.23}{132}{Controls globals de l'aplicació.\relax }{figure.caption.1128}{}}
+\@writefile{toc}{\contentsline {subsubsection}{Interacció amb Elements}{132}{section*.1129}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.24}{\ignorespaces Clic dret.\relax }}{132}{figure.caption.1130}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.25}{\ignorespaces Botó d'opcions.\relax }}{132}{figure.caption.1130}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.26}{\ignorespaces Opcions a l'arrel.\relax }}{132}{figure.caption.1130}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.27}{\ignorespaces Menú contextual dinàmic.\relax }}{132}{figure.caption.1130}\protected@file@percent }
+\newlabel{fig:react-context-menu-impl}{{9.27}{132}{Menú contextual dinàmic.\relax }{figure.caption.1130}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9.28}{\ignorespaces Selecció múltiple.\relax }}{133}{figure.caption.1131}\protected@file@percent }
+\newlabel{fig:react-selection-impl}{{9.28}{133}{Selecció múltiple.\relax }{figure.caption.1131}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9.29}{\ignorespaces Feedback visual de "Tallar".\relax }}{133}{figure.caption.1131}\protected@file@percent }
+\newlabel{fig:react-cut-impl}{{9.29}{133}{Feedback visual de "Tallar".\relax }{figure.caption.1131}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9.30}{\ignorespaces Panell de detalls.\relax }}{133}{figure.caption.1131}\protected@file@percent }
+\newlabel{fig:react-details-impl}{{9.30}{133}{Panell de detalls.\relax }{figure.caption.1131}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9.31}{\ignorespaces Diàleg per canviar el nom d'un element.\relax }}{134}{figure.caption.1132}\protected@file@percent }
+\newlabel{fig:react-rename-impl}{{9.31}{134}{Diàleg per canviar el nom d'un element.\relax }{figure.caption.1132}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9.32}{\ignorespaces Vista inicial.\relax }}{134}{figure.caption.1133}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.33}{\ignorespaces Vista amb carpeta desplegada.\relax }}{134}{figure.caption.1133}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.34}{\ignorespaces Modal per moure elements.\relax }}{134}{figure.caption.1133}\protected@file@percent }
+\newlabel{fig:react-move-impl}{{9.34}{134}{Modal per moure elements.\relax }{figure.caption.1133}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9.35}{\ignorespaces Vista principal.\relax }}{135}{figure.caption.1134}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.36}{\ignorespaces Cerca d'usuaris.\relax }}{135}{figure.caption.1134}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.37}{\ignorespaces Modal de compartició d'arxius.\relax }}{135}{figure.caption.1134}\protected@file@percent }
+\newlabel{fig:react-share-impl}{{9.37}{135}{Modal de compartició d'arxius.\relax }{figure.caption.1134}{}}
+\@writefile{toc}{\contentsline {subsubsection}{Seccions Específiques}{135}{section*.1135}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.38}{\ignorespaces Menú contextual a la secció "Compartit amb mi".\relax }}{135}{figure.caption.1137}\protected@file@percent }
+\newlabel{fig:react-shared-options-impl}{{9.38}{135}{Menú contextual a la secció "Compartit amb mi".\relax }{figure.caption.1137}{}}
+\@writefile{toc}{\contentsline {paragraph}{Elements Compartits}{135}{figure.caption.1137}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Paperera}{136}{section*.1138}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.39}{\ignorespaces Opcions contextuals de la paperera.\relax }}{136}{figure.caption.1139}\protected@file@percent }
+\newlabel{fig:react-trash-impl}{{9.39}{136}{Opcions contextuals de la paperera.\relax }{figure.caption.1139}{}}
+\@writefile{toc}{\contentsline {paragraph}{Panell d'Administració}{136}{section*.1140}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.40}{\ignorespaces Panell d'administració d'usuaris.\relax }}{136}{figure.caption.1141}\protected@file@percent }
+\newlabel{fig:react-admin-impl}{{9.40}{136}{Panell d'administració d'usuaris.\relax }{figure.caption.1141}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9.41}{\ignorespaces Diàleg per a l'edició d'un usuari des del panell d'administració (vista SUPER\_ADMIN).\relax }}{137}{figure.caption.1142}\protected@file@percent }
+\newlabel{fig:react-edit-user-admin-impl}{{9.41}{137}{Diàleg per a l'edició d'un usuari des del panell d'administració (vista SUPER\_ADMIN).\relax }{figure.caption.1142}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9.42}{\ignorespaces Botó d'eliminació actiu.\relax }}{137}{figure.caption.1143}\protected@file@percent }
+\newlabel{fig:react-delete-valid-impl}{{9.42}{137}{Botó d'eliminació actiu.\relax }{figure.caption.1143}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9.43}{\ignorespaces Botó d'eliminació desactivat.\relax }}{137}{figure.caption.1143}\protected@file@percent }
+\newlabel{fig:react-delete-invalid-impl}{{9.43}{137}{Botó d'eliminació desactivat.\relax }{figure.caption.1143}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9.44}{\ignorespaces Comportament dinàmic del botó d'eliminació.\relax }}{137}{figure.caption.1143}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9.45}{\ignorespaces Diàleg de confirmació per a l'eliminació d'un usuari.\relax }}{138}{figure.caption.1144}\protected@file@percent }
+\newlabel{fig:react-delete-confirm-impl}{{9.45}{138}{Diàleg de confirmació per a l'eliminació d'un usuari.\relax }{figure.caption.1144}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.4.3}Implementació per Casos d'Ús}{138}{subsection.1145}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Gestió d'Usuaris}{138}{section*.1146}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{UC-01: Registre d'Usuari \& UC-02: Inici de Sessió}{138}{section*.1147}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.36}Fragment de la funció `login` al hook `userAuth.tsx`}{139}{lstlisting.1148}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.37}Interceptor d'Axios per a la renovació automàtica de tokens a \texttt  {api.ts}}{139}{lstlisting.1170}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{UC-03: Tancament de Sessió}{140}{section*.1210}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.38}Fragment del component `Header` amb el botó de logout}{141}{lstlisting.1211}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.39}Funció `logoutEndpoint` al hook `userAuth.tsx`}{141}{lstlisting.1228}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{UC-04: Modificar Perfil \& UC-05: Eliminar Compte}{141}{section*.1246}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.40}Ús de `useDebounce` per a la validació a `UserSettings/index.tsx`}{142}{lstlisting.1247}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.41}Orquestració de les crides a l'API a `UserSettings/index.tsx`}{142}{lstlisting.1270}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.42}Mètodes del `userService` a `lib/api.ts`}{143}{lstlisting.1294}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Gestió d'Administració}{143}{section*.1310}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{UC-06, UC-07, UC-15, UC-16: Panell d'Administració}{143}{section*.1311}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.43}Renderitzat condicional del botó d'administració}{143}{lstlisting.1312}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.44}Renderitzat condicional del panell d'administració a `AppLayout`}{144}{lstlisting.1320}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.45}Control d'accés per a la modificació de rols}{144}{lstlisting.1336}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.46}Gestió d'operacions administratives}{145}{lstlisting.1353}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.4.4}Gestió d'Arxius}{146}{subsection.1384}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{UC-08: Crear o Pujar Arxius i Carpetes}{146}{section*.1385}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.47}Activació de la pujada de carpetes a `AddButton/index.tsx`}{146}{lstlisting.1386}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.48}Implementacio d'una mutacio optimista a `useFileOperations.ts`}{147}{lstlisting.1422}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{UC-09A/B/C: Operacions amb Arxius (Renomenar, Moure, Copiar)}{148}{section*.1466}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.49}Estils dinàmics del component `File` a `index.tsx`}{149}{lstlisting.1467}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.50}Implementació dels hooks `useIsItemSelected` i `useIsCutFile` a `fileSelectionStore.ts`}{149}{lstlisting.1486}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.51}Gestió del Drag \& Drop a `FileManager/index.tsx`}{150}{lstlisting.1499}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.52}Gestió de dreceres de teclat a `useFileShortcuts.ts`}{151}{lstlisting.1531}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{UC-10: Eliminar Arxiu (Moure a la Paperera)}{152}{section*.1575}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.53}Gestió de la tecla Delete a `useFileShortcuts.ts`}{152}{lstlisting.1576}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.54}Lògica dual de la mutació d'eliminació a `useFileOperations.ts`}{153}{lstlisting.1586}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.4.5}Compartició d'Arxius}{153}{subsection.1614}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{UC-13, UC-13A, UC-13B: Compartir, Deixar de Compartir i Veure Compartits}{153}{section*.1615}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.55}Navegació entre seccions a `FileDirectorySidebar/index.tsx`}{154}{lstlisting.1616}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.56}Gestió del directori actual amb `useQuery` a `useFileOperations.ts`}{154}{lstlisting.1642}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.57}Navegació per doble clic a `File/index.tsx`}{155}{lstlisting.1666}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.58}Lògica de comparació de permisos a `FileManager/index.tsx`}{156}{lstlisting.1674}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.59}Funció per compartir amb un usuari a `useShareManager.ts`}{156}{lstlisting.1706}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9.60}Renderitzat condicional de les opcions del menú a `FileManagerContextMenu/index.tsx`}{157}{lstlisting.1723}\protected@file@percent }
+\@setckpt{Capítols/Chapter9}{
+\setcounter{page}{159}
+\setcounter{equation}{0}
+\setcounter{enumi}{3}
+\setcounter{enumii}{0}
+\setcounter{enumiii}{0}
+\setcounter{enumiv}{0}
+\setcounter{footnote}{0}
+\setcounter{mpfootnote}{0}
+\setcounter{part}{0}
+\setcounter{chapter}{9}
+\setcounter{section}{4}
+\setcounter{subsection}{5}
+\setcounter{subsubsection}{0}
+\setcounter{paragraph}{0}
+\setcounter{subparagraph}{0}
+\setcounter{figure}{45}
+\setcounter{table}{0}
+\setcounter{LT@tables}{0}
+\setcounter{LT@chunks}{0}
+\setcounter{caption@flags}{0}
+\setcounter{continuedfloat}{0}
+\setcounter{parentequation}{0}
+\setcounter{subfigure}{0}
+\setcounter{subtable}{0}
+\setcounter{nlinenum}{0}
+\setcounter{AM@survey}{0}
+\setcounter{@todonotes@numberoftodonotes}{0}
+\setcounter{tcbbreakpart}{0}
+\setcounter{tcblayer}{0}
+\setcounter{tcolorbox@number}{0}
+\setcounter{lstnumber}{50}
+\setcounter{tabx@nest}{0}
+\setcounter{listtotal}{0}
+\setcounter{listcount}{0}
+\setcounter{liststart}{0}
+\setcounter{liststop}{0}
+\setcounter{citecount}{0}
+\setcounter{citetotal}{0}
+\setcounter{multicitecount}{0}
+\setcounter{multicitetotal}{0}
+\setcounter{instcount}{0}
+\setcounter{maxnames}{3}
+\setcounter{minnames}{1}
+\setcounter{maxitems}{3}
+\setcounter{minitems}{1}
+\setcounter{citecounter}{0}
+\setcounter{maxcitecounter}{0}
+\setcounter{savedcitecounter}{0}
+\setcounter{uniquelist}{0}
+\setcounter{uniquename}{0}
+\setcounter{refsection}{0}
+\setcounter{refsegment}{0}
+\setcounter{maxextratitle}{0}
+\setcounter{maxextratitleyear}{0}
+\setcounter{maxextraname}{0}
+\setcounter{maxextradate}{0}
+\setcounter{maxextraalpha}{0}
+\setcounter{abbrvpenalty}{50}
+\setcounter{highnamepenalty}{50}
+\setcounter{lownamepenalty}{25}
+\setcounter{maxparens}{3}
+\setcounter{parenlevel}{0}
+\setcounter{blx@maxsection}{0}
+\setcounter{blx@maxsegment@0}{0}
+\setcounter{blx@sectionciteorder@0}{9}
+\setcounter{mincomprange}{10}
+\setcounter{maxcomprange}{100000}
+\setcounter{mincompwidth}{1}
+\setcounter{afterword}{0}
+\setcounter{savedafterword}{0}
+\setcounter{annotator}{0}
+\setcounter{savedannotator}{0}
+\setcounter{author}{0}
+\setcounter{savedauthor}{0}
+\setcounter{bookauthor}{0}
+\setcounter{savedbookauthor}{0}
+\setcounter{commentator}{0}
+\setcounter{savedcommentator}{0}
+\setcounter{editor}{0}
+\setcounter{savededitor}{0}
+\setcounter{editora}{0}
+\setcounter{savededitora}{0}
+\setcounter{editorb}{0}
+\setcounter{savededitorb}{0}
+\setcounter{editorc}{0}
+\setcounter{savededitorc}{0}
+\setcounter{foreword}{0}
+\setcounter{savedforeword}{0}
+\setcounter{holder}{0}
+\setcounter{savedholder}{0}
+\setcounter{introduction}{0}
+\setcounter{savedintroduction}{0}
+\setcounter{namea}{0}
+\setcounter{savednamea}{0}
+\setcounter{nameb}{0}
+\setcounter{savednameb}{0}
+\setcounter{namec}{0}
+\setcounter{savednamec}{0}
+\setcounter{translator}{0}
+\setcounter{savedtranslator}{0}
+\setcounter{shortauthor}{0}
+\setcounter{savedshortauthor}{0}
+\setcounter{shorteditor}{0}
+\setcounter{savedshorteditor}{0}
+\setcounter{labelname}{0}
+\setcounter{savedlabelname}{0}
+\setcounter{institution}{0}
+\setcounter{savedinstitution}{0}
+\setcounter{lista}{0}
+\setcounter{savedlista}{0}
+\setcounter{listb}{0}
+\setcounter{savedlistb}{0}
+\setcounter{listc}{0}
+\setcounter{savedlistc}{0}
+\setcounter{listd}{0}
+\setcounter{savedlistd}{0}
+\setcounter{liste}{0}
+\setcounter{savedliste}{0}
+\setcounter{listf}{0}
+\setcounter{savedlistf}{0}
+\setcounter{location}{0}
+\setcounter{savedlocation}{0}
+\setcounter{organization}{0}
+\setcounter{savedorganization}{0}
+\setcounter{origlocation}{0}
+\setcounter{savedoriglocation}{0}
+\setcounter{origpublisher}{0}
+\setcounter{savedorigpublisher}{0}
+\setcounter{publisher}{0}
+\setcounter{savedpublisher}{0}
+\setcounter{language}{0}
+\setcounter{savedlanguage}{0}
+\setcounter{origlanguage}{0}
+\setcounter{savedoriglanguage}{0}
+\setcounter{pageref}{0}
+\setcounter{savedpageref}{0}
+\setcounter{textcitecount}{0}
+\setcounter{textcitetotal}{0}
+\setcounter{textcitemaxnames}{0}
+\setcounter{biburlbigbreakpenalty}{100}
+\setcounter{biburlbreakpenalty}{200}
+\setcounter{biburlnumpenalty}{0}
+\setcounter{biburlucpenalty}{0}
+\setcounter{biburllcpenalty}{0}
+\setcounter{smartand}{1}
+\setcounter{bbx:relatedcount}{0}
+\setcounter{bbx:relatedtotal}{0}
+\setcounter{cbx@tempcnta}{0}
+\setcounter{cbx@tempcntb}{0}
+\setcounter{cbx@tempcntc}{0}
+\setcounter{cbx@tempcntd}{0}
+\setcounter{r@tfl@t}{4}
+\setcounter{float@type}{16}
+\setcounter{Item}{80}
+\setcounter{Hfootnote}{0}
+\setcounter{bookmark@seq@number}{158}
+\setcounter{lstlisting}{60}
+\setcounter{section@level}{4}
+}

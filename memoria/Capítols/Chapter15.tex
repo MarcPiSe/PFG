@@ -25,7 +25,7 @@ cd <NOM_DE_LA_CARPETA_DEL_PROJECTE>
 \end{verbatim}
 
 \subsection{Execució de l'script}
-Un cop a la carpeta arrel, s'ha d'executar l'script corresponent al sistema operatiu amb l'indicador d'instal·lació (`-i`). És important executar-lo amb privilegis d'administrador, ja que instal·larà dependències i gestionarà contenidors de Docker.
+Un cop a la carpeta arrel, s'ha d'executar l'script corresponent al sistema operatiu amb l'indicador d'instal·lació (\texttt{-i}). És important executar-lo amb privilegis d'administrador, ja que instal·larà dependències i gestionarà contenidors de Docker.
 
 \paragraph{Per a Linux/macOS:}
 \begin{verbatim}
@@ -35,6 +35,17 @@ sudo bash setup.sh -i
 \paragraph{Per a Windows (des d'una terminal PowerShell com a Administrador):}
 \begin{verbatim}
 powershell -ExecutionPolicy Bypass -File .\\setup.ps1 -i
+\end{verbatim}
+
+\paragraph{Mode de dades de prova:}
+Per facilitar les proves de l'aplicació, es pot utilitzar l'opció \texttt{-t} juntament amb \texttt{-i} per iniciar el sistema amb dades preconfigurades (usuaris, carpetes, fitxers i comparticions de mostra):
+
+\begin{verbatim}
+# Linux/macOS
+sudo bash setup.sh -i -t
+
+# Windows
+powershell -ExecutionPolicy Bypass -File .\\setup.ps1 -i -t
 \end{verbatim}
 
 Aquesta comanda iniciarà un procés completament automatitzat que realitzarà les següents accions:
@@ -54,6 +65,10 @@ Aquesta comanda iniciarà un procés completament automatitzat que realitzarà l
 
     \item \textbf{Creació del Superadministrador}: Un cop els serveis estiguin actius, l'script sol·licitarà per terminal la creació d'un usuari i contrasenya per al primer compte de Superadministrador, que tindrà control total sobre la plataforma.
 \end{enumerate}
+
+Quan s'utilitza l'opció \texttt{-t}, a més dels passos anteriors, el sistema es configura amb dades de prova predefinides que inclouen usuaris de mostra, carpetes, fitxers i relacions de compartició, permetent provar immediatament totes les funcionalitats sense haver de crear manualment el contingut.
+
+\textbf{Nota sobre les dades de prova:} El mode de proves carrega un conjunt d'usuaris fictius amb carpetes, fitxers i configuracions de compartició preestablertes. Això permet avaluar funcionalitats com la gestió d'arxius, el control d'accés, la compartició entre usuaris i la sincronització sense necessitat de configurar manualment un entorn de proves. Els usuaris de prova creats tenen diferents nivells de permisos per permetre provar tots els aspectes del sistema de control d'accés.
 
 Un cop finalitzat el procés, tot el sistema estarà completament operatiu.
 
@@ -104,7 +119,6 @@ Un cop el sistema està en funcionament, es pot accedir als diferents components
     
     \item \textbf{Eines d'administració del backend}:
     \begin{itemize}
-        \item \textbf{pgAdmin}: Per a la gestió de la base de dades PostgreSQL, disponible a \href{http://localhost}{http://localhost}.
         \item \textbf{RabbitMQ Management}: Per monitorar les cues de missatges, disponible a \href{http://localhost:15672}{http://localhost:15672}.
         \item \textbf{Eureka Server}: Per visualitzar l'estat i el registre de tots els microserveis, disponible a \href{http://localhost:8761}{http://localhost:8761}.
     \end{itemize}

@@ -234,7 +234,7 @@ L'inici de sessió és un procés gestionat íntegrament per \texttt{UserAuthent
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{Figures/login.png}
+    \includegraphics[width=1\textwidth]{Figures/ui-web/login.png}
     \caption{Flux de dades per a l'inici de sessió (UC-02).}
 \end{figure}
 
@@ -272,7 +272,7 @@ Aquest cas d'ús permet a un usuari modificar la seva pròpia contrasenya i és 
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{Figures/change_password_user.png}
+    \includegraphics[width=1\textwidth]{Figures/flux/change_password_user.png}
     \caption{Flux de dades per al canvi de contrasenya (UC-15).}
 \end{figure}
 
@@ -301,7 +301,7 @@ L'eliminació d'un compte és un procés crític que ha de garantir la purga com
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{Figures/delete_user.png}
+    \includegraphics[width=1\textwidth]{Figures/flux/delete_user.png}
     \caption{Flux de dades centralitzat per a l'eliminació d'un compte (UC-16).}
 \end{figure}
 
@@ -366,7 +366,7 @@ Cada microservei, un cop ha finalitzat la seva tasca de neteja, té la responsab
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{@delete_user_async.png}
+    \includegraphics[width=\textwidth]{Figures/flux/delete_user_async.png}
 \end{figure}
 
 Finalment, per garantir la màxima robustesa i evitar que processos d'eliminació quedin bloquejats indefinidament, s'ha implementat un sistema de tasques programades a través de la classe \texttt{ScheduledTasks}. Aquesta classe executa dues funcions de manera periòdica (diàriament a la 1:00 AM):
@@ -395,10 +395,12 @@ Aquest cas d'ús gestiona tant la creació de noves carpetes com la pujada de fi
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{@upload_files_both.png}
+    \includegraphics[width=\textwidth]{Figures/flux/upload_files_both.png}
+    \caption{Flux del cas d'us UC-08.}
+    \label{fig:c08-flow}
 \end{figure}
 
-El flux, com es veu a la figura \ref{fig:uc08-flow}, sempre comença amb una validació de permisos d'escriptura contra el microservei \texttt{FileAccessControl} abans de procedir.
+El flux, com es veu a la figura \ref{fig:c08-flow}, sempre comença amb una validació de permisos d'escriptura contra el microservei \texttt{FileAccessControl} abans de procedir.
 
 \paragraph{Endpoint Multipart per al client web.} El client web utilitza l'endpoint estàndard i polivalent \texttt{POST /files}, que accepta dades en format \texttt{multipart/form-data}. Aquest mètode és el responsable de gestionar tota la creació d'elements des del web: no només la pujada de fitxers, sinó també la creació de noves carpetes. Com es pot veure al codi, una comprovació sobre la petició (\texttt{request.isFolder()}) bifurca el flux per invocar \texttt{FolderService} o \texttt{FileService} segons correspongui. Això permet enviar en una única petició tant les metadades (en un objecte JSON) com, si s'escau, el contingut del fitxer. L'endpoint també contempla la lògica per actualitzar un fitxer existent si rep un \texttt{elementId}, encara que aquesta funcionalitat actualment no és utilitzada pel client web.
 
@@ -525,7 +527,7 @@ Un aspecte fonamental del flux és la seguretat. Com mostra el diagrama, abans d
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{Figures/rename_files.png}
+    \includegraphics[width=1\textwidth]{Figures/flux/rename_files.png}
 \end{figure}
 
 El mètode del controlador que gestiona aquesta lògica centralitza les modificacions de metadades.
@@ -563,7 +565,7 @@ Com a treball futur, es contempla modificar el client web perquè utilitzi l'end
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{@move_files.png}
+    \includegraphics[width=\textwidth]{Figures/flux/move_files.png}
 \end{figure}
 
 El flux comença amb una doble validació de permisos a través de \texttt{FileAccessControl}: el sistema verifica que l'usuari té permís d'escriptura tant sobre l'element que vol moure com sobre la carpeta de destinació. Aquesta doble comprovació és crucial per a la seguretat.
@@ -631,7 +633,7 @@ Primer, fa una comprovació ràpida per veure si l'origen i el destí són la ma
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{@copy_files.png}
+    \includegraphics[width=\textwidth]{Figures/flux/copy_files.png}
     \caption{Flux de dades per copiar un element, destacat la doble validació de permisos i la naturalesa recursiva del procés.}
 \end{figure}
 
@@ -705,7 +707,7 @@ La descàrrega d'elements es fa mitjançant l'endpoint \texttt{GET /files/\{elem
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{@download_files.png}
+    \includegraphics[width=\textwidth]{Figures/flux/download_files.png}
 \end{figure}
 
 El procés de descàrrega segueix uns passos ben definits:
@@ -774,7 +776,7 @@ El procés per compartir un element amb un altre usuari s'inicia a través de l'
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{@share_files.png}
+    \includegraphics[width=\textwidth]{Figures/flux/share_files.png}
 \end{figure}
 
 La lògica, encapsulada a \texttt{FileSharingService}, segueix aquests passos:
@@ -839,7 +841,7 @@ Perquè el client web pugui mostrar aquesta llista d'elements compartits, s'ha c
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{@get_shared_root.png}
+    \includegraphics[width=\textwidth]{Figures/flux/get_shared_root.png}
     \caption{Diagrama de flux per obtenir la carpeta virtual d'elements compartits.}
 \end{figure}
 
@@ -892,7 +894,7 @@ Tant la revocació de l'accés per part del propietari (\textbf{UC-13A}) com l'a
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{@revoke_share.png}
+    \includegraphics[width=\textwidth]{Figures/flux/revoke_share.png}
     \caption{Diagrama de flux per revocar o deixar de seguir un element (UC-13A/B).}
 \end{figure}
 
@@ -944,7 +946,7 @@ Una decisió fonamental del disseny és que enviar un element a la paperera no n
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{@move_to_trash.png}
+    \includegraphics[width=\textwidth]{Figures/flux/move_to_trash.png}
 \end{figure}
 
 Com mostra el diagrama, el servei primer valida els permisos i després orquestra una operació en dues parts:
@@ -993,7 +995,7 @@ El flux complet es pot dividir en tres fases:
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{@permanent_delete_files.png}
+    \includegraphics[width=\textwidth]{Figures/flux/permanent_delete_files.png}
 \end{figure}
 
 \begin{enumerate}
@@ -1618,7 +1620,7 @@ El cervell de l'autenticació resideix al hook \texttt{ui-new/src/hooks/userAuth
 
 Després d'una resposta exitosa del servidor, el hook \texttt{userAuth} executa una seqüència d'accions crucials per actualitzar l'estat del client: desa els tokens d'accés i de refresc al \texttt{localStorage}, obté les dades completes del perfil de l'usuari, actualitza l'estat global de l'aplicació i, finalment, estableix la connexió WebSocket per a la sincronització en temps real.
 
-\begin{lstlisting}[language=typescript, caption={Fragment de la funció `login` al hook `userAuth.tsx`}]
+\begin{lstlisting}[language=javascript, caption={Fragment de la funció `login` al hook `userAuth.tsx`}]
 const login = useCallback(async (username: string, password: string): Promise<boolean> => {
   try {
     if(!isLogin) {
@@ -1644,7 +1646,7 @@ const login = useCallback(async (username: string, password: string): Promise<bo
 
 Un cop l'usuari està autenticat, per mantenir la sessió activa de manera eficient, s'utilitza un mecanisme arquitectònic clau: un interceptor d'Axios, configurat a \texttt{ui-new/src/lib/api.ts}. Aquest interceptor s'activa automàticament quan una petició a l'API falla amb un codi d'estat 401 (No autoritzat). En aquest moment, intenta renovar el token d'accés utilitzant el token de refresc. Si la renovació té èxit, la petició original es reintenta amb el nou token, un procés completament imperceptible per a l'usuari.
 
-\begin{lstlisting}[language=typescript, caption={Interceptor d'Axios per a la renovació automàtica de tokens a \texttt{api.ts}}]
+\begin{lstlisting}[language=javascript, caption={Interceptor d'Axios per a la renovació automàtica de tokens a \texttt{api.ts}}]
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
@@ -1695,7 +1697,7 @@ El procés de tancament de sessió és una mesura de seguretat fonamental, disse
 
 La lògica central resideix al hook \texttt{ui-new/src/hooks/userAuth.tsx}, que proporciona la funció \texttt{logoutEndpoint}. Aquesta funció és la responsable de garantir una sortida neta i segura. Primer intenta notificar al backend mitjançant \texttt{authService.logout}. Independentment del resultat d'aquesta crida, ja que s'asumeix que el servidor rep la petició i fa les accions necessaries per el logout, el bloc \texttt{finally} s'encarrega d'eliminar tota la informació de sessió del \texttt{localStorage}. Finalment, reinicia l'estat global de l'aplicació, desconnecta la sessió WebSocket activa i redirigeix forçosament l'usuari a la pàgina d'inici de sessió.
 
-\begin{lstlisting}[language=typescript, caption={Fragment del component `Header` amb el botó de logout}]
+\begin{lstlisting}[language=javascript, caption={Fragment del component `Header` amb el botó de logout}]
 import { useAuth } from "../../../hooks/userAuth"
 
 const Header = ({setAdminOpen}: {setAdminOpen: (open: boolean) => void}) => {
@@ -1714,7 +1716,7 @@ const Header = ({setAdminOpen}: {setAdminOpen: (open: boolean) => void}) => {
 }
 \end{lstlisting}
 
-\begin{lstlisting}[language=typescript, caption={Funció `logoutEndpoint` al hook `userAuth.tsx`}]
+\begin{lstlisting}[language=javascript, caption={Funció `logoutEndpoint` al hook `userAuth.tsx`}]
 const logoutEndpoint = useCallback(async () => {
   try {
     await authService.logout();
@@ -1739,7 +1741,7 @@ La gestió del perfil d'usuari, que va des de la modificació de dades personals
 
 Un aspecte clau d'aquest component és la seva estratègia de validació en temps real, dissenyada per oferir feedback instantani sense sobrecarregar el sistema. Mentre que la validació de formats bàsics per a la majoria de camps s'implementa a través del hook \texttt{ui-new/src/hooks/useValidation.ts}, la comprovació de la disponibilitat de camps únics com el nom d'usuari i el correu electrònic requereix una solució més sofisticada. Per evitar una gran quantitat de peticions a l'API amb cada pulsació de tecla, s'utilitza el hook \texttt{ui-new/src/hooks/useDebounce.ts}. Aquest retrasa l'execució de les funcions de validació (\texttt{userService.checkUsernameExists} i \texttt{userService.checkEmailExists}) fins que l'usuari ha deixat d'escriure durant un breu període. Aquesta tècnica millora dràsticament el rendiment i l'experiència d'usuari, evitant validacions innecessàries i oferint un indicador d'estat només quan és rellevant.
 
-\begin{lstlisting}[language=typescript, caption={Ús de `useDebounce` per a la validació a `UserSettings/index.tsx`}]
+\begin{lstlisting}[language=javascript, caption={Ús de `useDebounce` per a la validació a `UserSettings/index.tsx`}]
 // ...
 const debouncedUsername = useDebounce(userData.username, 500);
 const debouncedEmail = useDebounce(userData.email, 500);
@@ -1768,7 +1770,7 @@ useEffect(() => {
 
 Un cop les dades són validades, el component gestiona les dues accions principals. La funció \texttt{handleUpdateProfile} orquestra l'actualització del perfil, cridant \texttt{userService.updateUserProfile} i, si l'usuari ha introduït una nova contrasenya, \texttt{userService.changePassword}. Per altra banda, la funció \texttt{handleDeleteAccount} gestiona l'eliminació del compte. Per seguretat, primer mostra un diàleg de confirmació que requereix que l'usuari escrigui el seu nom d'usuari. Un cop confirmat, invoca \texttt{userService.deleteAccount}. Un detall crucial és que, després d'una eliminació exitosa, crida la funció \texttt{logoutEndpoint} del hook \texttt{useAuth} per netejar completament la sessió del client i redirigir-lo a la pàgina d'inici de sessió.
 
-\begin{lstlisting}[language=typescript, caption={Orquestració de les crides a l'API a `UserSettings/index.tsx`}]
+\begin{lstlisting}[language=javascript, caption={Orquestració de les crides a l'API a `UserSettings/index.tsx`}]
 const handleUpdateProfile = async () => {
     // ... (validació final)
     await userService.updateUserProfile(userData);
@@ -1796,7 +1798,7 @@ const handleDeleteAccount = async () => {
 
 Finalment, per a cada operació, ja sigui d'èxit o de fracàs, s'utilitzen notificacions tipus "toast" per proporcionar un feedback clar i immediat a l'usuari, tancant així el cicle d'interacció. El servei \texttt{userService} a \texttt{api.ts} abstrau les crides a l'API, proporcionant mètodes que mapegen directament als endpoints del backend per a una gestió de perfil clara i mantenible.
 
-\begin{lstlisting}[language=typescript, caption={Mètodes del `userService` a `lib/api.ts`}]
+\begin{lstlisting}[language=javascript, caption={Mètodes del `userService` a `lib/api.ts`}]
 export const userService = {
     // ...
     updateUserProfile: async (userData: { /* ... */ }) => {
@@ -1820,7 +1822,7 @@ El panell d'administració representa una funcionalitat crítica per a la gesti�
 
 L'accés al panell s'inicia a través d'un botó situat a la capçalera de l'aplicació, implementat a \texttt{ui-new/src/layouts/AppLayout/Header/index.tsx}. Aquest component utilitza el hook \texttt{useAuth} per verificar els permisos de l'usuari i renderitza el botó d'accés només si l'usuari té el rol \texttt{ADMIN} o \texttt{SUPER\_ADMIN}:
 
-\begin{lstlisting}[language=typescript, caption={Renderitzat condicional del botó d'administració}]
+\begin{lstlisting}[language=javascript, caption={Renderitzat condicional del botó d'administració}]
 {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
     <Tooltip side="left" content="Admin Panel" triggerAsChild={true}>
         <Button variant="primary" className="p-2" onClick={() => setAdminOpen(true)}> 
@@ -1832,7 +1834,7 @@ L'accés al panell s'inicia a través d'un botó situat a la capçalera de l'apl
 
 Quan s'activa el botó, el component \texttt{AppLayout} actua com a orquestrador, gestionant la transició entre la vista principal de l'aplicació i el panell d'administració. Aquest canvi es realitza mitjançant un estat local \texttt{adminOpen} que renderitza condicionalment el component \texttt{AdminDashboard} en lloc de la interfície principal:
 
-\begin{lstlisting}[language=typescript, caption={Renderitzat condicional del panell d'administració a `AppLayout`}]
+\begin{lstlisting}[language=javascript, caption={Renderitzat condicional del panell d'administració a `AppLayout`}]
     if(adminOpen) {
 		return (
 			<div className="flex h-screen bg-gray-100 relative">
@@ -1854,7 +1856,7 @@ El component \texttt{AdminDashboard} serveix com a punt central per a la gestió
 
 La gestió d'usuaris es realitza a través de dos diàlegs especialitzats: \texttt{EditUserDialog} i \texttt{DeleteUserDialog}. El primer és particularment complex, ja que implementa validacions en temps real i restriccions basades en rols. Per exemple, la capacitat de modificar el rol d'un usuari està estrictament controlada:
 
-\begin{lstlisting}[language=typescript, caption={Control d'accés per a la modificació de rols}]
+\begin{lstlisting}[language=javascript, caption={Control d'accés per a la modificació de rols}]
     {isSuperAdmin && editForm.role !== 'SUPER_ADMIN' &&(
         <>
       <div className="space-y-2">
@@ -1877,7 +1879,7 @@ Aquest fragment de codi il·lustra el control d'accés per a la modificació de 
 
 L'execució de les operacions d'administració es gestiona a través de funcions específiques al component \texttt{AdminDashboard}. Aquestes funcions no només realitzen les operacions sol·licitades sinó que també gestionen la retroalimentació a l'usuari i l'actualització de l'estat de l'aplicació:
 
-\begin{lstlisting}[language=typescript, caption={Gestió d'operacions administratives}]
+\begin{lstlisting}[language=javascript, caption={Gestió d'operacions administratives}]
     const handleSaveEdit = async (updatedUser: Partial<AdminUser>) => {
         if (!selectedUser) return;
         try {
@@ -1928,7 +1930,7 @@ La interacció de l'usuari s'inicia en el component \texttt{ui-new/src/component
 
 L'opció ``New folder'' obre el diàleg modal \texttt{ui-new/src/components/CreateNewFolderDialog/index.tsx}, mentre que les opcions de pujada activen directament els respectius inputs ocults. Aquests components de la UI actuen com a mers disparadors: tota la lògica de negoci complexa resideix en el hook \texttt{ui-new/src/hooks/useFileOperations.ts}, que centralitza les operacions d'arxius. Les accions de l'usuari en la UI invoquen les funcions \texttt{createFolder}, \texttt{uploadFile} i \texttt{uploadFolder} proporcionades per aquest hook.
 
-\begin{lstlisting}[language=typescript, caption={Activació de la pujada de carpetes a `AddButton/index.tsx`}]
+\begin{lstlisting}[language=javascript, caption={Activació de la pujada de carpetes a `AddButton/index.tsx`}]
 const folderInputRef = useRef<HTMLInputElement>(null);
     
     const handleFolderUploadLocal = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -1968,13 +1970,13 @@ const folderInputRef = useRef<HTMLInputElement>(null);
 
 El hook \texttt{useFileOperations.ts} constitueix una peça clau de l'arquitectura del client, utilitzant el hook \texttt{useMutation} de TanStack Query per a totes les operacions d'escriptura. Això permet una gestió d'estat molt avançada, incloent-hi les \textbf{actualitzacions optimistes}, que milloren dràsticament la percepció de velocitat de l'usuari. El flux d'una actualització optimista segueix un patró consistent: l'\texttt{onMutate} s'executa abans de la crida a l'API, actualitzant la memòria cache local de TanStack Query de manera immediata i fent que la interfície reflecteixi el canvi a l'instant. Es guarda una còpia de l'estat previ per poder-lo revertir en cas d'error. Si la crida a l'API falla, l'\texttt{onError} reverteix l'actualització optimista restaurant l'estat previ. Si la crida té èxit, l'\texttt{onSuccess} invalida la memòria cache per assegurar que les dades locals se sincronitzin amb les dades definitives provinents del servidor.
 
-\begin{lstlisting}[language=typescript, caption={Implementació d'una mutació optimista a `useFileOperations.ts`}]
+\begin{lstlisting}[language=javascript, caption={Implementacio d'una mutacio optimista a `useFileOperations.ts`}]
 const createFolderMutation = useMutation({
     mutationFn: async ({ name, parentId }: { name: string, parentId: string }) => {
       return fileService.createFolder(name, parentId);
     },
     onMutate: async ({ name, parentId }) => {
-      // 1. Cancel·lar queries per evitar que sobreescriguin l'actualització optimista
+      // 1. Cancelar queries per evitar que sobreescriguin l'actualitzacio optimista
       await queryClient.cancelQueries({ queryKey: [QUERY_KEYS.CURRENT_DIRECTORY, parentId] });
       await queryClient.cancelQueries({ queryKey: [QUERY_KEYS.FOLDER_STRUCTURE] });
       
@@ -2030,7 +2032,7 @@ Per determinar quins elements són seleccionables, el hook \texttt{useSelecto.ts
 
 Aquesta connexió permet que l'estil de cada fitxer reaccioni dinàmicament a l'estat de la selecció. Per exemple, quan un fitxer és seleccionat o marcat per a ser tallat, el component \texttt{File} actualitza les seves classes CSS amb Tailwind per reflectir visualment aquest canvi. Aquesta reactivitat s'aconsegueix mitjançant hooks personalitzats que se subscriuen a l'store de Zustand.
 
-\begin{lstlisting}[language=typescript, caption={Estils dinàmics del component `File` a `index.tsx`}]
+\begin{lstlisting}[language=javascript, caption={Estils dinàmics del component `File` a `index.tsx`}]
 const File = ({ file }: FileProps) => {
   // ...
   const isItemSelected = useIsItemSelected(file);
@@ -2051,7 +2053,7 @@ const File = ({ file }: FileProps) => {
 };
 \end{lstlisting}
 
-\begin{lstlisting}[language=typescript, caption={Implementació dels hooks `useIsItemSelected` i `useIsCutFile` a `fileSelectionStore.ts`}]
+\begin{lstlisting}[language=javascript, caption={Implementació dels hooks `useIsItemSelected` i `useIsCutFile` a `fileSelectionStore.ts`}]
 export function useIsItemSelected(file: FileItem) {
   return useFileSelectionStore((state) => state.selectedFilesIds.some(f => f === file.id));
 }
@@ -2074,7 +2076,7 @@ Les accions de l'usuari s'inicien des de diversos punts d'entrada que utilitzen 
 
 Independentment del disparador utilitzat, l'execució final de la lògica de negoci es delega sempre a les mutacions definides al hook \texttt{ui-new/src/hooks/useFileOperations.ts}. Per al \textbf{renombrament (UC-09A)}, l'opció del menú contextual obre el diàleg \texttt{ui-new/src/components/File/RenameDialog.tsx}. En confirmar el nou nom, una funció de callback al \texttt{FileManager/index.tsx} (\texttt{handleRename}) invoca la mutació \texttt{updateItem} del hook. Per al \textbf{moviment (UC-09B)}, tant l'acció d'arrossegar i deixar anar com la confirmació des del diàleg de selecció de carpeta acaben cridant a la mutació \texttt{moveItem}. Per a les operacions de \textbf{copiar i enganxar (UC-09C)}, la drecera \texttt{Ctrl+V} al \texttt{useFileShortcuts.ts} llegeix el contingut del \texttt{fileSelectionStore} i invoca la mutació \texttt{pasteFiles}. Aquesta única mutació gestiona tant la còpia (\texttt{fileService.copyElement}) com el tallat (\texttt{fileService.moveElement}), basant-se en el valor del booleà \texttt{isCut} de l'store.
 
-\begin{lstlisting}[language=typescript, caption={Gestió del Drag \& Drop a `FileManager/index.tsx`}]
+\begin{lstlisting}[language=javascript, caption={Gestió del Drag \& Drop a `FileManager/index.tsx`}]
 const handleDragEnd = useCallback(async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveDragItem(null);
@@ -2108,7 +2110,7 @@ const handleDragEnd = useCallback(async (event: DragEndEvent) => {
 }, [selectedFiles, fileOperations, notifications]);
 \end{lstlisting}
 
-\begin{lstlisting}[language=typescript, caption={Gestió de dreceres de teclat a `useFileShortcuts.ts`}]
+\begin{lstlisting}[language=javascript, caption={Gestió de dreceres de teclat a `useFileShortcuts.ts`}]
 useEffect(() => {
   const handleKeyDown = async (event: KeyboardEvent) => {
     if (event.ctrlKey || event.metaKey) {
@@ -2163,8 +2165,8 @@ Podem començar a eliminar un arxiu de dues maneres: fent clic amb el botó dret
 
 El que fa que aquesta funcionalitat sigui interessant és la lògica dual de la mutació \texttt{deleteItemMutation}. El que passa quan eliminem un arxiu depèn totalment de la secció on estem, informació que ens proporciona el \texttt{ui-new/src/store/fileContextStore.ts}. Aquest store ens diu on som (\texttt{root}, \texttt{shared} o \texttt{trash}), i això permet que la mateixa acció (prémer \texttt{Delete} o fer clic a "Eliminar") faci coses diferents segons el context.
 
-\begin{lstlisting}[language=typescript, caption={Gestió de la tecla Delete a `useFileShortcuts.ts`}]
-} else if (event.key === 'Delete') {
+\begin{lstlisting}[language=javascript, caption={Gestió de la tecla Delete a `useFileShortcuts.ts`}]
+else if (event.key === 'Delete') {
   event.preventDefault();
   if (fileContext.section === 'shared') {
     revokeAccess({items: selectedFiles})
@@ -2177,7 +2179,7 @@ El que fa que aquesta funcionalitat sigui interessant és la lògica dual de la 
 
 Dins de la funció \texttt{mutationFn} de la mutació \texttt{deleteItemMutation}, un simple condicional decideix què fer. Si estem a la secció \texttt{'root'}, es crida a \texttt{fileService.deleteElement}, que mou l'element a la paperera al backend. Però si estem a la secció \texttt{'trash'}, es crida a \texttt{trashService.deleteItem}, que esborra l'element de manera permanent. Aquest disseny ens permet utilitzar la mateixa interfície d'usuari per a dues operacions molt diferents, fent que la lògica sigui més senzilla als components de la interfície mentre mantenim la complexitat al nivell de servei.
 
-\begin{lstlisting}[language=typescript, caption={Lògica dual de la mutació d'eliminació a `useFileOperations.ts`}]
+\begin{lstlisting}[language=javascript, caption={Lògica dual de la mutació d'eliminació a `useFileOperations.ts`}]
 const deleteItemMutation = useMutation({
   mutationFn: async ({ items, section }: { items: FileItem[], section: 'root' | 'trash' | 'shared' }) => {
     try {
@@ -2215,7 +2217,7 @@ Aquesta funcionalitat permet als usuaris compartir els seus arxius i carpetes am
 
 La navegació entre les diferents seccions del gestor d'arxius (\texttt{root}, \texttt{shared}, \texttt{trash}) es gestiona a través d'un canvi de context en lloc d'un canvi de ruta. L'usuari inicia aquesta navegació fent clic a les icones corresponents a la barra lateral, implementada al component \texttt{ui-new/src/components/FileDirectorySidebar/index.tsx}. Aquesta acció invoca la funció \texttt{handleNavigateToSection}, que actualitza l'estat global a través del \texttt{ui-new/src/store/fileContextStore.ts}, establint la secció activa. Aquest canvi de context fa que el hook \texttt{useFileOperations} obtingui les dades del directori arrel corresponent a la secció seleccionada, poblant la vista principal amb els fitxers i carpetes adequats.
 
-\begin{lstlisting}[language=typescript, caption={Navegació entre seccions a `FileDirectorySidebar/index.tsx`}]
+\begin{lstlisting}[language=javascript, caption={Navegació entre seccions a `FileDirectorySidebar/index.tsx`}]
 const handleNavigateToSection = useCallback(async (section: 'root' | 'shared' | 'trash', e: React.MouseEvent) => {
   e.preventDefault();
   e.stopPropagation();
@@ -2249,7 +2251,7 @@ La funció \texttt{setCurrentDirectory} és fonamental per a la gestió de l'est
 
 Aquesta acció desencadena l'execució de la query \texttt{currentDirectoryQuery}, que utilitza el hook \texttt{useQuery} per obtenir les dades completes del directori des del backend. La clau d'aquesta query (\texttt{queryKey}) és un array que inclou l'identificador del directori actual, assegurant que cada directori tingui la seva pròpia entrada a la memòria cache. La configuració \texttt{staleTime} de 5 minuts indica a TanStack Query que consideri les dades a la memòria cache com a "fresques" durant aquest període, evitant crides innecessàries a l'API si l'usuari torna a un directori visitat recentment.
 
-\begin{lstlisting}[language=typescript, caption={Gestió del directori actual amb `useQuery` a `useFileOperations.ts`}]
+\begin{lstlisting}[language=javascript, caption={Gestió del directori actual amb `useQuery` a `useFileOperations.ts`}]
 const setCurrentDirectory = async (folder: FileItem) => {
   if (folder.id) {
     const newId = folder.id.toString();
@@ -2277,7 +2279,7 @@ const currentDirectoryQuery = useQuery({
 
 Aquest mecanisme de memòria cache és essencial per a una experiència de navegació fluida. Quan l'usuari navega a un directori ja visitat, les dades es carreguen instantàniament des de la memòria cache, eliminant la latència de la xarxa. La dada només es torna a demanar al servidor si ha passat el \texttt{staleTime} o si la memòria cache s'invalida manualment després d'una operació (com crear o eliminar un fitxer), assegurant un equilibri òptim entre rendiment i consistència de les dades.
 
-\begin{lstlisting}[language=typescript, caption={Navegació per doble clic a `File/index.tsx`}]
+\begin{lstlisting}[language=javascript, caption={Navegació per doble clic a `File/index.tsx`}]
 const handleDoubleClick = async () => {
   if (file.type === 'folder') {
     fileOperations.setCurrentDirectory(file);
@@ -2291,7 +2293,7 @@ L'acció de compartir s'inicia des del menú contextual, que obre el component \
 
 Una de les optimitzacions clau d'aquesta funcionalitat rau en la lògica de la funció \texttt{share}, passada com a callback \texttt{onShare} des de \texttt{FileManager/index.tsx}. En lloc d'enviar simplement l'estat final dels permisos, aquesta funció realitza una operació de "diferència" entre l'estat original (guardat en obrir el diàleg) i l'estat final (quan l'usuari fa clic a "Share"). El codi itera sobre l'estat final per identificar nous permisos o modificacions, i sobre l'estat original per identificar permisos revocats. Això genera una llista precisa de les accions necessàries (\texttt{shareWithUser}, \texttt{handleUpdateAccess}, \texttt{handleUnshareToUser}), minimitzant el nombre de crides a l'API.
 
-\begin{lstlisting}[language=typescript, caption={Lògica de comparació de permisos a `FileManager/index.tsx`}]
+\begin{lstlisting}[language=javascript, caption={Lògica de comparació de permisos a `FileManager/index.tsx`}]
 const share = useCallback(async (userAccess: {username: string, fileId: string, accessType: 'READ' | 'WRITE' }[], originalSharedAccess: Map<string, {username: string, fileId: string, accessType: 'READ' | 'WRITE' }[]>) => {
   const promises = [];
   if(originalSharedAccess.size > 0) { 
@@ -2327,7 +2329,7 @@ const share = useCallback(async (userAccess: {username: string, fileId: string, 
 
 Aquesta optimització va ser una millora directa basada en el feedback d'un \textit{beta tester}, que va assenyalar que compartir múltiples fitxers amb múltiples usuaris era un procés lent i afarragós. La funció de comparació utilitza el hook \texttt{useShareManager} com a intermediari, que conté funcions més granulars que són les que finalment criden als mètodes corresponents del \texttt{sharingService}.
 
-\begin{lstlisting}[language=typescript, caption={Funció per compartir amb un usuari a `useShareManager.ts`}]
+\begin{lstlisting}[language=javascript, caption={Funció per compartir amb un usuari a `useShareManager.ts`}]
 const shareWithUser = useCallback(async (fileId: string, username: string, accessType: 'READ' | 'WRITE' = 'READ') => {
   if (!username) {
     console.error("Please enter a username");
@@ -2350,7 +2352,7 @@ A més de mostrar els fitxers compartits, la secció \texttt{shared} ofereix opc
 
 Aquesta adaptabilitat s'aconsegueix mitjançant una sèrie de renderitzats condicionals dins del component, que comproven la secció activa (\texttt{isInRoot}, \texttt{isInTrash}, \texttt{isInShared}) i si s'ha seleccionat un fitxer per mostrar només les accions pertinents.
 
-\begin{lstlisting}[language=typescript, caption={Renderitzat condicional de les opcions del menú a `FileManagerContextMenu/index.tsx`}]
+\begin{lstlisting}[language=javascript, caption={Renderitzat condicional de les opcions del menú a `FileManagerContextMenu/index.tsx`}]
 const handleUnshare = useCallback(async () => {
   if (!file) return;
   

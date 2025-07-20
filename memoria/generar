@@ -1,0 +1,5 @@
+pdflatex main.tex
+biber main
+makeindex main.id
+pdflatex main.tex
+pdflatex main.tex

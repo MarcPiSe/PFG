@@ -1,0 +1,96 @@
+% Indicate the main file. Must go at the beginning of the file.
+% !TEX root = ../main.tex
+
+%-------------------------------------------------------------------------------
+% CHAPTER 3
+%-------------------------------------------------------------------------------
+
+\chapter{Metodologia seguida}
+
+\section{Marc teòric: voluntat d'un enfocament àgil}
+
+Des de l'inici del projecte, la meva intenció era aplicar una metodologia àgil inspirada en \emph{Scrum}, adaptada a la realitat d'un únic desenvolupador. El plantejament teòric consistia a dividir el treball en sprints curts, amb planificació, desenvolupament i revisió regulars, per tal de poder avançar de manera incremental i adaptar-me als imprevistos.
+
+A la realitat, aquesta estructura àgil va quedar principalment a la fase de planificació. A la pràctica, la temporalitat dels sprints no es va respectar i el desenvolupament es va veure fortament condicionat per la dificultat de compaginar el projecte amb la vida laboral i personal. Aquesta manca de continuïtat i de gestió del temps va ser un dels principals factors que van afectar el progrés, com s'analitza amb més detall al Capítol~4.
+
+\section{Seguiment i control}
+
+En lloc d'utilitzar eines digitals o sistemes formals de seguiment, el control de l'avanç es va fer mitjançant una simple llibreta d'objectius. En aquesta llibreta anotava les tasques a realitzar, afegia nous objectius a mesura que sorgien i anava marcant o tachant els que es completaven. No es va fer servir cap eina de gestió de projectes ni registre digital, fet que en retrospectiva considero un error, ja que va dificultar la visibilitat global del progrés i la priorització de tasques.
+
+La revisió de les tasques es feia una vegada es donava com a completades, fent un test de la funcionalitat i si es completava es marcava com a completada. Era durant aquest procés que pasava per un període de reflexió sobre el funcionament per a contemplar si la implementació era la correcta o no i si necessitava d'una nova interpretació.
+
+\section{Definition of Done: l'únic criteri formal}
+
+Tot i la manca d'un sistema de seguiment estructurat, sí que vaig mantenir una \emph{Definition of Done} clara per a cada tasca o funcionalitat. Aquest criteri va ser l'únic element formalment aplicat durant tot el projecte i em va ajudar a garantir un mínim de qualitat i coherència en el resultat final.
+
+\subsection*{Definition of Done}
+Per evitar ambigüitats vaig definir aquests criteris de tancament:
+\begin{itemize}
+  \item El projecte compilava sense errors i la imatge Docker es generava correctament.
+  \item Totes les proves funcionals definides passaven sense incidències.
+  \item La funcionalitat era accessible i usable des de la interfície client corresponent (web o escriptori).
+  \item En cas de ser un dels blocs principals del desenvolupament, es feia una breu sessió exploratòria i cap dels testers trobava errors crítics.
+\end{itemize}
+Aquesta \emph{Definition of Done} va ser clau per mantenir un estàndard de qualitat constant, tot i la manca d'altres mecanismes de control.
+
+\section{Fases del projecte: del pla a la realitat}
+
+Per estructurar el desenvolupament, inicialment vaig dividir el projecte en vuit fases, tal com es mostra a la Taula~\ref{tab:fases}. Aquesta planificació pretenia agrupar els sprints i establir objectius tangibles per a cada etapa.
+
+\begin{table}[h]
+  \centering
+  \caption{Fases d'implementació i criteris de finalització}
+  \label{tab:fases}
+  \begin{tabular}{@{}p{3.5cm}p{9cm}@{}}
+    \toprule
+    \textbf{Fase} & \textbf{Criteri de finalització} \\
+    \midrule
+    1. Preparació i aprenentatge & Definició de requisits, entorn Docker operatiu i exploració inicial de Rust/Tauri. \\
+    2. Backend inicial & Microserveis d'autenticació, usuaris i gestió d'arxius desenvolupats. \\
+    3. Prototip web (MVP) & Client web funcional capaç de pujar i descarregar arxius. \\
+    4. Prototip escriptori (Tauri) & Client d'escriptori bàsic amb llistat d'arxius i revisió de l'API. \\
+    5. Paperera de reciclatge & Implementació de la funcionalitat de paperera. \\
+    6. Compartició i Sync & Incorporació de la compartició d'arxius i sincronització en temps real. \\
+    7. Accés a compartits (Tauri) & Client d'escriptori capaç d'accedir a arxius compartits. \\
+    8. Admin i desplegament & Panell d'administració creat, proves integrals realitzades i desplegament final. \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Aquesta taula reflecteix el disseny original, però la realitat del desenvolupament va ser molt menys lineal. Tal com s'explica al Capítol~4, el projecte va patir desviacions importants respecte al calendari previst: pauses llargues, replanificacions i una execució fragmentada per la dificultat de mantenir la continuïtat. Les fases es van solapar, alguns objectius es van ajornar i d'altres es van modificar o descartar segons la disponibilitat i el feedback rebut.
+
+\section{Desglossament i revisió de les unitats de treball}
+
+Cada fase es traduïa en objectius concrets, però el desglossament i la revisió d'aquestes unitats de treball es feia de manera informal. No hi havia un procés sistemàtic d'anàlisi, desenvolupament i prova dins d'un mateix sprint, sinó que les tasques s'anaven adaptant i reescrivint a mesura que avançava el projecte, sempre anotades a la llibreta.
+
+\section{Feedback dels testers}
+
+El feedback dels testers va ser sempre informal i de paraula, sense cap registre formal. Els comentaris rebuts eren del tipus "m'agrada aquesta part de l'aplicació" o "podries fer que aquesta altra sigui diferent com X". Aquestes aportacions, tot i ser valuoses, no seguien cap procés estructurat ni quedaven documentades més enllà de la meva pròpia memòria o de notes puntuals.
+
+\section{Dificultats de gestió i conciliació}
+
+Un dels principals obstacles va ser la dificultat de compaginar el desenvolupament del projecte amb la vida laboral i personal. Aquesta manca de dedicació continuada, sumada a l'absència d'un sistema de gestió del temps i de seguiment formal, va provocar retards i una execució molt menys àgil del que s'havia previst. Aquesta qüestió s'analitza amb més profunditat al Capítol~4.
+
+\section{Gestió de riscos i lliçons apreses}
+
+Al llarg del projecte vaig identificar diversos riscos, però la manca d'eines de seguiment i la dificultat per mantenir la continuïtat van ser els més rellevants. La taula següent recull els principals riscos i les estratègies de resposta:
+
+\begin{table}[h]
+  \centering
+  \caption{Riscos principals i estratègia de mitigació}
+  \label{tab:riesgos}
+  \begin{tabular}{@{}p{0.7cm}p{6.8cm}p{6.8cm}@{}}
+    \toprule
+    \textbf{ID} & \textbf{Risc} & \textbf{Resposta / Mitigació} \\
+    \midrule
+    R1 & Falta de temps a causa d'obligacions laborals i personals. & Reprioritzar tasques i posposar característiques no crítiques al pla de treball futur. \\
+    R2 & Corba d'aprenentatge de Tauri i Rust. & Dedicar una fase específica de formació i buscar ajuda puntual d'un expert. \\
+    R3 & Absència d'integració contínua, mètriques objectives i eines de seguiment. & Validació manual abans de cada \textit{merge}; deixar la implantació de CI i eines de gestió com a millora futura. \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Lliçons apreses}
+
+Les lliçons apreses apunten clarament a la necessitat d'adoptar eines de seguiment, definir millor la gestió del temps i establir fites intermèdies més rigoroses en futurs projectes. La flexibilitat de l'enfocament àgil va ser útil, però sense disciplina i eines adequades, la planificació es va veure superada per la realitat del dia a dia.
+

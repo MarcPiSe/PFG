@@ -5,6 +5,7 @@ Param(
     [switch]$r,
     [switch]$b,
     [switch]$h,
+    [switch]$t,
     [string]$up,
     [string]$pp,
     [string]$dp,
@@ -69,6 +70,7 @@ function Show-Usage {
     Write-Host "  -d  stop system"
     Write-Host "  -r  stop system and remove all data"
     Write-Host "  -b  update: rebuild services and restart containers"
+    Write-Host "  -t  use test data (sample users, files and shares) - only valid with -i"
     Write-Host "  -h  show this help"
     Write-Host ""
     Write-Host "Credential options (only valid with -i):"
@@ -81,6 +83,24 @@ function Show-Usage {
     Write-Host "  -pa <password>  pgAdmin password"
     Write-Host ""
     Write-Host "Example: setup.ps1 -i -up myuser -pp mypass -dp mydb"
+    Write-Host "Example with test data: setup.ps1 -i -t"
+}
+
+# Function to switch between init files based on test mode
+function Configure-InitFile {
+    param([bool]$TestMode)
+    
+    $composeFile = Join-Path $ComposeDir 'compose.yml'
+    
+    if ($TestMode) {
+        Write-Host "Configuring system with test data..."
+        # Replace init-creation.sql with init.sql in compose.yml
+        (Get-Content $composeFile) -replace 'init-creation\.sql', 'init.sql' | Set-Content $composeFile
+    } else {
+        Write-Host "Configuring system with clean database..."
+        # Ensure init-creation.sql is used
+        (Get-Content $composeFile) -replace 'init\.sql', 'init-creation.sql' | Set-Content $composeFile
+    }
 }
 
 function Install-Docker {
@@ -330,6 +350,12 @@ if (($up -or $pp -or $dp -or $ur -or $pr -or $ea -or $pa) -and -not $i) {
     exit 1
 }
 
+# Validate -t option is only used with -i
+if ($t -and -not $i) {
+    Write-Host "Error: -t option can only be used with -i" -ForegroundColor Red
+    exit 1
+}
+
 if ($h -or (-not ($i -or $u -or $d -or $r -or $b))) {
     Show-Usage
     exit
@@ -347,6 +373,7 @@ if ($i) {
     
     Set-DefaultVars
     Save-EnvVars
+    Configure-InitFile -TestMode $t
     Install-Docker
     Install-NodeAndPnpm
     Install-Rust

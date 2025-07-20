@@ -1,0 +1,153 @@
+% Indicate the main file. Must go at the beginning of the file.
+% !TEX root = ../main.tex
+
+%-------------------------------------------------------------------------------
+% CHAPTER 4
+%-------------------------------------------------------------------------------
+
+\chapter{Planificació}
+
+\section{Pla original}
+
+Abans d'escriure la primera línia de codi vaig traçar un calendari ambiciós: acabar el projecte en \textbf{vuit mesos} aprofitant tardes i caps de setmana. La idea era avançar de baix a dalt: desenvolupar el backend, validar un prototip web funcional, sumar el client d'escriptori i, finalment, polir i provar tot el conjunt.
+
+\begin{table}[h]
+  \centering
+  \caption{Full de ruta inicial (Oct‑2023 → Jun‑2024)}
+  \label{tab:planOriginal}
+  \begin{tabular}{@{}p{2cm}p{11cm}@{}}
+    \toprule
+    \textbf{Mes} & \textbf{Objectiu principal} \\
+    \midrule
+    Oct 2023 & Definir requisits, preparar entorn Docker i explorar Rust\,/\,Tauri. \\
+    Nov‑Des 2023 & Desenvolupar microserveis d'autenticació, usuaris i operacions d'arxius. \\
+    Gen 2024 & Construir un prototip web capaç de pujar i descarregar arxius. \\
+    Feb 2024 & Prototipar el client Tauri i revisar l'API. \\
+    Mar 2024 & Afegir la paperera. \\
+    Abr 2024 & Incorporar la compartició d'arxius i la sincronització en temps real. \\
+    Mai 2024 & Permetre que el client Tauri accedeixi als arxius compartits. \\
+    Jun 2024 & Crear el panell d'administració, executar proves integrals i desplegar. \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Execució real i validacions}
+
+La trajectòria real del projecte va ser força diferent del que s'havia planejat inicialment. El desenvolupament es va allargar fins al juliol de 2025, amb diversos períodes de pausa entremig. Durant aquest temps, vaig realitzar tres validacions principals amb usuaris beta testers: la primera després d'implementar l'administració de fitxers, la segona quan vaig completar la paperera, i l'última un cop finalitzada la sincronització. 
+
+Cal destacar que, després de la implementació de la compartició d'arxius, es va detectar un error d'arquitectura en la gestió dels serveis del backend. Aquest error feia que tant el servei de paperera com el de compartició depenguessin del servei de file manager com a punt de contacte, trencant així el principi d'acoblament feble (loose coupling) dels microserveis, que estableix que cada servei ha de ser independent i autònom. Això va obligar a fer un refactor important del backend, que va durar aproximadament dues setmanes i mitja i es va solapar amb el desenvolupament del servei de compartició. Aquest refactor va requerir tornar a testejar tota l'aplicació per assegurar que no s'havien trencat funcionalitats ja implementades, i va endarrerir l'inici del desenvolupament de la sincronització, que es va començar just després. El detall tècnic d'aquest error i la solució adoptada es tracta amb més profunditat al capítol 8.
+
+Tot això es pot veure reflectit al diagrama de Gantt de la Figura~\ref{fig:ganttReal}, on es mostren les diferents etapes del desenvolupament, els períodes d'aturada, les proves amb usuaris (en groc), les millores aplicades (en morat) i el període de refactor (en marró).
+
+\begin{sidewaysfigure}
+  \centering
+  \ganttset{calendar week text=}
+  \begin{ganttchart}[
+      x unit=0.3mm,
+      hgrid style/.style={draw=black!5, line width=.75pt},
+      vgrid={*{6}{draw=none},dotted},
+      y unit title=0.7cm,
+      y unit chart=0.5cm,
+      bar height=0.4,
+      title label font=\small,
+      time slot format=isodate,
+      bar label font=\small,
+      bar/.append style={text=black}
+    ]{2023-10-01}{2025-07-31}
+    \gantttitlecalendar{year, month=shortname,week=4} \\
+
+    % Fites del TFG
+    \ganttbar[bar/.style={fill=blue!45}]{Preparació}{2023-10-01}{2023-10-31} \ganttnewline[grid]
+    \ganttbar[bar/.style={fill=blue!45}]{Auth \& Users}{2023-11-01}{2023-12-31} \ganttnewline[grid]
+    \ganttbar[bar/.style={fill=gray!35}]{Pausa}{2024-01-01}{2024-01-31} \ganttnewline[grid]
+    \ganttbar[bar/.style={fill=green!50}]{Files \& Web}{2024-02-01}{2024-03-31} \ganttnewline[grid]
+    \ganttbar[bar/.style={fill=yellow!60}]{Beta 1}{2024-03-25}{2024-03-27} \ganttnewline[grid]
+    \ganttbar[bar/.style={fill=purple!45}]{Millores}{2024-03-28}{2024-04-04} \ganttnewline[grid]
+    \ganttbar[bar/.style={fill=green!50}]{Paperera}{2024-04-01}{2024-10-31} \ganttnewline[grid]
+    \ganttbar[bar/.style={fill=gray!35}]{Pausa}{2024-05-15}{2024-05-31} \ganttnewline[grid]
+    \ganttbar[bar/.style={fill=gray!35}]{Pausa}{2024-07-10}{2024-07-25} \ganttnewline[grid]
+    \ganttbar[bar/.style={fill=yellow!60}]{Beta 2}{2024-10-10}{2024-10-12} \ganttnewline[grid]
+    \ganttbar[bar/.style={fill=orange!55}]{Compartició}{2024-07-01}{2024-11-30} \ganttnewline[grid]
+    \ganttbar[bar/.style={fill=brown!70}]{Refactor}{2024-11-01}{2024-11-18} \ganttnewline[grid]
+    \ganttbar[bar/.style={fill=orange!35}]{Sync}{2024-11-19}{2025-02-28} \ganttnewline[grid]
+    \ganttbar[bar/.style={fill=yellow!60}]{Beta 3}{2025-02-15}{2025-02-17} \ganttnewline[grid]
+    \ganttbar[bar/.style={fill=purple!45}]{Tauri}{2024-12-01}{2025-03-31} \ganttnewline[grid]
+    \ganttbar[bar/.style={fill=red!55}]{Admin}{2025-04-01}{2025-06-15} \ganttnewline[grid]
+    \ganttbar[bar/.style={fill=cyan!55}]{Memòria}{2025-06-24}{2025-07-07}
+  \end{ganttchart}
+  \caption{Cronograma real amb desenvolupaments, pauses, refactorització i validacions (Oct‑2023 → Jul‑2025)}
+  \label{fig:ganttReal}
+\end{sidewaysfigure}
+
+Finalment, cal destacar que una de les funcionalitats planificades, la visualització d'arxius compartits des del client d'escriptori, es va haver de descartar a causa de la complexitat tècnica i la falta de temps. Aquesta última etapa de desenvolupament del prototip de Tauri, a més, es va haver de realitzar en paral·lel amb la creació del panell d'administració per tal de complir amb els terminis.
+
+Els beta‑tests van durar entre un i dos dies i van ser decisius per polir usabilitat. Gràcies a ells vaig afegir la compartició múltiple d'arxius, accessos ràpids de teclat i components \emph{Tremor Raw}, entre altres millores.
+
+\section{Pla vs. execució: la bretxa quantificada}
+
+\begin{table}[h]
+  \centering
+  \caption{Retards acumulats respecte al pla inicial}
+  \label{tab:desviaciones}
+  \begin{tabular}{@{}p{4cm}p{2.6cm}p{2.8cm}p{4.4cm}@{}}
+    \toprule
+    \textbf{Fita completada} & \textbf{Pla} & \textbf{Real} & \textbf{Retard / comentari} \\
+    \midrule
+    Auth + Usuaris & Nov‑Des 2023 & Feb 2024 & +2 mesos \\
+    Admin de fitxers (MVP) & Feb 2024 & Mar 2024 & +1 mes; optimització React + accessibilitat \\
+    Paperera & Abr 2024 & Oct 2024 & +6 mesos; pauses intermitents \\
+    Compartició & Mai 2024 & Nov 2024 & +6 mesos; validació + refactor \\
+    Accés a compartits (Tauri) & Jun 2024 & No implementat & Descartat per complexitat i falta de temps \\
+    Refactor backend & — & Nov 2024 & 2,5 setmanes; revalidació completa \\
+    Sync & Mai 2024 & Feb 2025 & +9 mesos; inici després del refactor \\
+    Prototip Tauri & Mar 2024 & Jun 2025 & +15 mesos; desenvolupament en paral·lel amb panell d'admin \\
+    Admin + proves globals & Jun 2024 & Jun 2025 & +12 mesos \\
+    Redacció memòria & — & Jun‑Jul 2025 & no previst; 2 setmanes exclusives \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Causes de les desviacions}
+\begin{enumerate}
+  \item \textbf{Discontinuïtat en la dedicació}. Les pauses prolongades van exigir un "peatge cognitiu" que estimo entre un 10 i un 15 \% del temps total: reprendre context, re‑configurar l'entorn i refrescar la lògica del codi.
+  \item \textbf{Corba d'aprenentatge subestimada}. Rust i Svelte van requerir més pràctica de la prevista; la integració amb Tauri es va desplaçar gairebé un any.
+  \item \textbf{Obligacions laborals i viatges}. Entre gener i octubre de 2024 vaig alternar desplaçaments a Granada i Alemanya, fragmentant els cicles de treball.
+\end{enumerate}
+
+\section{Accions correctores aplicades}
+\begin{itemize}
+  \item Vaig re‑prioritzar el backlog: vaig desplaçar el prototip de Tauri al tram final, sacrificant la funcionalitat de visualitzar arxius compartits des d'aquest, i vaig deixar la sincronització de fitxers compartits a local per a futures versions.
+  \item Vaig reservar un sprint‑buffer al desembre 2024 per absorbir retards acumulats i estabilitzar el full de ruta.
+\end{itemize}
+
+\section{Estimació d'hores dedicades}
+
+\begin{table}[h]
+  \centering
+  \caption{Pla vs. realitat en esforç mensual aproximat}
+  \label{tab:horas}
+  \begin{tabular}{@{}p{3.2cm}p{3cm}p{3cm}@{}}
+    \toprule
+    \textbf{Mètrica} & \textbf{Pla} & \textbf{Real} \\
+    \midrule
+    Mitjana mensual & 60 h & 20 – 40 h \\
+    Mes pic & 60 h & \textasciitilde45 h \\
+    Mes vall & 60 h & 0 h \\
+    Pèrdua per represes & — & 10 – 15 \% del temps total \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Lliçons finals}
+
+Aquesta experiència em va ensenyar que la \textbf{continuïtat} pesa tant com la quantitat d'hores: cada pausa llarga afegeix un peatge cognitiu que penalitza el calendari. Igualment, sense \textbf{mètriques objectives} (Kanban, full d'hores, CI amb indicadors) és fàcil sobrestimar els avenços.
+
+Per a futurs projectes aplicaré:
+\begin{enumerate}
+  \item Un tauler Kanban públic.
+  \item Buffers explícits després de viatges o pics laborals que redueixin la incertesa.
+  \item Prototips inicials per validar corbes d'aprenentatge abans de planificar dates ambicioses.
+  \item Sessions de feedback programades des del primer dia, amb temps reservat per implementar millores.
+\end{enumerate}
+
+En definitiva, tot i que els terminis inicials es van dilatar, el cronograma real mostra una evolució honesta, validada amb usuaris i enriquida amb lliçons que ja aplico en la meva pràctica professional.

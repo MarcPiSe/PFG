@@ -25,6 +25,8 @@
     \newcommand{\zhawtitlefont}{\scshape}
 \fi
 
+\usepackage[section]{placeins}
+
 %\usepackage[scaled]{helvet}
 
 %----------------------------
@@ -101,10 +103,36 @@
     sensitive=true,
     comment=[l]{//},
     morecomment=[s]{/*}{*/},
-    commentstyle=\color{codegreen}\ttfamily,
-    stringstyle=\color{codepurple}\ttfamily,
     morestring=[b]',
     morestring=[b]'
+}
+
+\lstdefinelanguage{Rust}{
+    keywords={as, break, const, continue, crate, else, enum, extern, false, fn, for, if, impl, in, let, loop, match, mod, move, mut, pub, ref, return, self, Self, static, struct, super, trait, true, type, unsafe, use, where, while, async, await, dyn},
+    keywordstyle=\color{magenta}\bfseries,
+    ndkeywords={u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64, char, str, bool, Option, Result, String, Vec},
+    ndkeywordstyle=\color{blue},
+    identifierstyle=\color{black},
+    sensitive=true,
+    comment=[l]{//},
+    morecomment=[s]{/*}{*/},
+    commentstyle=\color{codegreen}\ttfamily,
+    stringstyle=\color{codepurple}\ttfamily,
+    morestring=[b]"
+}
+
+\lstdefinelanguage{yaml}{
+  keywords={true, false, null, on, off},
+  keywordstyle=\color{codepurple},
+  sensitive=false,
+  comment=[l]{\#},
+  commentstyle=\color{codegreen},
+  stringstyle=\color{codepurple},
+  morestring=[b]',
+  morestring=[b]",
+  identifierstyle=\color{black},
+  literate=
+    {:}{{{\color{magenta}{:}}}}{1}
 }
 
 % minted is an alternative code listing package. (See chapter 2)
@@ -157,21 +185,9 @@
 \usepackage{lscape} % For landscape pages
 \usepackage{rotating} % To rotate elements (e.g., tables)
 \usepackage{float} % For advanced float positioning, like [H]
-\usepackage{listings} % To display code listings
 \usepackage{pgfgantt} % To draw Gantt charts
 
-\usepackage[
-    backend=biber,
-    sorting=none,
-    style=numeric-comp
-]{biblatex}
-\addbibresource{example.bib}
-\usepackage[autostyle=false]{csquotes}
-
 % Define colors for code listings
-\definecolor{codegreen}{rgb}{0,0.6,0}
-\definecolor{codegray}{rgb}{0.5,0.5,0.5}
-\definecolor{codepurple}{rgb}{0.58,0,0.82}
 \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
 
 % Configure listings for Java

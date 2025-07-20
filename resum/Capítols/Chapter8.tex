@@ -1,0 +1,810 @@
+\chapter{An\`alisi i disseny del sistema}
+\label{chap:analisi_disseny}
+
+\section{Introducci\'o}
+Aquest cap\'itol presenta l'an\`alisi funcional i estructural del sistema desenvolupat, aix\'i com les decisions arquitect\`oniques preses durant la seva fase de disseny. Es descriuen els components principals de l'arquitectura de microserveis, els fluxos de dades, els casos d'\'us m\'es rellevants i els esbossos inicials de la interf\'icie d'usuari, tant pel client web com per al client d'escriptori.
+
+\section{An\`alisi funcional}
+
+\subsection{Diagrama de casos d'ús}
+A continuació es mostra el diagrama general de casos d'ús, que resumeix la interacció dels actors principals (Usuari i Administrador) amb les funcionalitats clau del sistema.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{Figures/use_case_diagram.png}
+\caption{Diagrama de casos d'ús}
+\end{figure}
+
+Tal com mostra el diagrama, el sistema té diferents tipus d'usuaris (actors). El punt de partida és el \texttt{Client Tauri} l'aplicació d'escriptori pensada per a una integració total amb el sistema de fitxers local. L'\texttt{Usuari web} hereta d'aquest les funcions bàsiques de gestió d'arxius, com pujar-ne, descarregar-ne o compartir-los, però operant des del navegador. 
+
+El que els diferencia és la sincronització. Tot i que tots dos clients en tenen, la seva funció és distinta. El client \texttt{Tauri} busca la \texttt{rèplica de fitxers}, és a dir, que una carpeta local sigui un mirall del que hi ha al servidor. En canvi, a l'\texttt{aplicació web} la sincronització s'utilitza per refrescar l'estat de la interfície. D'aquesta manera, si un altre usuari, o el mateix usuari en un altre instancia de l'aplicació, fa un canvi, aquest es reflecteix a la pantalla al moment, sense haver de recarregar la pàgina. Cal dir que, tot i que el disseny inicial preveia la sincronització d'arxius compartits a Tauri, aquesta funció no es va poder implementar per falta de temps, com ja s'explica al capítol 4.
+
+Per sobre del usuari normal, tenim l'\texttt{Administrador}. Aquest rol, a part de fer el mateix que un usuari normal, té la capacitat de gestionar altres comptes d'usuari: pot consultar la llista, modificar-ne les dades o directament eliminar-los.
+
+Finalment, tenim el \texttt{Superadministrador}. És el rol amb més privilegis, ja que fa tot el que fan els altres i, a més, pot gestionar els comptes dels propis administradors, i tambe la capacitat de modificar les contrasenyes d'altres usuaris (independentment del seu rol) o modificar el rol d'un altre usuari. Això garanteix un control absolut sobre el sistema.
+
+El disseny d'aquesta jerarquia respon a una filosofia de control centralitzat. La figura del \texttt{Superadministrador} es concep com un rol únic, amb autoritat sobre tot el sistema, que es crea exclusivament durant el procés d'instal·lació mitjançant scripts, no des de l'aplicació. Això garanteix un punt de control segur. A partir d'aquí, el Superadministrador pot delegar funcions nomenant altres \texttt{Administradors}, creant una estructura piramidal. No obstant això, les accions més sensibles —com modificar contrasenyes alienes o canviar rols— queden reservades per a ell. Aquesta concentració de poder en una única figura el converteix en el màxim responsable de la seguretat i la integritat de la plataforma. Al ser un rol generat durant el procés d'instal·lació, també s'asumeig que sera el gestor principal de la aplicacio (qui inicia el procès d'instal·lació) qui asumira aquest rol al ser tambe el major responsable del manteniment de les dades y la seguretat del sistema.
+
+\subsection{Actors i m\`oduls}
+Els principals actors identificats en el sistema, ordenats per jerarquia, s\'on:
+\begin{itemize}
+  \item \textbf{Client Tauri}: Representa l'usuari de l'aplicació d'escriptori. Té accés a totes les funcionalitats de gestió de fitxers i la capacitat de sincronització automàtica amb una carpeta local.
+  \item \textbf{Usuari web}: Usuari que interactua amb el sistema a través de la interfície web. Pot gestionar els seus arxius, compartir-los i configurar el seu compte.
+  \item \textbf{Administrador}: A més de les capacitats d'un usuari normal, pot gestionar altres usuaris, incloent la modificació de dades i l'eliminació de comptes.
+  \item \textbf{Superadministrador}: El rol amb màxims privilegis. Té control total sobre la plataforma, incloent la gestió de comptes d'administradors i la capacitat de restablir qualsevol contrasenya.
+\end{itemize}
+
+El sistema es divideix funcionalment en els seg\"uents m\`oduls:
+\begin{itemize}
+  \item Autenticaci\'o i gesti\'o d'usuaris
+  \item Gesti\'o d'arxius i carpetes
+  \item Control d'acc\'es
+  \item Compartici\'o d'arxius
+  \item Sincronitzaci\'o en temps real
+  \item Gesti\'o de la paperera
+\end{itemize}
+
+\subsection{Casos d'\'us principals}
+A continuació es descriuen diversos casos d'\'us extrets de les fitxes funcionals, detallant la interacció entre els principals serveis implicats:
+
+\paragraph{UC-01: Registrar-se}
+\begin{itemize}
+  \item \textbf{Descripció}: L'usuari crea un compte nou.
+  \item \textbf{Actors}: Usuari.
+  \item \textbf{Precondicions}: No haver iniciat sessió.
+  \item \textbf{Postcondicions}: Compte creat i sessió iniciada.
+  \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El client envia una sol·licitud de registre al servei \texttt{UserAuthentication} a través del Gateway.
+        \item El servei valida les dades rebudes:
+            \begin{itemize}
+                \item Comprova que el format del nom d'usuari, contrasenya i email siguin correctes.
+                \item Verifica que el nom d'usuari no estigui ja en ús.
+                \item Consulta a \texttt{UserManagement} per assegurar que l'email no estigui registrat.
+            \end{itemize}
+        \item Si les validacions són correctes, \texttt{UserAuthentication} guarda les credencials (nom d'usuari i contrasenya xifrada) i inicia la creació de dades en altres serveis:
+            \begin{itemize}
+                \item Fa una crida a\texttt{UserManagement} per guardar la informació personal de l'usuari (email, nom i cognoms).
+                \item Crida a\texttt{FileManagement} per crear la carpeta arrel de l'usuari.
+                \item Finalment, envia un missatge asíncron a través de RabbitMQ a\texttt{SyncService} per generar l'estat inicial de sincronització (\emph{snapshot}) amb la carpeta arrel.
+            \end{itemize}
+        \item Un cop finalitzat el procés,\texttt{UserAuthentication} retorna els tokens d'accés i de refresc per iniciar la sessió automàticament.
+    \end{enumerate}
+\end{itemize}
+
+\paragraph{UC-02: Iniciar sessi\'o}
+\begin{itemize}
+  \item \textbf{Descripció}: L'usuari inicia sessió amb el seu nom i contrasenya.
+  \item \textbf{Actors}: Usuari.
+  \item \textbf{Precondicions}: Tenir un compte vàlid.
+  \item \textbf{Postcondicions}: Sessió activa.
+  \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El client envia el nom d'usuari i la contrasenya al servei\texttt{UserAuthentication}.
+        \item El servei busca l'usuari a la base de dades a partir del seu nom.
+        \item Si l'usuari existeix, compara la contrasenya rebuda amb la versió xifrada emmagatzemada.
+        \item Si les credencials són correctes, genera un nou token d'accés (JWT) de curta durada i un token de refresc de llarga durada.
+        \item Finalment, retorna els dos tokens al client per iniciar la sessió i mantenir-la activa.
+    \end{enumerate}
+\end{itemize}
+
+\paragraph{UC-08: Pujar un arxiu}
+\begin{itemize}
+  \item \textbf{Descripció}: Pujada de fitxers o creació de carpetes.
+  \item \textbf{Actors}: Usuari.
+  \item \textbf{Precondicions}: Permís d'escriptura a la carpeta de destinació.
+  \item \textbf{Postcondicions}: Nou element emmagatzemat i notificat.
+  \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El Gateway valida el token JWT i reenvia la petició a \textbf{FileManagement}.
+        \item El servei consulta a \textbf{FileAccessControl} per verificar que l'usuari té permís d'escriptura (\texttt{WRITE}) a la carpeta de destinació.
+        \item Si el permís és correcte, crea les metadades de l'arxiu (nom, mida, etc.) a la seva base de dades.
+        \item Emmagatzema el contingut del fitxer al sistema d'arxius del servidor, utilitzant un ID únic com a nom.
+        \item Sol·licita a \textbf{FileAccessControl} que assigni el permís de propietari (\texttt{ADMIN}) sobre el nou element a l'usuari que l'ha pujat.
+        \item Finalment, envia un missatge asíncron a \textbf{SyncService} per notificar la creació i actualitzar els clients.
+    \end{enumerate}
+\end{itemize}
+
+\paragraph{UC-10: Descarregar un arxiu}
+\begin{itemize}
+  \item \textbf{Descripció}: Obtenir el contingut d'un arxiu o carpeta.
+  \item \textbf{Actors}: Usuari.
+  \item \textbf{Precondicions}: Permís de lectura sobre l'element sol·licitat.
+  \item \textbf{Postcondicions}: Arxiu descarregat pel client.
+  \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El Gateway valida el JWT i reenvia la petició a \textbf{FileManagement}.
+        \item Aquest consulta \textbf{FileAccessControl} per confirmar que l'usuari té permís de lectura (\texttt{READ}).
+        \item Si els permisos són correctes, recupera el fitxer del sistema d'emmagatzematge. Si és una carpeta, la comprimeix en format ZIP.
+        \item Retorna el contingut com un flux de dades (\emph{stream}) perquè el client iniciï la descàrrega.
+    \end{enumerate}
+\end{itemize}
+
+\paragraph{UC-11: Moure un arxiu a la paperera}
+\begin{itemize}
+  \item \textbf{Descripció}: Moure elements a la paperera.
+  \item \textbf{Actors}: Usuari.
+  \item \textbf{Precondicions}: Permís d'escriptura sobre l'element.
+  \item \textbf{Postcondicions}: Element marcat com a eliminat i visible a la paperera.
+  \item \textbf{Escenari principal}:
+      \begin{enumerate}
+        \item El Gateway valida el JWT i envia la petició a \textbf{TrashService}.
+        \item \textbf{TrashService} verifica a \textbf{FileAccessControl} que l'usuari té permís d'escriptura.
+        \item Crida a \textbf{FileManagement} perquè marqui l'element i els seus descendents com a eliminats (sense esborrar-los físicament).
+        \item Crea un registre a la seva pròpia base de dades (\texttt{TrashRecord}) per cada element mogut, emmagatzemant la data d'eliminació i de caducitat.
+        \item \textbf{FileManagement} notifica a \textbf{SyncService} el canvi d'estat per actualitzar els clients.
+    \end{enumerate}
+\end{itemize}
+
+\paragraph{UC-12: Eliminar definitivament}
+\begin{itemize}
+  \item \textbf{Descripció}: Esborrar definitivament un element de la paperera.
+  \item \textbf{Actors}: Usuari.
+  \item \textbf{Precondicions}: Element a la paperera i ser-ne el propietari.
+  \item \textbf{Postcondicions}: Element eliminat de forma permanent.
+  \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El Gateway envia la petició a \textbf{TrashService}.
+        \item El servei verifica que l'usuari és el propietari de l'element.
+        \item Crida a \textbf{FileManagement} per esborrar l'arxiu físic i les seves metadades.
+        \item Canvia l'estat del \texttt{TrashRecord} a \texttt{PENDING\_DELETION} i inicia un procés de purga asíncron.
+        \item A través de missatges per cua, ordena a \textbf{FileAccessControl} i \textbf{FileSharing} que eliminin totes les regles associades a l'element.
+        \item Un cop confirmat per tots els serveis, el \texttt{TrashRecord} s'esborra.
+        \item Es notifica a \textbf{SyncService} per eliminar les còpies locals de l'element.
+    \end{enumerate}
+\end{itemize}
+
+\paragraph{UC-13: Compartir arxiu}
+\begin{itemize}
+  \item \textbf{Descripció}: Concedir o revocar accessos sobre elements a altres usuaris.
+  \item \textbf{Actors}: Usuari.
+  \item \textbf{Precondicions}: Permís de propietari o d'administrador sobre l'element.
+  \item \textbf{Postcondicions}: Els usuaris seleccionats obtenen o perden l'accés indicat.
+  \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El Gateway valida el JWT i passa la petició a \textbf{FileSharing}.
+        \item El servei verifica a \textbf{FileAccessControl} que el sol·licitant és el propietari (\texttt{ADMIN}) de l'element.
+        \item Consulta a \textbf{UserManagement} per obtenir l'ID de l'usuari amb qui es vol compartir.
+        \item Sol·licita a \textbf{FileAccessControl} que creï una nova regla d'accés (lectura o escriptura) per a l'usuari convidat sobre l'element i els seus descendents (si es una carpeta).
+        \item Desa un registre de la compartició a la seva base de dades.
+        \item Notifica a \textbf{SyncService} a través de RabbitMQ per propagar els canvis als clients implicats.
+    \end{enumerate}
+\end{itemize}
+
+(\emph{La resta de fitxes completes es poden consultar a l'Apèndix \ref{app:casos_us}})
+
+\subsection{Diagrames d'activitat dels Casos d'Ús Principals}
+A continuació, es presenten els diagrames d'activitat per als casos d'ús més representatius del sistema. Cada diagrama il·lustra el flux de treball, les decisions i les interaccions entre serveis.
+
+\subsubsection{UC-01: Registrar-se}
+El flux comença quan l'usuari envia el formulari de registre. El Gateway reenvia la petició a \texttt{UserAuthentication}, que valida el format de les dades, comprova que el nom d'usuari no existeixi i consulta a \texttt{UserManagement} per assegurar que l'email tampoc estigui en ús. Si tot és correcte, orquestra la creació de l'usuari: guarda credencials, demana a \texttt{UserManagement} que creï el perfil, a \texttt{FileManagement} que generi la carpeta arrel i notifica a \texttt{SyncService} via RabbitMQ. Finalment, retorna els tokens per iniciar la sessió.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Figures/ad_UC01.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-01: Registrar-se.}
+    \label{fig:ad_uc01}
+\end{figure}
+
+\subsubsection{UC-02: Iniciar sessió}
+L'usuari envia les seves credencials, que el Gateway reenvia a \texttt{UserAuthentication}. El servei busca l'usuari i, si existeix, verifica la contrasenya. Si les credencials són correctes, genera i retorna un nou joc de tokens (accés i refresc) per activar la sessió del client.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/ad_UC02.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-02: Iniciar sessió.}
+    \label{fig:ad_uc02}
+\end{figure}
+
+\subsubsection{UC-08: Crear o pujar arxius}
+\texttt{FileManagement} rep la petició i consulta a \texttt{FileAccessControl} si l'usuari té permís d'escriptura. Si és així, crea les metadades, emmagatzema el fitxer (si escau), demana a \texttt{FileAccessControl} que assigni el permís de propietari i finalment notifica \texttt{SyncService} del canvi.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Figures/ad_UC08.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-08: Crear o pujar arxius.}
+    \label{fig:ad_uc08}
+\end{figure}
+
+\subsubsection{UC-10: Descarregar}
+Després de verificar el permís de lectura a \texttt{FileAccessControl}, \texttt{FileManagement} recupera el fitxer del sistema d'emmagatzematge (o el comprimeix si és una carpeta) i el retorna al client com un flux de dades.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Figures/ad_UC10.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-10: Descarregar.}
+    \label{fig:ad_uc10}
+\end{figure}
+
+\subsubsection{UC-11: Enviar a la paperera}
+\texttt{TrashService} rep la petició, verifica el permís d'escriptura a \texttt{FileAccessControl} i demana a \texttt{FileManagement} que marqui l'element com a eliminat. Finalment, crea un registre a la seva pròpia base de dades per gestionar la caducitat de l'element.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/ad_UC11.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-11: Enviar a la paperera.}
+    \label{fig:ad_uc11}
+\end{figure}
+
+\subsubsection{UC-12: Eliminar permanentment}
+Quan un usuari sol·licita l'eliminació permanent, \texttt{TrashService} verifica que n'és el propietari. Si ho és, inicia la saga d'eliminació enviant missatges a la cua perquè \texttt{FileManagement}, \texttt{FileAccessControl} i \texttt{FileSharing} purguin totes les dades associades de forma asíncrona.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/ad_UC12.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-12: Eliminar permanentment.}
+    \label{fig:ad_uc12}
+\end{figure}
+
+\subsubsection{UC-13: Compartir arxius}
+El servei \texttt{FileSharing} comprova que el sol·licitant és el propietari de l'element. Després, obté l'ID de l'usuari convidat de \texttt{UserManagement} i demana a \texttt{FileAccessControl} que creï la nova regla d'accés. Finalment, desa un registre de la compartició i notifica \texttt{SyncService}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/ad_UC13.png}
+    \caption{Diagrama d'activitat per al cas d'ús UC-13: Compartir arxius.}
+    \label{fig:ad_uc13}
+\end{figure}
+
+\par\noindent(\emph{La resta de diagrames d'activitat detallats per a cada cas d'ús es poden consultar a l'Apèndix \ref{app:diagrames_activitat}}).
+
+\subsection{Matriu de traçabilitat entre requisits i casos d'ús}
+Per garantir que tots els requisits funcionals descrits al Capítol 6 estan coberts per la funcionalitat del sistema, es presenta a la Taula \ref{tab:traceability_matrix} una matriu de traçabilitat detallada. Aquesta relaciona cada requisit funcional amb els casos d'ús individuals (detallats a l'Apèndix \ref{app:casos_us}) que l'implementen.
+
+\begin{sidewaystable}[htbp]
+\centering
+\caption{Matriu de traçabilitat detallada entre requisits funcionals i casos d'ús.}
+\label{tab:traceability_matrix}
+\resizebox{\textheight}{!}{%
+\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{Requisit Funcional} & \rotatebox{90}{UC-01} & \rotatebox{90}{UC-02} & \rotatebox{90}{UC-03} & \rotatebox{90}{UC-04} & \rotatebox{90}{UC-05} & \rotatebox{90}{UC-06} & \rotatebox{90}{UC-07} & \rotatebox{90}{UC-08} & \rotatebox{90}{UC-09A} & \rotatebox{90}{UC-09B} & \rotatebox{90}{UC-09C} & \rotatebox{90}{UC-10} & \rotatebox{90}{UC-11} & \rotatebox{90}{UC-12} & \rotatebox{90}{UC-13} & \rotatebox{90}{UC-13A} & \rotatebox{90}{UC-13B} & \rotatebox{90}{UC-14} & \rotatebox{90}{UC-15} & \rotatebox{90}{UC-16} & \rotatebox{90}{UC-17} & \rotatebox{90}{UC-18} & \rotatebox{90}{UC-19} & \rotatebox{90}{UC-20} & \rotatebox{90}{UC-21} & \rotatebox{90}{UC-22} \\
+\hline
+1. Gestió d'usuaris & X & X & X & & & & & & & & & & & & & & & & X & X & & & & & & \\
+\hline
+2. Gestió d'arxius & & & & & & & & X & X & X & X & X & X & & X & X & X & & & & X & & & & & \\
+\hline
+3. Sistema de paperera & & & & & & & & & & & & & X & X & & & & & & & X & & & & & \\
+\hline
+4. Compartició d'arxius & & & & & & & & & & & & & & & X & X & X & & & & & & & & & \\
+\hline
+5. Sincronització en temps real & & & & & & & & & & & & & & & & & & X & & & & & & & & X \\
+\hline
+6. Panell d'administració & & & & X & X & X & X & & & & & & & & & & & & & & & X & X & X & X & \\
+\hline
+\end{tabular}%
+}
+\end{sidewaystable}
+
+\section{Arquitectura del sistema}
+
+\subsection{Visi\'o general i components}
+El sistema segueix una arquitectura de microserveis, dissenyada per garantir l'escalabilitat, la resiliència i la mantenibilitat. La figura \ref{fig:backend_component_diagram} mostra una visió general d'aquesta arquitectura, els components principals de la qual es descriuen a continuació.
+
+\begin{sidewaysfigure}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/backend_component_diagram.png}
+    \caption{Diagrama de components de l'arquitectura del backend.}
+    \label{fig:backend_component_diagram}
+\end{sidewaysfigure}
+
+\begin{itemize}
+    \item \textbf{Gateway}: Actua com a punt d'entrada únic (\textit{Single Point of Entry}) per a totes les sol·licituds dels clients. La seva funció és enrutar les peticions REST a l'API cap al microservei corresponent i gestionar les connexions WebSocket per a les actualitzacions en temps real, dirigint-les exclusivament al \textbf{SyncService}. Aquesta capa d'abstracció simplifica la comunicació des del client i centralitza la gestió de l'autenticació i el control d'accés inicial.
+
+    \item \textbf{Core Services}: Constitueixen el nucli funcional de l'aplicació. Estan agrupats en dos paquets lògics:
+    \begin{itemize}
+        \item \textbf{User \& Auth}: Conté els serveis responsables de l'autenticació (\texttt{UserAuthentication}) i la gestió de les dades dels usuaris (\texttt{UserManagement}).
+        \item \textbf{File System}: Agrupa tots els serveis relacionats amb la gestió d'arxius, incloent la manipulació de metadades (\texttt{FileManagement}), el control d'accés (\texttt{FileAccessControl}), la compartició (\texttt{FileSharing}), la gestió de la paperera (\texttt{Trash}) i la sincronització en temps real (\texttt{SyncService}).
+    \end{itemize}
+
+    \item \textbf{Components d'Infraestructura}:
+    \begin{itemize}
+        \item \textbf{Eureka Server}: Actua com a registre de serveis. Cada microservei es registra a Eureka en iniciar-se, la qual cosa permet el descobriment dinàmic de serveis dins de la xarxa interna.
+        \item \textbf{PostgreSQL Database}: És el sistema de gestió de bases de dades relacional on tots els serveis principals persisteixen les seves dades. Encara que comparteixen la mateixa instància de base de dades, cada servei opera sobre el seu propi esquema per mantenir un acoblament baix.
+    \end{itemize}
+
+    \item \textbf{Comunicació Asíncrona (RabbitMQ)}: Per a operacions que requereixen un alt grau de desacoblament o que són de llarga durada, s'utilitza una cua de missatges amb RabbitMQ. Els principals fluxos asíncrons són:
+    \begin{itemize}
+        \item \textbf{Sincronització en Temps Real}: Serveis com \texttt{FileManagement} i \texttt{FileSharing} publiquen esdeveniments (p. ex., creació o modificació d'un arxiu). \texttt{SyncService} consumeix aquests esdeveniments per notificar els clients connectats via WebSocket.
+        \item \textbf{Eliminació d'Usuari (Fan-out)}: Quan s'inicia l'eliminació d'un usuari, es publica un únic missatge que és rebut per tots els serveis. Aquest patró (\textit{fan-out}) assegura que cada servei pugui purgar de forma independent totes les dades associades a l'usuari eliminat.
+        \item \textbf{Eliminació Permanent (Saga)}: El servei \texttt{Trash} orquestra l'eliminació definitiva d'un fitxer mitjançant una saga. Aquest patró s'utilitza perquè l'eliminació no és una acció atòmica, sinó una transacció distribuïda que ha d'executar-se de forma coordinada en diversos serveis. La saga, implementada mitjançant missatges, garanteix que l'operació es completi de forma resilient: \texttt{Trash} publica un missatge que és consumit pels serveis del paquet \textit{File System} per garantir que es netegen totes les dades relacionades (metadades, permisos i comparticions) de forma eventualment consistent.
+    \end{itemize}
+\end{itemize}
+
+Aquesta estructura modular permet un desenvolupament i desplegament independents de cada component. A continuació, es detalla el disseny específic de cada microservei, incloent les seves responsabilitats, el seu diagrama de classes i l'esquema de la seva base de dades, per proporcionar una visió completa del seu funcionament intern.
+
+\subsection{Disseny dels microserveis}
+
+\subsubsection{UserAuthentication}
+Aquest servei és el responsable de gestionar les credencials dels usuaris (nom d'usuari, contrasenya) i els seus rols. Centralitza els processos de registre, inici de sessió i validació de tokens JWT.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{Figures/diagrama_clases_userAuth.png}
+    \caption{Diagrama de classes del servei UserAuthentication.}
+    \label{fig:userauth_classes}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\textwidth]{Figures/diagrama_bd_userAuth.png}
+    \caption{Diagrama de la base de dades del servei UserAuthentication.}
+    \label{fig:userauth_db}
+\end{figure}
+
+Per optimitzar el rendiment de les consultes, s'ha creat un índex a la columna \texttt{email} de la taula \texttt{user\_info}. Aquest índex és crucial per accelerar la comprovació d'existència de correus durant el registre d'usuaris i per a les cerques ràpides basades en l'adreça de correu electrònic.
+
+\subsubsection{UserManagement}
+Gestiona la informació personal dels usuaris, com el correu electrònic, el nom i els cognoms. Col·labora estretament amb \texttt{UserAuthentication} durant el registre i proporciona funcionalitats per a la cerca i gestió d'usuaris per part dels administradors.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.25\textwidth]{Figures/diagrama_clases_userManagement.png}
+    \caption{Diagrama de classes del servei UserManagement.}
+    \label{fig:usermgmt_classes}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\textwidth]{Figures/diagrama_bd_userManagement.png}
+    \caption{Diagrama de la base de dades del servei UserManagement.}
+    \label{fig:usermgmt_db}
+\end{figure}
+
+Per optimitzar el rendiment de les consultes, s'ha creat un índex a la columna \texttt{email} de la taula \texttt{user\_info}. Aquest índex és crucial per accelerar la comprovació d'existència de correus durant el registre d'usuaris i per a les cerques ràpides basades en l'adreça de correu electrònic.
+
+\subsubsection{FileManagement}
+És el nucli del sistema de gestió de fitxers. S'encarrega de les metadades dels arxius i carpetes (nom, mida, dates) i de la seva ubicació física al servidor. Processa operacions com la creació, pujada, descàrrega, renombrat i moviment d'elements.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{Figures/diagrama_clases_filemanager.png}
+    \caption{Diagrama de classes del servei FileManagement.}
+    \label{fig:filemgmt_classes}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{Figures/diagrama_bd_filemanager.png}
+    \caption{Diagrama de la base de dades del servei FileManagement.}
+    \label{fig:filemgmt_db}
+\end{figure}
+
+Per garantir un rendiment òptim, s'han definit diversos índexs. A les taules \texttt{file\_entity} i \texttt{folder\_entity}, s'han indexat les columnes \texttt{user\_id} i \texttt{parent\_id}. L'índex sobre \texttt{user\_id} accelera la càrrega inicial dels arxius d'un usuari, mentre que l'índex sobre \texttt{parent\_id} és fonamental per llistar de forma ràpida el contingut d'una carpeta, una de les operacions més freqüents del sistema.
+
+\subsubsection{FileAccessControl}
+Aquest servei actua com a autoritat central per a la gestió de permisos. Emmagatzema les regles que defineixen quin usuari té quin tipus d'accés (lectura, escriptura, propietari) sobre cada fitxer o carpeta. És consultat per altres serveis abans de realitzar qualsevol operació crítica.
+
+\begin{figure}[H]
+\centering
+    \includegraphics[width=0.5\textwidth]{Figures/diagrama_clases_fileAccesControl.png}
+    \caption{Diagrama de classes del servei FileAccessControl.}
+    \label{fig:fac_classes}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+    \includegraphics[width=0.3\textwidth]{Figures/diagrama_bd_fileAccesControl.png}
+    \caption{Diagrama de la base de dades del servei FileAccessControl.}
+    \label{fig:fac_db}
+\end{figure}
+
+La taula \texttt{access\_rule} està fortament indexada per les columnes \texttt{user\_id} i \texttt{element\_id}. Aquests índexs són essencials per a la funció principal del servei: verificar de manera quasi instantània si un usuari concret té permís sobre un element específic, una consulta que es realitza abans de la majoria d'operacions sobre fitxers.
+
+\subsubsection{FileSharing}
+Gestiona la lògica de compartició d'arxius entre usuaris. Emmagatzema registres de qui ha compartit què i amb qui, i col·labora amb \texttt{FileAccessControl} per aplicar els permisos corresponents als usuaris convidats.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\textwidth]{Figures/diagrama_clases_fileSharing.png}
+    \caption{Diagrama de classes del servei FileSharing.}
+    \label{fig:filesharing_classes}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{Figures/diagrama_bd_fileSharing.png}
+    \caption{Diagrama de la base de dades del servei FileSharing.}
+    \label{fig:filesharing_db}
+\end{figure}
+
+Per optimitzar les consultes relacionades amb la compartició, s'han creat índexs a les columnes \texttt{user\_id} i \texttt{element\_id} de la taula \texttt{shared\_access}. Aquests permeten recuperar ràpidament tots els elements compartits amb un usuari o, inversament, tots els usuaris amb qui s'ha compartit un element.
+
+\subsubsection{Trash}
+Implementa la funcionalitat de la paperera de reciclatge. Quan un usuari elimina un element, aquest servei el marca com a "eliminat" i emmagatzema un registre amb la data de caducitat. També orquestra el procés d'eliminació permanent (la saga descrita anteriorment).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{Figures/diagrama_clases_Trash.png}
+    \caption{Diagrama de classes del servei Trash.}
+    \label{fig:trash_classes}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\textwidth]{Figures/diagrama_bd_trash.png}
+    \caption{Diagrama de la base de dades del servei Trash.}
+    \label{fig:trash_db}
+\end{figure}
+
+El rendiment de la paperera es millora amb índexs a les columnes \texttt{user\_id} i \texttt{element\_id}. El primer accelera la càrrega de la vista de la paperera per a un usuari, mentre que el segon permet localitzar de forma eficient el registre d'un element concret quan es vol restaurar o eliminar.
+
+\subsubsection{SyncService}
+És el responsable de les actualitzacions en temps real. Manté una connexió WebSocket amb els clients actius i consumeix esdeveniments de RabbitMQ per notificar canvis en l'estructura de fitxers, mantenint així les interfícies d'usuari sincronitzades.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{Figures/diagrama_clases_sync.png}
+    \caption{Diagrama de classes del servei SyncService.}
+    \label{fig:sync_classes}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\textwidth]{Figures/diagrama_bd_sync.png}
+    \caption{Diagrama de la base de dades del servei SyncService.}
+    \label{fig:sync_db}
+\end{figure}
+
+Per assegurar la rapidesa en les operacions de sincronització, s'han establert índexs clau. A la taula \texttt{snapshot\_entity}, s'indexa \texttt{user\_id} per localitzar ràpidament l'estat de sincronització d'un usuari. A la taula \texttt{snapshot\_element\_entity}, s'indexen \texttt{snapshot\_id} per carregar tots els elements d'una sincronització i \texttt{element\_id} per trobar un fitxer o carpeta específic dins de l'estructura de sincronització.
+
+\subsection{Patrons de disseny i principis arquitectònics}
+El desenvolupament del backend s'ha guiat per un conjunt de patrons de disseny i principis arquitectònics orientats a garantir un codi net, mantenible, escalable i desacoblat. L'ús del framework Spring facilita l'adopció d'aquests patrons, especialment a través del seu contenidor d'Inversió de Control (IoC) i la injecció de dependències.
+
+\begin{itemize}
+    \item \textbf{Arquitectura per Capes}: Tots els microserveis segueixen una arquitectura de tres capes ben diferenciades (Controlador, Servei i Repositori). Aquesta separació de responsabilitats és fonamental:
+    \begin{itemize}
+        \item La \textbf{Capa de Controlador} gestiona les peticions HTTP i actua com a façana de l'API.
+        \item La \textbf{Capa de Servei} conté la lògica de negoci del domini.
+        \item La \textbf{Capa de Repositori} abstrau l'accés a les dades.
+    \end{itemize}
+    Aquesta estructura compleix el \textbf{Principi de Responsabilitat Única (SRP)} de SOLID, ja que cada capa té un propòsit clar i aïllat, la qual cosa millora la cohesió i redueix l'acoblament.
+
+    \item \textbf{Injecció de Dependències i Inversió de Control (IoC)}: En lloc que els components creïn les seves pròpies dependències, el contenidor de Spring les ''injecta'' automàticament. Per exemple, un servei no crea la seva instància de repositori, sinó que la declara com una dependència. Això compleix el \textbf{Principi d'Inversió de Dependències (DIP)} de SOLID, ja que els mòduls d'alt nivell (serveis) depenen d'abstraccions (interfícies de repositori) en lloc d'implementacions concretes. El resultat és un sistema molt més modular i fàcil de provar, ja que les dependències es poden substituir per simulacres (\textit{mocks}) en els tests unitaris.
+
+    \item \textbf{Patró Repository}: Implementat a través de Spring Data JPA, aquest patró desacobla la lògica de negoci de la tecnologia de persistència de dades. Els serveis interactuen amb una interfície (p. ex., \texttt{UserRepository}) sense conèixer els detalls de la base de dades subjacents. Això permetria, per exemple, canviar de PostgreSQL a una altra base de dades SQL amb un impacte mínim en el codi de l'aplicació.
+
+    \item \textbf{Data Transfer Object (DTO)}: El sistema utilitza objectes específics per a les peticions (`...Request`) i respostes (`...Response`) de l'API. Aquest patró desacobla el model de dades intern (entitats JPA) del model exposat públicament. Això no només és una bona pràctica per a la seguretat, evitant l'exposició excessiva de dades, sinó que també permet que l'API evolucioni de forma independent al model de la base de dades.
+\end{itemize}
+
+A més d'aquests principis generals, en el codi dels microserveis s'han implementat patrons de disseny específics per resoldre problemes concrets del domini:
+\begin{itemize}
+    \item \textbf{Patró Composite}: En el servei \texttt{FileManagement}, el model de dades de carpetes (\texttt{FolderEntity}), que contenen una llista d'altres carpetes filles, implementa aquest patró de manera natural. Això permet tractar de manera uniforme i recursiva les estructures de directoris, simplificant operacions com moure o eliminar una carpeta amb tot el seu contingut. L'ús d'una \texttt{ElementEntity} associada a cada fitxer i carpeta permet, a més, que la resta del sistema pugui referenciar-los de manera polimòrfica a través d'un ID comú.
+
+    \item \textbf{Patró State}: El servei \texttt{Trash} utilitza una implementació d'aquest patró. L'entitat \texttt{TrashRecord} té un camp d'estat (\texttt{RecordStatus}) que determina el seu comportament: un element només es pot restaurar si el seu estat és \texttt{ACTIVE}, pero no si està \texttt{PENDING\_DELETION}.
+
+    \item \textbf{Patró Soft Delete}: Implementat al servei \texttt{TrashService}, aquest patró evita l'eliminació física immediata dels arxius quan un usuari els elimina. En lloc d'esborrar definitivament un element del sistema de fitxers, es marca com a "eliminat" mitjançant el mètode \texttt{setElementDeletedState} i es crea un registre \texttt{TrashRecord} que inclou la data d'eliminació i una data de caducitat. Aquesta aproximació millora significativament l'experiència d'usuari en permetre la recuperació d'eliminacions accidentals, i garanteix que les dades estiguin disponibles per a processos de neteja programats.
+
+    \item \textbf{Patró Saga}: Utilitzat per orquestrar transaccions distribuïdes complexes que no poden ser atòmiques, especialment en l'eliminació permanent d'elements (UC-12) i l'eliminació completa d'usuaris (UC-07). El \texttt{TrashService} actua com a coordinador, enviant missatges asíncrons a través de RabbitMQ a múltiples microserveis (\texttt{FileManagement}, \texttt{FileAccessControl}, \texttt{FileSharing}) perquè cadascun executi la seva part de l'operació. Aquest patró és fonamental per garantir la consistència eventual en un sistema distribuït, ja que proporciona tolerància a fallades mitjançant mecanismes de reintent i confirmació, assegurant que totes les operacions es completin de manera fiable sense bloquejar el sistema.
+
+    \item \textbf{Patró Factory Method (simplificat)}: A \texttt{UserAuthentication}, el mètode \texttt{generateToken} actua com una fàbrica. El client sol·licita un token, i el mètode, basant-se en un paràmetre, decideix si ha de crear un token d'accés (de curta durada) o un de refresc (de llarga durada), encapsulant-ne la lògica de creació.
+
+    \item \textbf{Patró d'Agregació}: El disseny de les dades d'usuari segueix aquest principi. En lloc de tenir una entitat monolítica, la informació s'ha separat en dos microserveis:
+    \begin{itemize}
+        \item \texttt{UserAuthentication}: Gestiona les dades crítiques de seguretat (credencials, rol).
+        \item \texttt{UserManagement}: Gestiona la informació personal (nom, correu electrònic).
+    \end{itemize}
+    Aquesta agregació, connectada per un \texttt{userId} comú, permet tractar l'usuari com una unitat lògica alhora que es mantenen les seves dades desacoblades i segures.
+\end{itemize}
+
+\subsection{Justificació de l'arquitectura de microserveis}
+L'elecció d'una arquitectura de microserveis per a aquest projecte no va ser una decisió trivial, sinó una resposta estratègica als requisits funcionals i no funcionals del sistema, com l'escalabilitat, la resiliència i la mantenibilitat a llarg termini. A continuació, es justifiquen els motius principals d'aquesta elecció enfront d'una alternativa monolítica:
+
+\begin{itemize}
+    \item \textbf{Escalabilitat independent}: En una aplicació de gestió de fitxers, no tots els components tenen la mateixa càrrega de treball. Per exemple, el servei \texttt{FileManagement} (operacions de fitxers) i el \texttt{SyncService} (connexions WebSocket) són susceptibles de rebre una càrrega molt més alta que el \texttt{UserManagement}. L'arquitectura de microserveis permet escalar horitzontalment només aquells serveis que ho necessiten, optimitzant l'ús de recursos sense haver de replicar tota l'aplicació.
+
+    \item \textbf{Mantenibilitat i Cohesió}: El sistema es descompon en serveis petits i cohesionats, cadascun amb una única responsabilitat ben definida (p. ex., autenticació, gestió d'arxius, paperera). Aquesta separació facilita enormement el desenvolupament i el manteniment. Un desenvolupador pot treballar en el servei de compartició (\texttt{FileSharing}) sense necessitat de comprendre les complexitats internes del sistema de sincronització, la qual cosa redueix la càrrega cognitiva i accelera el cicle de desenvolupament.
+
+    \item \textbf{Aïllament de fallades i resiliència}: En un sistema monolític, un error no controlat en una part del codi pot provocar la caiguda de tota l'aplicació. En canvi, amb microserveis, una fallada en un servei no crític (com podria ser el \texttt{TrashService}) no hauria d'afectar el funcionament de la resta del sistema, com l'autenticació o la gestió de fitxers. L'ús d'un registre de serveis com Eureka contribueix a aquesta resiliència, permetent que els serveis es descobreixin i es comuniquin de manera dinàmica fins i tot si algunes instàncies fallen.
+
+    \item \textbf{Flexibilitat tecnològica}: Tot i que actualment tots els serveis estan desenvolupats amb Spring Boot, l'arquitectura de microserveis ofereix la llibertat d'adoptar diferents tecnologies per a diferents serveis en el futur. Si, per exemple, es descobrís que un servei de processament de fitxers requereix un llenguatge optimitzat per a computació intensiva, es podria desenvolupar i integrar sense afectar la resta de l'ecosistema tecnològic.
+
+    \item \textbf{Desplegament independent i agilitat}: Cada microservei es pot desplegar de forma autònoma. Això significa que una actualització al servei d'usuaris (\texttt{UserManagement}) es pot llançar a producció sense necessitat de tornar a provar i desplegar tot el sistema. Aquest cicle de desplegament més ràpid i menys arriscat augmenta l'agilitat del projecte i facilita la integració contínua.
+\end{itemize}
+
+En conclusió, l'arquitectura de microserveis proporciona la base per a un sistema robust, flexible i preparat per créixer, alineant-se perfectament amb els objectius d'un servei al núvol modern i escalable.
+
+\section{Disseny de les interfícies d'usuari}
+
+\subsection{Client web}
+El disseny de la interfície d'usuari per al client web s'ha centrat a oferir una experiència intuïtiva i funcional, semblant a la d'altres serveis d'emmagatzematge al núvol. A continuació es descriuen les principals vistes i components.
+
+\subsubsection{Autenticació}
+El primer contacte de l'usuari amb l'aplicació són els formularis d'autenticació. Es presenta una finestra per a l'inici de sessió (Figura \ref{fig:react-login}) i una altra per al registre de nous usuaris (Figura \ref{fig:react-registre}), amb validacions clares per a cada camp.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/interficies/react-login.jpg}
+        \caption{Pantalla d'inici de sessió.}
+        \label{fig:react-login}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/interficies/react-registre.jpg}
+        \caption{Pantalla de registre.}
+        \label{fig:react-registre}
+    \end{minipage}
+\end{figure}
+
+\subsubsection{Escriptori principal}
+Un cop autenticat, l'usuari accedeix a l'escriptori principal (Figura \ref{fig:react-pantalla-principal}), que és el nucli de l'aplicació. Aquesta vista es compon de diversos elements clau.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Figures/interficies/react-pantalla-principal.jpg}
+    \caption{Escriptori principal del client web.}
+    \label{fig:react-pantalla-principal}
+\end{figure}
+
+\paragraph{Navegació i accions principals}
+A la part esquerra, un arbre de carpetes (Figura \ref{fig:react-arbre-carpetes}) permet navegar per l'estructura de directoris. En fer clic a una carpeta, s'accedeix al seu contingut i el seu estil canvia per reflectir que és la seleccionada. L'arbre inclou seccions per als arxius propis, els compartits i la paperera. La vista de contingut es pot filtrar per tipus d'element (fitxers o carpetes) mitjançant dos botons dedicats. Just a sobre d'aquest arbre, es troben els botons d'acció contextuals a la carpeta actual (Figura \ref{fig:react-boto-de-accions}), que permeten pujar arxius, pujar carpetes senceres o crear una nova carpeta. Aquestes opcions també estan disponibles a la secció de "Compartits amb mi", sempre que l'usuari tingui permisos d'escriptura a la carpeta seleccionada.
+
+A la cantonada superior dreta (Figura \ref{fig:react-botons-esquina-sup-der}), es troben les opcions globals: un menú per ordenar els fitxers (per nom, data, etc.), un botó per accedir al panell d'administració (només visible per a administradors), un altre per a la configuració del compte d'usuari, que obre un modal per modificar dades personals i canviar la contrasenya (Figura \ref{fig:react-modal-configuracio-usuari}), i, finalment, el botó per tancar la sessió.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Figures/interficies/react-arbre-carpetes.jpg}
+    \caption{Detall de l'arbre de navegació, on s'indica la carpeta seleccionada i les diferents seccions.}
+    \label{fig:react-arbre-carpetes}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/interficies/react-boto-de-accions.jpg}
+        \caption{Accions sobre la carpeta actual (pujar i crear).}
+        \label{fig:react-boto-de-accions}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/interficies/react-botons-esquina-sup-der.jpg}
+        \caption{Opcions globals (ordenació, configuració i logout).}
+        \label{fig:react-botons-esquina-sup-der}
+    \end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Figures/interficies/react-modal-configuracio-usuari.jpg}
+    \caption{Modal de configuració d'usuari.}
+    \label{fig:react-modal-configuracio-usuari}
+\end{figure}
+
+\paragraph{Interacció amb elements}
+Cada fitxer o carpeta disposa d'un menú contextual (Figura \ref{fig:react-opcions-root}) que permet realitzar diverses operacions. Algunes d'aquestes accions es duen a terme a través de finestres modals dissenyades per a cada tasca específica:
+\begin{itemize}
+    \item \textbf{Detalls}: Mostra informació rellevant de l'element (Figura \ref{fig:react-modal-detalls-fitxer}).
+    \item \textbf{Renombrar}: Permet canviar el nom de l'element (Figura \ref{fig:react-modal-renomenar-fitxer}).
+    \item \textbf{Moure}: Facilita el trasllat d'elements a una altra carpeta (Figura \ref{fig:react-modal-moure-elements}).
+    \item \textbf{Compartir}: Obre un modal on es pot buscar un usuari, assignar-li permisos i gestionar els accessos existents (Figura \ref{fig:react-modal-compartir-fitxer}).
+\end{itemize}
+
+A més d'aquestes accions que es gestionen amb finestres modals, el menú contextual ofereix opcions d'acció directa com ara descarregar, copiar, tallar i eliminar (que mou l'element a la paperera).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Figures/interficies/react-opcions-root.jpg}
+    \caption{Menú contextual d'accions sobre un element.}
+    \label{fig:react-opcions-root}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/interficies/react-modal-detalls-fitxer.jpg}
+        \caption{Modal amb els detalls d'un fitxer.}
+        \label{fig:react-modal-detalls-fitxer}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/interficies/react-modal-renomenar-fitxer.jpg}
+        \caption{Modal per renombrar un element.}
+        \label{fig:react-modal-renomenar-fitxer}
+    \end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Figures/interficies/react-modal-moure-elements.jpg}
+    \caption{Modal per moure elements a una altra ubicació.}
+    \label{fig:react-modal-moure-elements}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Figures/interficies/react-modal-compartir-fitxer.jpg}
+    \caption{Modal de compartició d'arxius.}
+    \label{fig:react-modal-compartir-fitxer}
+\end{figure}
+
+\paragraph{Gestió d'elements compartits}
+Per als elements que es troben a la secció "Compartits amb mi", les opcions del menú contextual són dinàmiques i depenen dels permisos que l'usuari tingui sobre l'element (Figura \ref{fig:react-opcions-compartir}). Les opcions només es mostren si l'usuari té els privilegis necessaris:
+\begin{itemize}
+    \item Per a tots els fitxers compartits, existeix l'opció per deixar de compartir, que elimina l'accés de l'usuari a l'element.
+    \item Si es tenen permisos de \textbf{lectura}, es pot descarregar l'arxiu i consultar-ne els detalls.
+    \item Si es tenen permisos d'\textbf{escriptura}, a més de les anteriors, s'afegeixen les opcions de renombrar, copiar, tallar i moure l'element.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Figures/interficies/react-opcions-compartir.jpg}
+    \caption{Menú contextual per a un element compartit.}
+    \label{fig:react-opcions-compartir}
+\end{figure}
+
+\paragraph{Paperera}
+La vista de la paperera (Figura \ref{fig:react-opcions-paperera}) mostra tots els elements eliminats i ofereix un menú contextual amb diverses opcions per a cada un:
+\begin{itemize}
+    \item \textbf{Restaurar}: Retorna l'element a la seva ubicació original.
+    \item \textbf{Eliminar definitivament}: Esborra l'element de forma permanent del sistema.
+    \item \textbf{Detalls}: Mostra la informació de l'arxiu.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Figures/interficies/react-opcions-paperera.jpg}
+    \caption{Opcions de la paperera.}
+    \label{fig:react-opcions-paperera}
+\end{figure}
+
+\paragraph{Panell d'administració}
+Finalment, els usuaris amb rol d'administrador tenen accés a un panell exclusiu (Figura \ref{fig:react-admin-usuaris}) per gestionar els comptes d'usuari de la plataforma, on poden veure la llista d'usuaris, modificar-ne les dades o eliminar-los.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Figures/interficies/react-admin-usuaris.jpg}
+    \caption{Panell d'administració d'usuaris.}
+    \label{fig:react-admin-usuaris}
+\end{figure}
+
+\subsection{Client d'escriptori}
+El disseny de l'aplicació d'escriptori amb Tauri s'ha centrat a oferir una experiència nativa i integrada amb el sistema operatiu, posant especial èmfasi en la sincronització automàtica de fitxers.
+
+El primer cop que s'inicia l'aplicació, es presenta a l'usuari la finestra de configuració inicial (Figura \ref{fig:tauri_config_inicial}). Aquí ha de definir dos paràmetres clau: l'endpoint del servidor al qual es connectarà i la carpeta local que es mantindrà sincronitzada. Aquesta configuració és un pas previ indispensable per poder operar.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Figures/interficies/tauri-config-inicial.jpg}
+    \caption{Configuració inicial del servidor i la carpeta de sincronització.}
+    \label{fig:tauri_config_inicial}
+\end{figure}
+
+Un cop guardada la configuració, l'usuari ha d'iniciar sessió (Figura \ref{fig:tauri_login}) per accedir al seu compte. L'aplicació desarà els tokens d'autenticació de manera segura, de manera que aquest pas només serà necessari la primera vegada o si la sessió caduca després d'un llarg període d'inactivitat.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Figures/interficies/tauri-login.jpg}
+    \caption{Finestra d'inici de sessió del client Tauri.}
+    \label{fig:tauri_login}
+\end{figure}
+
+Després d'autenticar-se, l'usuari accedeix a les funcionalitats principals de l'aplicació:
+\begin{itemize}
+    \item \textbf{Finestra principal de sincronització}: Aquesta és la vista principal de l'aplicació (Figura \ref{fig:tauri_main}), on l'usuari pot monitorar l'estat de la sincronització. Mostra un historial de les pujades i baixades actives i recents. A la part superior, disposa de quatre botons per a accions ràpides:
+    \begin{itemize}
+        \item Obrir la carpeta de sincronització local (icona de carpeta).
+        \item Accedir a l'aplicació web (icona de globus terraqüi).
+        \item Forçar una sincronització manual (icona de dues fletxes circulars).
+        \item Obrir el menú de configuració (icona d'engranatge).
+    \end{itemize}
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=\textwidth]{Figures/interficies/tauri-pantalla-principal.jpg}
+        \caption{Finestra principal de sincronització del client d'escriptori.}
+        \label{fig:tauri_main}
+    \end{figure}
+
+    \item \textbf{Menú de configuració}: L'usuari pot accedir a una finestra de configuració (Figura \ref{fig:tauri_config}) per ajustar paràmetres de l'aplicació, com les dades de l'usuari o canviar la carpeta de sincronització.
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=\textwidth]{Figures/interficies/tauri-configuracio.jpg}
+        \caption{Menú de configuració del client d'escriptori.}
+        \label{fig:tauri_config}
+    \end{figure}
+\end{itemize}
+
+Finalment, l'aplicació s'integra a la safata del sistema operatiu mitjançant una icona (Figura \ref{fig:tauri_icon}), des de la qual es pot accedir ràpidament a la configuració, obrir la carpeta local, veure l'estat de la sincronització o tancar l'aplicació.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Figures/interficies/tauri-icon.jpg}
+    \caption{Menú contextual de la icona de Tauri a la safata del sistema.}
+    \label{fig:tauri_icon}
+\end{figure}
+
+\section{Consideracions de seguretat}
+La seguretat ha estat un pilar fonamental en el disseny del sistema, abordant-se des de l'autenticació i autorització fins a la protecció de dades en trànsit i en repòs. A continuació, es detallen les principals mesures implementades.
+
+\subsection{Control d'accés basat en rols (RBAC)}
+El sistema implementa un model de control d'accés jeràrquic amb tres nivells de rols, gestionats pel servei \texttt{UserAuthentication}. Aquests rols defineixen les capacitats de cada usuari dins de l'aplicació, seguint el principi de mínim privilegi. A la Taula \ref{tab:roles_permisos} es resumeixen els permisos associats a cada rol.
+
+\begin{table}[H]
+\centering
+\caption{Matriu de permisos per rol d'usuari.}
+\label{tab:roles_permisos}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Acció} & \textbf{Usuari (USER)} & \textbf{Administrador (ADMIN)} & \textbf{Superadministrador (SUPER\_ADMIN)} \\
+\hline
+\hline
+\multicolumn{4}{|c|}{\textbf{Gesti\'o del propi compte}} \\
+\hline
+Actualitzar perfil i canviar contrasenya & \checkmark & \checkmark & \checkmark \\
+Eliminar el propi compte & \checkmark & \checkmark & \checkmark \\
+\hline
+\multicolumn{4}{|c|}{\textbf{Gesti\'o d'arxius}} \\
+\hline
+Crear, llegir, actualitzar i esborrar (CRUD) arxius/carpetes propis & \checkmark & \checkmark & \checkmark \\
+Compartir arxius/carpetes amb altres usuaris & \checkmark & \checkmark & \checkmark \\
+Gestionar la paperera (restaurar/eliminar permanentment) & \checkmark & \checkmark & \checkmark \\
+\hline
+\multicolumn{4}{|c|}{\textbf{Administració d'usuaris}} \\
+\hline
+Llistar tots els usuaris &  & \checkmark & \checkmark \\
+Actualitzar perfil d'usuaris amb rol USER &  & \checkmark & \checkmark \\
+Eliminar usuaris amb rol USER &  & \checkmark & \checkmark \\
+\hline
+\multicolumn{4}{|c|}{\textbf{Administració avançada}} \\
+\hline
+Actualitzar perfil d'usuaris amb rol ADMIN &  &  & \checkmark \\
+Eliminar usuaris amb rol ADMIN &  &  & \checkmark \\
+Canviar la contrasenya de qualsevol usuari &  &  & \checkmark \\
+Modificar el rol de qualsevol usuari &  &  & \checkmark \\
+\hline
+\end{tabular}%
+}
+\end{table}
+
+A més d'aquests rols globals, el servei \texttt{FileAccessControl} gestiona permisos a nivell d'element individual (\texttt{READ}, \texttt{WRITE}, \texttt{ADMIN}), la qual cosa permet un control granular sobre qui pot accedir o modificar cada arxiu i carpeta.
+
+\subsection{Mecanismes de protecció}
+Per garantir la integritat i confidencialitat del sistema, s'han implementat diverses capes de seguretat:
+\begin{itemize}
+    \item \textbf{Autenticació amb JSON Web Tokens (JWT)}: Totes les peticions a l'API protegida han d'incloure un token JWT. Aquest és generat pel servei \texttt{UserAuthentication} utilitzant un sistema de criptografia asimètrica (RSA), signant cada token amb una clau privada. El \textbf{Gateway}, posseïdor de la clau pública, actua com a primer filtre, validant la signatura i la caducitat del token abans de redirigir la petició. Aquest mètode garanteix que només el servei d'autenticació pot generar tokens vàlids. A més, el payload del token s'enriqueix amb el rol de l'usuari i un identificador de connexió únic (\texttt{connectionId}). Un cop validat el token, la combinació de l'identificador d'usuari (\texttt{userId}) i aquesta \texttt{connectionId} permet identificar de manera inequívoca cada sessió d'usuari, possibilitant una autorització primerenca i un control més granular.
+    
+    \item \textbf{Abstracció d'identificadors interns}: El sistema ha estat dissenyat per no exposar mai els identificadors interns de la base de dades (claus primàries, generalment UUIDs) a l'exterior. En la comunicació amb els clients, s'utilitzen identificadors públics com el nom d'usuari per a referenciar usuaris o un `elementId` específic per a fitxers i carpetes. Aquesta capa d'abstracció impedeix que un atacant que pugui interceptar la comunicació obtingui informació sobre l'estructura interna del sistema o pugui endevinar fàcilment els identificadors per accedir a recursos aliens (atac de tipus \textit{Insecure Direct Object Reference} o IDOR).
+    
+    \item \textbf{Validació de dades d'entrada}: Els serveis del backend apliquen validacions estrictes sobre les dades rebudes (p. ex., format de correu electrònic, complexitat de la contrasenya, tipus de dades esperats). Aquesta mesura és crucial per prevenir atacs d'injecció (com SQLi o XSS) i garantir la integritat de les dades.
+    
+    \item \textbf{Limitació de recursos}: S'estableix un límit en la mida màxima dels arxius que es poden pujar (100 MB), configurat a nivell del servei \texttt{FileManagement}. Aquesta mesura evita que un atacant pugui esgotar l'espai d'emmagatzematge del servidor. Tot i que no s'ha arribat a implementar un límit en la quantitat de peticions per segon (\textit{rate limiting}), es considera una millora de seguretat crucial a desenvolupar en el futur per protegir el sistema contra atacs de denegació de servei (DoS) i de força bruta.
+\end{itemize}
+
+\subsection{Justificació del compliment del RGPD}
+El disseny del sistema ha tingut en compte els requisits del Reglament General de Protecció de Dades (RGPD) des de la seva concepció:
+\begin{itemize}
+  \item \textbf{Dret a l'oblit}: El sistema garanteix el dret a l'eliminació completa de les dades d'un usuari. Quan un usuari elimina el seu compte (o un administrador ho fa en nom seu), s'inicia una saga asíncrona que propaga l'ordre d'eliminació a tots els microserveis. Aquest procés assegura que totes les dades personals, arxius, permisos i registres associats siguin purgats de forma permanent de totes les bases de dades.
+  
+  \item \textbf{Seguretat i confidencialitat de les dades}: Les dades personals es tracten amb mesures de seguretat robustes. Les contrasenyes s'emmagatzemen a la base de dades utilitzant un algorisme de \textit{hashing} fort, la qual cosa impedeix que puguin ser llegides fins i tot en cas d'un accés no autoritzat a la base de dades. L'accés a les dades en repòs està restringit per les credencials de cada microservei. A més, el sistema implementa una ofuscació per disseny per als arxius emmagatzemats: cada fitxer es desa al sistema d'arxius amb un identificador únic (UUID) com a nom, sense la seva extensió original, i tots junts en una única ubicació. Aquesta tècnica desacobla el contingut de les seves metadades (nom, propietari), fent que, en cas d'un accés no autoritzat al servidor, sigui extremadament difícil identificar, interpretar o associar els arxius amb usuaris concrets.
+  
+  \item \textbf{Principi de minimització de dades i accés granular}: El sistema està dissenyat per limitar l'accés a les dades només al personal autoritzat a través del sistema de rols. A més, la compartició d'arxius requereix una acció explícita per part del propietari, que pot assignar permisos de només lectura o d'escriptura, garantint que els usuaris només tinguin accés a la informació estrictament necessària.
+\end{itemize}
+
+\section{Cobertura dels requisits no funcionals}
+El disseny del sistema, detallat al llarg d'aquest capítol, s'ha concebut per donar resposta directa als requisits no funcionals establerts al Capítol 6. A continuació, s'analitza com les decisions arquitectòniques i de disseny cobreixen cada una de les àrees clau.
+
+\begin{itemize}
+    \item \textbf{Rendiment i Escalabilitat}: La decisió fonamental per satisfer aquests requisits és l'adopció d'una \textbf{arquitectura de microserveis}. Com s'ha justificat prèviament, aquesta permet l'\textbf{escalabilitat horitzontal} independent de cada servei, de manera que components amb alta demanda com \texttt{FileManagement} o \texttt{SyncService} es poden replicar per gestionar un major nombre d'usuaris i operacions simultànies. Per garantir temps de resposta ràpids, el disseny de la base de dades de cada microservei inclou \textbf{índexs estratègics} en les consultes més freqüents, com la cerca d'usuaris o la llista de fitxers d'una carpeta.
+
+    \item \textbf{Seguretat}: Aquesta àrea es cobreix àmpliament a la secció de "Consideracions de seguretat". El disseny compleix els requisits d'alta prioritat mitjançant:
+    \begin{itemize}
+        \item Una \textbf{autenticació segura} amb tokens JWT signats amb criptografia asimètrica (RSA).
+        \item Un \textbf{control d'accés granular} a dos nivells: un control global basat en rols (RBAC) i un de més fi a nivell de fitxer i carpeta gestionat pel servei \texttt{FileAccessControl}.
+        \item La \textbf{protecció contra atacs comuns} com IDOR, mitjançant l'abstracció d'identificadors interns, i la validació estricta de totes les dades d'entrada per prevenir injeccions de codi.
+    \end{itemize}
+
+    \item \textbf{Mantenibilitat}: L'arquitectura de microserveis promou per si mateixa un codi modular i desacoblat. A més, tal com s'ha detallat a la secció de "Patrons de disseny i principis arquitectònics", cada servei segueix una \textbf{arquitectura per capes} (controlador, servei, repositori) que aplica el Principi de Responsabilitat Única (SRP). L'ús extensiu de la \textbf{injecció de dependències} i patrons com el \textbf{Repository} o el \textbf{DTO} contribueix a un codi més net, extensible i fàcil de provar.
+
+    \item \textbf{Portabilitat}: L'arquitectura dissenyada està pensada per a un desplegament amb \textbf{Docker}, complint el requisit d'instal·lació senzilla a través de contenidors. La comunicació entre serveis a través d'un registre com Eureka i una passarel·la API facilita l'orquestració en qualsevol entorn compatible.
+
+    \item \textbf{Usabilitat i Compatibilitat}: El disseny contempla des del principi la creació de clients diferenciats (web i escriptori amb Tauri), la qual cosa garanteix la compatibilitat amb els principals navegadors i sistemes operatius. Els esbossos de les interfícies d'usuari defineixen una estructura de vistes lògica i funcional, orientada a una experiència d'usuari intuïtiva.
+\end{itemize}
+
+\section{Conclusions}
+L'arquitectura modular basada en microserveis ha permès una separació clara de responsabilitats, facilitant el desenvolupament, la integració de clients diversos i el compliment de requisits com la seguretat o la sincronització. El disseny de la interfície s'ha alineat des del principi amb la funcionalitat tècnica, assegurant una experiència d'usuari fluida.

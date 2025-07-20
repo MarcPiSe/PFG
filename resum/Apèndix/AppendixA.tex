@@ -1,0 +1,430 @@
+% !TEX root = ../main.tex
+
+%----------------------------------------------------------------------------------------
+% APPENDIX A
+%----------------------------------------------------------------------------------------
+
+\chapter{Fitxes completes de Casos d'Ús}
+\label{app:casos_us}
+
+A continuació es detallen els casos d'ús principals del sistema, descrivint la interacció entre els actors i els diferents microserveis.
+
+\section{UC-01: Registrar-se}
+\begin{itemize}
+    \item \textbf{Descripció}: L'usuari crea un compte nou.
+    \item \textbf{Actors}: Usuari.
+    \item \textbf{Precondicions}: No haver iniciat sessió.
+    \item \textbf{Postcondicions}: Compte creat i sessió iniciada.
+    \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El client envia una sol·licitud de registre al servei \textbf{UserAuthentication} a través del Gateway.
+        \item El servei valida les dades rebudes:
+        \begin{itemize}
+            \item Comprova que el format del nom d'usuari, contrasenya i email siguin correctes.
+            \item Verifica que el nom d'usuari no estigui ja en ús.
+            \item Consulta a \textbf{UserManagement} per assegurar que l'email no estigui registrat.
+        \end{itemize}
+        \item Si les validacions són correctes, \textbf{UserAuthentication} guarda les credencials (nom d'usuari i contrasenya xifrada) i inicia la creació de dades en altres serveis:
+        \begin{itemize}
+            \item Fa una crida a \textbf{UserManagement} per guardar la informació personal de l'usuari (email, nom i cognoms).
+            \item Crida a \textbf{FileManagement} per crear la carpeta arrel de l'usuari.
+            \item Finalment, envia un missatge asíncron a través de RabbitMQ a \textbf{SyncService} per generar l'estat inicial de sincronització (\emph{snapshot}) amb la carpeta arrel.
+        \end{itemize}
+        \item Un cop finalitzat el procés, \textbf{UserAuthentication} retorna els tokens d'accés i de refresc per iniciar la sessió automàticament.
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-02: Iniciar sessió}
+\begin{itemize}
+    \item \textbf{Descripció}: L'usuari inicia sessió amb el seu nom i contrasenya.
+    \item \textbf{Actors}: Usuari.
+    \item \textbf{Precondicions}: Tenir un compte vàlid.
+    \item \textbf{Postcondicions}: Sessió activa.
+    \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El client envia el nom d'usuari i la contrasenya al servei \textbf{UserAuthentication}.
+        \item El servei busca l'usuari a la base de dades a partir del seu nom.
+        \item Si l'usuari existeix, compara la contrasenya rebuda amb la versió xifrada emmagatzemada.
+        \item Si les credencials són correctes, genera un nou token d'accés (JWT) de curta durada i un token de refresc de llarga durada.
+        \item Finalment, retorna els dos tokens al client per iniciar la sessió i mantenir-la activa.
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-03: Actualitzar perfil}
+\begin{itemize}
+    \item \textbf{Descripció}: L'usuari modifica les seves dades personals (nom, cognoms i email).
+    \item \textbf{Actors}: Usuari.
+    \item \textbf{Precondicions}: Sessió iniciada.
+    \item \textbf{Postcondicions}: Dades de perfil actualitzades a la base de dades.
+    \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El Gateway valida el token JWT i reenvia la petició a \textbf{UserManagement} amb l'ID de l'usuari.
+        \item El servei busca l'usuari a la base de dades.
+        \item Valida que el nou email no estigui en ús per un altre usuari.
+        \item Si la validació és correcta, actualitza el nom, cognoms i email de l'usuari.
+        \item Retorna les dades actualitzades.
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-04: Cercar usuaris}
+\begin{itemize}
+    \item \textbf{Descripció}: Permet localitzar usuaris per nom d'usuari o correu electrònic.
+    \item \textbf{Actors}: Usuari.
+    \item \textbf{Precondicions}: Sessió iniciada.
+    \item \textbf{Postcondicions}: Retorna una llista d'usuaris que coincideixen amb el criteri de cerca.
+    \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El Gateway valida el JWT i envia la petició de cerca a \textbf{UserManagement}.
+        \item \textbf{UserManagement} fa una crida a \textbf{UserAuthentication} per buscar coincidències per nom d'usuari.
+        \item Paral·lelament, \textbf{UserManagement} busca a la seva pròpia base de dades coincidències per email.
+        \item Combina i retorna una llista d'usuaris (nom d'usuari i email) que compleixen el criteri de cerca.
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-05: Llistar usuaris (administració)}
+\begin{itemize}
+    \item \textbf{Descripció}: Un administrador o superadministrador consulta la llista completa d'usuaris del sistema.
+    \item \textbf{Actors}: Administrador, Superadministrador.
+    \item \textbf{Precondicions}: Rol d'administrador o superadministrador.
+    \item \textbf{Postcondicions}: Llista de tots els usuaris amb les seves dades.
+    \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El Gateway valida el JWT i el rol del sol·licitant, i reenvia la petició a \textbf{UserManagement}.
+        \item \textbf{UserManagement} obté la llista de tots els usuaris de la seva base de dades.
+        \item A continuació, fa una crida a \textbf{UserAuthentication} per obtenir les dades d'autenticació (nom d'usuari i rol) de cada usuari.
+        \item Si el sol·licitant és Superadministrador, la informació retornada per \textbf{UserAuthentication} inclou també la contrasenya.
+        \item Finalment, \textbf{UserManagement} combina la informació i retorna una llista completa amb els detalls de cada usuari.
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-06: Actualitzar usuari (administració)}
+\begin{itemize}
+    \item \textbf{Descripció}: Un administrador o superadministrador modifica les dades d'un altre usuari, incloent el seu rol o contrasenya.
+    \item \textbf{Actors}: Administrador, Superadministrador.
+    \item \textbf{Precondicions}: Rol administratiu i respectar la jerarquia de permisos.
+    \item \textbf{Postcondicions}: Dades de l'usuari objectiu actualitzades.
+    \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El Gateway valida el JWT i el rol, i envia la petició a \textbf{UserManagement}.
+        \item \textbf{UserManagement} fa una crida a \textbf{UserAuthentication} per comprovar els rols tant del sol·licitant com de l'usuari a modificar.
+        \item Es valida la jerarquia: un Administrador només pot modificar usuaris amb rol \texttt{USER}, mentre que un Superadministrador pot modificar qualsevol usuari excepte treure's a si mateix el rol de Superadministrador.
+        \item \textbf{UserManagement} actualitza la informació personal (nom, email) a la seva base de dades.
+        \item Simultàniament, fa una crida a \textbf{UserAuthentication} perquè actualitzi les dades d'autenticació (nom d'usuari, rol i, si s'escau, la contrasenya).
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-07: Eliminar usuari (administració)}
+\begin{itemize}
+    \item \textbf{Descripció}: Un administrador o superadministrador inicia el procés d'eliminació completa d'un usuari.
+    \item \textbf{Actors}: Administrador, Superadministrador.
+    \item \textbf{Precondicions}: Rol administratiu i respectar la jerarquia de permisos.
+    \item \textbf{Postcondicions}: S'inicia l'eliminació asíncrona de les dades de l'usuari a tots els serveis.
+    \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El Gateway valida el JWT i el rol, i reenvia la petició a \textbf{UserManagement}.
+        \item \textbf{UserManagement} crida a \textbf{UserAuthentication} per verificar la jerarquia de rols (un Administrador només pot eliminar usuaris \texttt{USER}, un Superadministrador pot eliminar Administradors).
+        \item Si es compleixen els permisos, \textbf{UserManagement} envia un missatge d'eliminació a una cua de RabbitMQ.
+        \item Aquest missatge és rebut per \textbf{UserAuthentication}, que esborra les credencials de l'usuari i, al seu torn, envia un nou missatge de notificació d'eliminació.
+        \item Aquest segon missatge és consumit per la resta de microserveis (\textbf{FileManagement}, \textbf{FileSharing}, etc.), que procedeixen a eliminar de forma asíncrona totes les dades associades a l'usuari.
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-08: Crear o pujar arxius}
+\begin{itemize}
+  \item \textbf{Descripció}: Pujada de fitxers o creació de carpetes.
+  \item \textbf{Actors}: Usuari.
+  \item \textbf{Precondicions}: Permís d'escriptura a la carpeta de destinació.
+  \item \textbf{Postcondicions}: Nou element emmagatzemat i notificat.
+  \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El Gateway valida el token JWT i reenvia la petició a \textbf{FileManagement}.
+        \item El servei consulta a \textbf{FileAccessControl} per verificar que l'usuari té permís d'escriptura (\texttt{WRITE}) a la carpeta de destinació.
+        \item Si el permís és correcte, crea les metadades de l'arxiu (nom, mida, etc.) a la seva base de dades.
+        \item Emmagatzema el contingut del fitxer al sistema d'arxius del servidor, utilitzant un ID únic com a nom.
+        \item Sol·licita a \textbf{FileAccessControl} que assigni el permís de propietari (\texttt{ADMIN}) sobre el nou element a l'usuari que l'ha pujat.
+        \item Finalment, envia un missatge asíncron a \textbf{SyncService} per notificar la creació i actualitzar els clients.
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-09A: Renomenar un element}
+\begin{itemize}
+    \item \textbf{Descripció}: Canvia el nom d'un arxiu o carpeta existent.
+    \item \textbf{Actors}: Usuari.
+    \item \textbf{Precondicions}: Permís d'escriptura sobre l'element.
+    \item \textbf{Postcondicions}: L'element té el nou nom assignat.
+    \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El Gateway valida el JWT i envia la sol·licitud a \textbf{FileManagement} amb el nou nom.
+        \item \textbf{FileManagement} crida a \textbf{FileAccessControl} per verificar que l'usuari té permís d'escriptura (\texttt{WRITE}) sobre l'element.
+        \item Actualitza el nom de l'element a la base de dades.
+        \item Envia un missatge d'actualització (\texttt{update}) a \textbf{SyncService} per notificar el canvi als clients.
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-09B: Moure un element}
+\begin{itemize}
+    \item \textbf{Descripció}: Canvia la ubicació d'un arxiu o carpeta a una nova carpeta de destinació.
+    \item \textbf{Actors}: Usuari.
+    \item \textbf{Precondicions}: Permís d'escriptura sobre l'element a moure i sobre la carpeta de destinació.
+    \item \textbf{Postcondicions}: L'element es troba a la nova ubicació.
+    \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El Gateway valida el JWT i envia la sol·licitud a \textbf{FileManagement} amb l'ID de l'element i de la destinació.
+        \item \textbf{FileManagement} verifica a \textbf{FileAccessControl} el permís d'escriptura (\texttt{WRITE}) sobre l'origen i la destinació.
+        \item Valida que l'operació no generi una dependència circular (p. ex., moure una carpeta dins d'ella mateixa).
+        \item Actualitza la referència a la carpeta pare de l'element a la base de dades.
+        \item Envia un missatge d'actualització (\texttt{update}) a \textbf{SyncService} per notificar el canvi als clients.
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-09C: Copiar un element}
+\begin{itemize}
+    \item \textbf{Descripció}: Crea un duplicat d'un arxiu o carpeta en una ubicació de destinació.
+    \item \textbf{Actors}: Usuari.
+    \item \textbf{Precondicions}: Permís de lectura sobre l'element a copiar i d'escriptura sobre la carpeta de destinació.
+    \item \textbf{Postcondicions}: Es crea una còpia de l'element a la destinació.
+    \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El Gateway valida el JWT i envia la sol·licitud a \textbf{FileManagement}.
+        \item \textbf{FileManagement} verifica a \textbf{FileAccessControl} el permís de lectura (\texttt{READ}) sobre l'origen i d'escriptura (\texttt{WRITE}) sobre la destinació.
+        \item Crea les noves entitats a la base de dades per a la còpia, assignant nous IDs.
+        \item Si és un fitxer, duplica el contingut físic al sistema d'emmagatzematge.
+        \item Sol·licita a \textbf{FileAccessControl} que assigni el permís de propietari (\texttt{ADMIN}) sobre el nou element a l'usuari.
+        \item Envia un missatge de creació (\texttt{create}) a \textbf{SyncService} per notificar el nou element als clients.
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-10: Descarregar}
+\begin{itemize}
+  \item \textbf{Descripció}: Obtenir el contingut d'un arxiu o carpeta.
+  \item \textbf{Actors}: Usuari.
+  \item \textbf{Precondicions}: Permís de lectura sobre l'element sol·licitat.
+  \item \textbf{Postcondicions}: Arxiu descarregat pel client.
+  \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El Gateway valida el JWT i reenvia la petició a \textbf{FileManagement}.
+        \item Aquest consulta \textbf{FileAccessControl} per confirmar que l'usuari té permís de lectura (\texttt{READ}).
+        \item Si els permisos són correctes, recupera el fitxer del sistema d'emmagatzematge. Si és una carpeta, la comprimeix en format ZIP.
+        \item Retorna el contingut com un flux de dades (\emph{stream}) perquè el client iniciï la descàrrega.
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-11: Enviar a la paperera}
+\begin{itemize}
+  \item \textbf{Descripció}: Moure elements a la paperera.
+  \item \textbf{Actors}: Usuari.
+  \item \textbf{Precondicions}: Permís d'escriptura sobre l'element.
+  \item \textbf{Postcondicions}: Element marcat com a eliminat i visible a la paperera.
+  \item \textbf{Escenari principal}:
+      \begin{enumerate}
+        \item El Gateway valida el JWT i envia la petició a \textbf{TrashService}.
+        \item \textbf{TrashService} verifica a \textbf{FileAccessControl} que l'usuari té permís d'escriptura.
+        \item Crida a \textbf{FileManagement} perquè marqui l'element i els seus descendents com a eliminats (sense esborrar-los físicament).
+        \item Crea un registre a la seva pròpia base de dades (\texttt{TrashRecord}) per cada element mogut, emmagatzemant la data d'eliminació i de caducitat.
+        \item \textbf{FileManagement} notifica a \textbf{SyncService} el canvi d'estat per actualitzar els clients.
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-12: Eliminar permanentment}
+\begin{itemize}
+  \item \textbf{Descripció}: Esborrar definitivament un element de la paperera.
+  \item \textbf{Actors}: Usuari.
+  \item \textbf{Precondicions}: Element a la paperera i ser-ne el propietari.
+  \item \textbf{Postcondicions}: Element eliminat de forma permanent.
+  \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El Gateway envia la petició a \textbf{TrashService}.
+        \item El servei verifica que l'usuari és el propietari de l'element.
+        \item Crida a \textbf{FileManagement} per esborrar l'arxiu físic i les seves metadades.
+        \item Canvia l'estat del \texttt{TrashRecord} a \texttt{PENDING\_DELETION} i inicia un procés de purga asíncron.
+        \item A través de missatges per cua, ordena a \textbf{FileAccessControl} i \textbf{FileSharing} que eliminin totes les regles associades a l'element.
+        \item Un cop confirmat per tots els serveis, el \texttt{TrashRecord} s'esborra.
+        \item Es notifica a \textbf{SyncService} per eliminar les còpies locals de l'element.
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-13: Compartir arxius}
+\begin{itemize}
+  \item \textbf{Descripció}: Concedir o revocar accessos sobre elements a altres usuaris.
+  \item \textbf{Actors}: Usuari.
+  \item \textbf{Precondicions}: Permís de propietari o d'administrador sobre l'element.
+  \item \textbf{Postcondicions}: Els usuaris seleccionats obtenen o perden l'accés indicat.
+  \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El Gateway valida el JWT i passa la petició a \textbf{FileSharing}.
+        \item El servei verifica a \textbf{FileAccessControl} que el sol·licitant és el propietari (\texttt{ADMIN}) de l'element.
+        \item Consulta a \textbf{UserManagement} per obtenir l'ID de l'usuari amb qui es vol compartir.
+        \item Sol·licita a \textbf{FileAccessControl} que creï una nova regla d'accés (lectura o escriptura) per a l'usuari convidat sobre l'element i els seus descendents (si es una carpeta).
+        \item Desa un registre de la compartició a la seva base de dades.
+        \item Notifica a \textbf{SyncService} a través de RabbitMQ per propagar els canvis als clients implicats.
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-13A: Revocar accés a un arxiu (propietari)}
+\begin{itemize}
+    \item \textbf{Descripció}: El propietari d'un element compartit revoca el permís d'accés a un altre usuari.
+    \item \textbf{Actors}: Usuari (propietari).
+    \item \textbf{Precondicions}: Ser el propietari (\texttt{ADMIN}) de l'element.
+    \item \textbf{Postcondicions}: L'usuari objectiu perd l'accés a l'element.
+    \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El Gateway valida el JWT i reenvia la petició a \textbf{FileSharing} amb l'ID de l'element i el nom de l'usuari a qui es revoca el permís.
+        \item \textbf{FileSharing} crida a \textbf{FileAccessControl} per verificar que el sol·licitant és el propietari (\texttt{ADMIN}) de l'element.
+        \item Sol·licita a \textbf{UserManagement} l'ID de l'usuari a eliminar.
+        \item Crida a \textbf{FileAccessControl} per eliminar la regla d'accés associada a l'usuari i a l'element (i als seus descendents, si és una carpeta).
+        \item Elimina el registre corresponent de la taula de \texttt{SharedAccess} de la seva pròpia base de dades.
+        \item Notifica a \textbf{SyncService} a través de RabbitMQ per actualitzar els clients implicats.
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-13B: Deixar de seguir un arxiu compartit (receptor)}
+\begin{itemize}
+    \item \textbf{Descripció}: Un usuari elimina un element que algú altre havia compartit amb ell.
+    \item \textbf{Actors}: Usuari (receptor).
+    \item \textbf{Precondicions}: Un altre usuari ha compartit un element amb l'usuari actual.
+    \item \textbf{Postcondicions}: L'element desapareix de la llista d'arxius compartits de l'usuari.
+    \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El Gateway valida el JWT i reenvia la petició a \textbf{FileSharing}. El flux és idèntic a \texttt{UC-13A}, però en aquest cas el sol·licitant és el mateix usuari a qui es revocarà el permís.
+        \item \textbf{FileSharing} comprova que el sol·licitant i l'usuari a eliminar són el mateix.
+        \item Es crida a \textbf{FileAccessControl} per eliminar la regla d'accés i a la base de dades de \textbf{FileSharing} per eliminar el registre de compartició.
+        \item Finalment, es notifica a \textbf{SyncService} per actualitzar la interfície de l'usuari.
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-14: Actualització en temps real}
+\begin{itemize}
+    \item \textbf{Descripció}: Manté els clients sincronitzats amb els canvis del sistema de fitxers mitjançant WebSockets.
+    \item \textbf{Actors}: Usuari.
+    \item \textbf{Precondicions}: Sessió iniciada.
+    \item \textbf{Postcondicions}: El client rep esdeveniments de sincronització i actualitza el seu estat local.
+    \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El client (Tauri o web) estableix una connexió WebSocket amb el Gateway, enviant el token JWT a les capçaleres.
+        \item El Gateway valida el token i reenvia la connexió a \textbf{SyncService}, afegint a les capçaleres l'ID d'usuari i un ID de connexió únic.
+        \item \textbf{SyncService} registra la connexió WebSocket associada a l'usuari. Si el client és d'escriptori (Tauri), li envia l'estat actual complet del seu arbre de fitxers (\textit{snapshot}).
+        \item Quan un altre servei (com \textbf{FileManagement} o \textbf{FileSharing}) realitza una acció que modifica l'estructura de fitxers, envia un missatge a una cua de RabbitMQ.
+        \item \textbf{SyncService} consumeix aquest missatge, actualitza l'snapshot de l'usuari afectat i propaga el canvi.
+        \item Per als clients d'escriptori, envia el \textit{snapshot} actualitzat. Per als clients web, envia una ordre de refresc (\texttt{updated\_tree}) per a la part de la interfície afectada. Això es fa a través de la connexió WebSocket corresponent.
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-15: Canviar contrasenya}
+\begin{itemize}
+    \item \textbf{Descripció}: L'usuari actualitza la seva contrasenya.
+    \item \textbf{Actors}: Usuari.
+    \item \textbf{Precondicions}: Sessió iniciada i coneixement de la contrasenya actual.
+    \item \textbf{Postcondicions}: Contrasenya modificada a la base de dades.
+    \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El Gateway valida el JWT i reenvia la petició a \textbf{UserAuthentication} amb l'ID de l'usuari i les contrasenyes (antiga i nova).
+        \item El servei recupera l'usuari de la base de dades.
+        \item Compara la contrasenya antiga rebuda amb el que hi ha emmagatzemat per verificar-la.
+        \item Valida que la nova contrasenya compleix els requisits de seguretat (llargada, majúscules, minúscules i números).
+        \item Si tot és correcte, xifra la nova contrasenya i l'actualitza a la base de dades.
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-16: Eliminar compte}
+\begin{itemize}
+    \item \textbf{Descripció}: L'usuari sol·licita esborrar definitivament el seu propi compte i tots els seus arxius.
+    \item \textbf{Actors}: Usuari.
+    \item \textbf{Precondicions}: Sessió iniciada.
+    \item \textbf{Postcondicions}: S'inicia el procés d'eliminació asíncrona de totes les dades de l'usuari.
+    \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El Gateway valida el JWT i passa la petició a \textbf{UserAuthentication}.
+        \item \textbf{UserAuthentication} esborra l'entitat de l'usuari de la seva base de dades.
+        \item A continuació, envia un missatge a una cua de RabbitMQ per notificar que un usuari ha estat eliminat.
+        \item La resta de microserveis (\textbf{UserManagement}, \textbf{FileManagement}, etc.) estan subscrits a aquesta cua i, en rebre el missatge, cadascun inicia la purga de totes les dades associades a l'ID d'aquell usuari.
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-17: Restaurar des de la paperera}
+\begin{itemize}
+    \item \textbf{Descripció}: Recuperar un element prèviament enviat a la paperera.
+    \item \textbf{Actors}: Usuari.
+    \item \textbf{Precondicions}: L'element es troba a la paperera i l'usuari n'és el propietari.
+    \item \textbf{Postcondicions}: Element restaurat a la seva ubicació original i ja no és visible a la paperera.
+    \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El Gateway valida el JWT i envia la sol·licitud a \textbf{TrashService}.
+        \item \textbf{TrashService} verifica que l'usuari que fa la petició és el propietari.
+        \item Crida a \textbf{FileManagement} per canviar l'estat de l'element (i els seus descendents, si és una carpeta) a no eliminat.
+        \item \textbf{TrashService} elimina de la seva base de dades tots els registres (\texttt{TrashRecord}) associats als elements restaurats.
+        \item Finalment, \textbf{FileManagement} notifica a \textbf{SyncService} el canvi d'estat a través de RabbitMQ per actualitzar la vista dels clients.
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-18: Modificar contrasenya d'un altre usuari (Superadministració)}
+\begin{itemize}
+    \item \textbf{Descripció}: El Superadministrador canvia la contrasenya d'un altre usuari.
+    \item \textbf{Actors}: Superadministrador.
+    \item \textbf{Precondicions}: Rol de Superadministrador.
+    \item \textbf{Postcondicions}: Contrasenya de l'usuari objectiu modificada.
+    \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item La petició arriba a \textbf{UserManagement} a través del Gateway.
+        \item \textbf{UserManagement} crida a \textbf{UserAuthentication} per validar que el sol·licitant és Superadministrador.
+        \item Si la validació és correcta, \textbf{UserManagement} envia una ordre d'actualització a \textbf{UserAuthentication} amb la nova contrasenya.
+        \item \textbf{UserAuthentication} valida el format de la nova contrasenya, la xifra i l'emmagatzema a la seva base de dades.
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-19: Modificar un administrador (Superadministració)}
+\begin{itemize}
+    \item \textbf{Descripció}: El Superadministrador modifica les dades d'un usuari amb rol d'Administrador.
+    \item \textbf{Actors}: Superadministrador.
+    \item \textbf{Precondicions}: Rol de Superadministrador.
+    \item \textbf{Postcondicions}: Dades de l'administrador actualitzades.
+    \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item Similar a \texttt{UC-06}, el Gateway reenvia la petició a \textbf{UserManagement}.
+        \item \textbf{UserManagement} crida a \textbf{UserAuthentication} per verificar que el sol·licitant és \texttt{SUPER\_ADMIN} i l'usuari a modificar és \texttt{ADMIN}.
+        \item Si la jerarquia de permisos és correcta, \textbf{UserManagement} actualitza la informació personal.
+        \item Paral·lelament, \textbf{UserAuthentication} actualitza les dades d'autenticació (nom d'usuari, rol).
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-20: Eliminar un administrador (Superadministració)}
+\begin{itemize}
+    \item \textbf{Descripció}: El Superadministrador elimina un compte d'usuari amb rol d'Administrador.
+    \item \textbf{Actors}: Superadministrador.
+    \item \textbf{Precondicions}: Rol de Superadministrador.
+    \item \textbf{Postcondicions}: S'inicia l'eliminació asíncrona de les dades de l'administrador.
+    \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El Gateway valida el rol i reenvia la petició a \textbf{UserManagement}.
+        \item \textbf{UserManagement} crida a \textbf{UserAuthentication} per verificar que el sol·licitant és \texttt{SUPER\_ADMIN} i l'usuari a eliminar és \texttt{ADMIN}.
+        \item Si els permisos són correctes, s'inicia el mateix procés d'eliminació asíncrona descrit a \texttt{UC-07}, enviant missatges a la resta de serveis per purgar totes les dades associades.
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-21: Modificar nivell de permisos d'un usuari (Superadministració)}
+\begin{itemize}
+    \item \textbf{Descripció}: El Superadministrador canvia el rol d'un usuari (p. ex., de \texttt{USER} a \texttt{ADMIN}).
+    \item \textbf{Actors}: Superadministrador.
+    \item \textbf{Precondicions}: Rol de Superadministrador.
+    \item \textbf{Postcondicions}: El rol de l'usuari objectiu és modificat.
+    \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item El flux és una variant de \texttt{UC-06}. La petició arriba a \textbf{UserManagement}.
+        \item Es verifica a \textbf{UserAuthentication} que el sol·licitant té permisos per realitzar el canvi de rol. Un Superadministrador no pot rebaixar el seu propi rol.
+        \item \textbf{UserManagement} envia la petició a \textbf{UserAuthentication} per actualitzar el camp \texttt{role} de l'usuari a la base de dades d'autenticació.
+    \end{enumerate}
+\end{itemize}
+
+\section{UC-22: Sincronitzar arxius compartits}
+\begin{itemize}
+    \item \textbf{Descripció}: Manté els clients sincronitzats amb els canvis en arxius i carpetes que altres usuaris han compartit amb ells. Aquesta funcionalitat no va ser completament implementada.
+    \item \textbf{Actors}: Usuari.
+    \item \textbf{Precondicions}: Altres usuaris han compartit elements amb l'usuari actual.
+    \item \textbf{Postcondicions}: El client web rep notificacions sobre canvis en elements compartits.
+    \item \textbf{Escenari principal}:
+    \begin{enumerate}
+        \item Quan un usuari propietari comparteix un element (a la \texttt{UC-13}), el servei \textbf{FileSharing} envia un missatge a RabbitMQ.
+        \item \textbf{SyncService} rep aquest missatge.
+        \item Per al client web, \textbf{SyncService} envia una ordre genèrica de refresc (\texttt{updated\_tree}) a l'usuari amb qui s'ha compartit l'element, indicant-li que ha de refrescar la secció d'arxius compartits.
+        \item Per al client d'escriptori (Tauri), aquesta funcionalitat no està implementada. El disseny preveia que \textbf{SyncService} actualitzés un \textit{snapshot} específic per als elements compartits, però no es va dur a terme.
+    \end{enumerate}
+\end{itemize}

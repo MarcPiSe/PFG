@@ -34,7 +34,7 @@ Aquesta finestra (\textbf{Figura \ref{fig:desktop-initial-config-impl}}) és una
 
 Un cop l'usuari omple i envia el formulari, s'invoca el comandament \texttt{save\_initial\_config}. Aquesta funció de Rust primer valida que el servidor sigui accessible i que la carpeta seleccionada existeixi. Si les comprovacions són correctes, desa les dades en un fitxer \texttt{config.json}, tanca la finestra de configuració i obre la finestra de login per continuar amb el flux.
 
-\begin{lstlisting}[language=rust, caption={Comandament per desar la configuració inicial a \texttt{main.rs}}]
+\begin{lstlisting}[language=Rust, caption={Comandament per desar la configuració inicial a \texttt{main.rs}}]
 #[tauri::command]
 async fn save_initial_config(
     app: AppHandle,
@@ -79,7 +79,7 @@ async fn save_initial_config(
 
 Un cop desada aquesta configuració, l'aplicació presenta la finestra d'inici de sessió (\textbf{Figura \ref{fig:desktop-login-impl}}), que correspon directament amb l'esbós de la \textbf{Figura 8.41}. Igual que la seva contrapart web, el disseny és minimalista i funcional, centrat exclusivament a facilitar l'autenticació de l'usuari. El codi d'aquesta funcionalitat envia les credencials al servidor i, si la resposta és correcta, extreu els tokens JWT de les capçaleres de la resposta, els desa a la configuració local i inicia el motor de sincronització.
 
-\begin{lstlisting}[language=rust, caption={Comandament per a l'inici de sessió a \texttt{main.rs}}]
+\begin{lstlisting}[language=Rust, caption={Comandament per a l'inici de sessió a \texttt{main.rs}}]
 #[tauri::command]
 async fn login(app: AppHandle, username: String, password: String) -> Result<(), String> {
     let server = CONFIG.lock().unwrap().server_url.to_owned();
@@ -160,7 +160,7 @@ canviar de compte, la qual cosa reutilitza un flux de treball ja validat i redue
 
 La comunicació entre la interfície de Svelte i el nucli de Rust es realitza a través de la funció \texttt{invoke} de l'API de Tauri, que permet cridar a funcions de Rust exposades com a comandaments. Per exemple, quan l'usuari modifica l'URL del servidor i prem el botó "Save", s'executa el següent codi del component de Svelte.
 
-\begin{lstlisting}[language=typescript, caption={Exemple de crida al backend des de Svelte a \texttt{Connection.svelte}}]
+\begin{lstlisting}[language=javascript, caption={Exemple de crida al backend des de Svelte a \texttt{Connection.svelte}}]
 <script lang="ts">
 	import { config } from '$lib/store.svelte';
 	import { update_config } from '$lib/utils';
@@ -199,7 +199,7 @@ El punt de partida del procés és la funció \texttt{start}, que s'executa en u
 
 La primera tasca que s'inicia és la connexió amb el servidor, encapsulada dins d'un bucle per garantir la reconnexió automàtica en cas de pèrdua de connexió.
 
-\begin{lstlisting}[language=rust, caption={Establiment de la connexió WebSocket a \texttt{synchronizer.rs}}]
+\begin{lstlisting}[language=Rust, caption={Establiment de la connexió WebSocket a \texttt{synchronizer.rs}}]
 let socket_task = async move {
     loop {
         let config = CONFIG.lock().unwrap().clone();
@@ -245,7 +245,7 @@ Un cop el \textit{debouncer} activa l'acció, es desencadena el nucli de la lòg
     \item \textbf{Execució d'accions}: Finalment, es recorre la llista de canvis i s'invoca la funció corresponent del mòdul \texttt{api.rs}. Per il·lustrar com es gestionen aquestes operacions de xarxa, s'utilitzarà com a exemple la funció de descàrrega, ja que mostra clarament el procés de \textit{streaming} i el càlcul de progrés. Per a garantir la integritat de les dades i evitar fitxers corruptes, la descàrrega es realitza primer a un directori temporal. Un cop la transferència s'ha completat correctament, el fitxer es mou a la seva ubicació final.
 \end{enumerate}
 
-\begin{lstlisting}[language=rust, caption={Gestió de la descàrrega amb progrés a \texttt{api.rs}}]
+\begin{lstlisting}[language=Rust, caption={Gestió de la descàrrega amb progrés a \texttt{api.rs}}]
 pub async fn download(
     app: tauri::AppHandle,
     root_path: &PathBuf,
@@ -293,7 +293,7 @@ pub async fn download(
 }
 \end{lstlisting}
 
-Com es pot observar en el fragment de codi anterior, la comunicació entre el nucli de Rust i la interfície d'usuari és un dels punts forts de Tauri i és clau per a l'experiència en temps real. Dins del bucle de descàrrega, un cop calculat el progrés, la línia `window.emit("transfer", &transfer).unwrap()` és la que fa tota la màgia. Aquesta funció emet un esdeveniment anomenat `"transfer"` des del backend. El frontend, que està construït amb Svelte, té un `listener` configurat específicament per a aquest esdeveniment. Quan el frontend rep l'esdeveniment `"transfer"`, també rep la càrrega útil associada —en aquest cas, l'objecte `transfer` que conté el percentatge de progrés actualitzat. Això provoca una actualització reactiva a la interfície, i la barra de progrés es redibuixa a la pantalla de l'usuari de manera instantània. Aquest patró d'esdeveniments és el que permet que el backend, que gestiona tota la lògica pesada, pugui notificar a la vista de manera eficient sense necessitat d'un acoblament directe.
+Com es pot observar en el fragment de codi anterior, la comunicació entre el nucli de Rust i la interfície d'usuari és un dels punts forts de Tauri i és clau per a l'experiència en temps real. Dins del bucle de descàrrega, un cop calculat el progrés, la línia `window.emit("transfer", \&transfer).unwrap()` és la que fa tota la màgia. Aquesta funció emet un esdeveniment anomenat `"transfer"` des del backend. El frontend, que està construït amb Svelte, té un `listener` configurat específicament per a aquest esdeveniment. Quan el frontend rep l'esdeveniment `"transfer"`, també rep la càrrega útil associada —en aquest cas, l'objecte `transfer` que conté el percentatge de progrés actualitzat. Això provoca una actualització reactiva a la interfície, i la barra de progrés es redibuixa a la pantalla de l'usuari de manera instantània. Aquest patró d'esdeveniments és el que permet que el backend, que gestiona tota la lògica pesada, pugui notificar a la vista de manera eficient sense necessitat d'un acoblament directe.
 
 Després de processar tots els canvis, el nou arbre en memòria es desa al fitxer \texttt{tree.json}, establint així el nou punt de partida per a la propera detecció de canvis.
 
@@ -302,7 +302,7 @@ El cor del motor de sincronització resideix en les funcions \texttt{diff\_trees
 
 La funció \texttt{diff\_trees} implementa un algorisme de comparació recursiva. Com es pot veure al codi, navega simultàniament per dos arbres (l'antic i el nou) i compara els nodes a cada nivell.
 
-\begin{lstlisting}[language=rust, caption={Lògica de la funció \texttt{diff\_trees} a \texttt{fstree.rs}}]
+\begin{lstlisting}[language=Rust, caption={Lògica de la funció \texttt{diff\_trees} a \texttt{fstree.rs}}]
 pub fn diff_trees(
     path: &str,
     node_1: Option<&Node>, // Arbre antic (o local)
@@ -351,7 +351,7 @@ pub fn diff_trees(
 
 Un cop \texttt{diff\_trees} ha generat la llista inicial de canvis (addicions i eliminacions), aquesta es passa a \texttt{detect\_renames}. Aquesta funció implementa una optimització clau: en lloc de tractar un canvi de nom com una eliminació i una addició, busca coincidències basades en el contingut.
 
-\begin{lstlisting}[language=rust, caption={Fragment clau de \texttt{detect\_renames} a \texttt{fstree.rs}}]
+\begin{lstlisting}[language=Rust, caption={Fragment clau de \texttt{detect\_renames} a \texttt{fstree.rs}}]
 pub fn detect_renames(mut changes: Vec<Change>) -> Vec<Change> {
     // ... separa els canvis en llistes 'added' i 'deleted'
     
@@ -381,7 +381,7 @@ pub fn detect_renames(mut changes: Vec<Change>) -> Vec<Change> {
 \subsubsection{Sincronització Remot-a-Local: Escoltant el Servidor}
 Per a la sincronització en sentit contrari, el motor es basa en els missatges rebuts a través de la connexió WebSocket. El servidor envia un missatge de tipus \texttt{snapshot} cada cop que es produeix un canvi en els fitxers de l'usuari des d'una altra font. Aquest \textit{snapshot} conté l'estructura de fitxers actualitzada del servidor. El missatge és processat per la funció \texttt{handle\_msg}.
 
-\begin{lstlisting}[language=rust, caption={Processament de missatges WebSocket a \texttt{synchronizer.rs}}]
+\begin{lstlisting}[language=Rust, caption={Processament de missatges WebSocket a \texttt{synchronizer.rs}}]
 async fn handle_msg(
     local_tree: &Arc<Mutex<fstree::Node>>,
     root_path: &PathBuf,
@@ -421,7 +421,7 @@ async fn handle_msg(
             // ... Gestionar altres tipus de canvis (Deleted, Renamed, Modified)
         }
     }
-    // S'executen totes les tasques de descàrrega en paral·lel
+    // S'executen totes les tasques de descàrrega en paralel
     join_all(futures).await;
     // ... Actualitzar l'arbre local si no hi ha conflictes
 }
@@ -435,7 +435,7 @@ El flux de processament és simètric a l'anterior:
     \item S'executen totes les operacions de forma asíncrona amb \texttt{join\_all} per maximitzar el rendiment. Per aconseguir-ho, en lloc d'executar cada operació de descàrrega de manera seqüencial (una darrere l'altra), el sistema primer recorre tots els canvis detectats i crea una tasca asíncrona (\textit{future}) per a cada fitxer que s'ha de descarregar. Totes aquestes tasques s'emmagatzemen en un vector. Finalment, s'utilitza la funció \texttt{join\_all}, que executa totes aquestes tasques de manera concurrent. El programa esperarà en aquest punt fins que l'última de les descàrregues hagi finalitzat. Aquest enfocament millora dràsticament el rendiment, especialment quan s'han de sincronitzar múltiples fitxers, ja que el temps total de l'operació depèn del fitxer més lent, no de la suma de tots ells.
 \end{enumerate}
 
-\begin{lstlisting}[language=rust, caption={Execució concurrent de descàrregues amb \texttt{join\_all} a \texttt{synchronizer.rs}}]
+\begin{lstlisting}[language=Rust, caption={Execució concurrent de descàrregues amb \texttt{join\_all} a \texttt{synchronizer.rs}}]
     // ...
     let mut futures = vec![];
     let changes = fstree::detect_renames(changes);
@@ -456,7 +456,7 @@ El flux de processament és simètric a l'anterior:
             // ...
         }
     }
-    // S'executen totes les tasques de descàrrega en paral·lel
+    // S'executen totes les tasques de descàrrega en paralel
     join_all(futures).await;
 \end{lstlisting}
 
@@ -644,6 +644,7 @@ L'script \texttt{setup.sh} proporciona les funcionalitats següents:
   \item \texttt{-d}: Atura tots els serveis.
   \item \texttt{-r}: Elimina completament el sistema i totes les dades.
   \item \texttt{-b}: Actualitza el sistema recompilant els serveis, incloent-hi la regeneració dels instal·ladors de l'aplicació d'escriptori.
+  \item \texttt{-t}: Configura el sistema amb dades de prova (només vàlid amb \texttt{-i}). Utilitza el fitxer \texttt{init.sql} que conté usuaris, carpetes, fitxers i comparticions preconfigurats per facilitar les proves de l'aplicació.
 \end{itemize}
 
 \paragraph{Dependències i construcció automàtica}
@@ -705,6 +706,23 @@ Exemple d'ús:
 ./setup.sh -i -up myuser -pp mypass -dp mydb
 \end{lstlisting}
 
+\paragraph{Mode de proves amb dades preconfigurades}
+
+L'opció \texttt{-t} permet iniciar el sistema amb un conjunt de dades de prova predefinides, facilitant la validació de funcionalitats sense necessitat de crear manualment usuaris, carpetes i fitxers. Quan s'utilitza aquesta opció:
+
+\begin{itemize}
+  \item Es substitueix el fitxer d'inicialització de base de dades buit (\texttt{init-creation.sql}) pel fitxer \texttt{init.sql}, que conté dades de mostra.
+  \item El sistema es configura automàticament amb usuaris de prova, carpetes, fitxers i relacions de compartició preestablertes.
+  \item Es continua amb la creació del superadministrador de forma normal, afegint-se als usuaris de prova existents.
+\end{itemize}
+
+Aquest mode és especialment útil per a desenvolupadors, proves d'integració o demonstrations de l'aplicació, ja que proporciona un entorn preonfigurat que permet provar immediatament totes les funcionalitats sense haver de crear manualment el contingut necessari.
+
+Exemple d'ús amb dades de prova:
+\begin{lstlisting}[language=bash]
+./setup.sh -i -t -up myuser -pp mypass -dp mydb
+\end{lstlisting}
+
 \paragraph{Persistència de la configuració}
 
 Quan s'utilitzen paràmetres personalitzats durant la instal·lació, l'script genera automàticament un fitxer \texttt{.env} a l'arrel del projecte que conté totes les credencials configurades. Aquest fitxer:
@@ -728,6 +746,7 @@ L'script PowerShell \texttt{setup.ps1} replica exactament la funcionalitat de l'
   \item Generació dels instal·ladors de l'aplicació d'escriptori per a Windows (\texttt{.msi} i \texttt{.exe})
   \item Opcions de configuració de credencials idèntiques
   \item Generació i càrrega automàtica del fitxer \texttt{.env}
+  \item Suport per al mode de dades de prova amb l'opció \texttt{-t}
 \end{itemize}
 
 L'script utilitza \texttt{winget} com a gestor de paquets preferit, amb \texttt{chocolatey} com a alternativa, i proporciona instruccions manuals si cap dels dos està disponible.

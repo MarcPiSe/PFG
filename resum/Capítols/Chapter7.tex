@@ -1,0 +1,412 @@
+\chapter{Estudis i decisions}
+\label{chap:estudis_decisions}
+
+\section{Introducció}
+Aquest capítol explora el procés de reflexió i les decisions tècniques que han donat forma a l'arquitectura d'aquest projecte. Més que una simple llista d'eines, el que es presenta a continuació és un recorregut per les anàlisis i els criteris que van guiar l'elecció de cada component, sempre amb l'objectiu de materialitzar la visió central del projecte: crear una plataforma de gestió de fitxers autogestionada, segura i de codi obert, on l'usuari final mantingui el control total sobre les seves dades.
+
+Per navegar aquest procés de decisió, em vaig basar en un conjunt de criteris clau:
+\begin{itemize}
+\item \textbf{Experiència prèvia:} Aprofitar un coneixement de base en certes tecnologies per accelerar les fases inicials del desenvolupament.
+\item \textbf{Rendiment i eficiència:} Prioritzar solucions lleugeres, un requisit crític per al client d'escriptori.
+\item \textbf{Cohesió de l'ecosistema:} Optar per conjunts d'eines dissenyades per integrar-se de manera fluida.
+\item \textbf{Capacitats tècniques específiques:} Seleccionar tecnologies que oferissin solucions a reptes concrets com la comunicació asíncrona o la gestió de dades.
+\item \textbf{Codi obert i compliment legal:} Escollir eines de codi obert,  un factor que garanteix la sostenibilitat i la viabilitat econòmica del projecte a llarg termini i que facilitessin l'adhesió a normatives com el RGPD.
+\end{itemize}
+
+Aquestes directrius em van permetre dissenyar una arquitectura coherent i alineada amb la visió del projecte.
+
+\section{Pila Tecnològica del Backend}
+Per al backend, vaig decidir implementar una arquitectura de microserveis. Aquesta elecció es fonamenta en la necessitat de construir un sistema modular, escalable i fàcil de mantenir, on cada servei tingui una responsabilitat única. Vaig escollit l'ecosistema de Java i Spring per la seva coneguda maduresa, estabilitat i ampli suport en entorns empresarials. 
+
+\newcommand{\springlogo}{\includegraphics[height=8ex]{Figures/logos/springboot.png}}
+
+\subsection{\springlogo\hspace{0.5em}Spring Boot}
+\textit{Spring Boot és un framework que simplifica la creació d'aplicacions Java autònomes i llestes per a producció}. Facilita la configuració i el desplegament de microserveis gràcies a la seva filosofia de "convenció sobre configuració" i a la inclusió de servidors web embeguts. 
+
+Abans de prendre una decisió, vaig analitzar alternatives modernes a Spring Boot altament considerades en el desenvolupament de microserveis per la seva eficiència \cite{baeldung-spring-alternatives}. A continuació, es presenta una taula comparativa que resumeix els factors clau.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|p{5cm}|p{5cm}|}
+\hline
+\textbf{Framework} & \textbf{Avantatges (Pros)} & \textbf{Inconvenients (Contres)} \\
+\hline
+\textbf{Spring Boot} & 
+\begin{itemize}
+    \item Ecosistema molt madur i estable.
+    \item Gran comunitat i suport empresarial.
+    \item Experiència prèvia que garantia alta productivitat.
+\end{itemize} & 
+\begin{itemize}
+    \item Temps d'arrencada més lent.
+    \item Major consum de memòria en comparació amb les alternatives.
+\end{itemize} \\
+\hline
+\textbf{Quarkus} & 
+\begin{itemize}
+    \item Temps d'arrencada extremadament ràpids.
+    \item Baix consum de memòria (optimitzat per a contenidors).
+    \item Enfocament natiu a GraalVM.
+\end{itemize} & 
+\begin{itemize}
+    \item Corba d'aprenentatge en no tenir experiència prèvia.
+    \item Risc per al compliment dels terminis del projecte.
+\end{itemize} \\
+\hline
+\textbf{Micronaut} & 
+\begin{itemize}
+    \item Temps d'arrencada quasi instantanis.
+    \item Mínim ús de reflexió gràcies a la injecció de dependències en temps de compilació.
+\end{itemize} & 
+\begin{itemize}
+    \item També presentava una corba d'aprenentatge.
+    \item Ecosistema menys extens que el de Spring.
+\end{itemize} \\
+\hline
+\end{tabular}
+\caption{Comparativa de frameworks Java per a microserveis.}
+\label{tab:frameworks_backend}
+\end{table}
+
+\paragraph{Justificació de l'elecció}
+Vaig basar la meva elecció principalment en l'experiència prèvia que ja tenia amb l'ecosistema Spring. Aquesta familiaritat em va permetre assolir una alta productivitat des de l'inici del projecte. Tot i que vaig considerar alternatives modernes com Quarkus o Micronaut, que prometen millors temps d'arrencada, la corba d'aprenentatge associada hauria suposat un risc per al compliment dels terminis. Spring Boot representava, doncs, la via més pragmàtica i segura per al meu cas.
+
+\newcommand{\jpalogo}{\includegraphics[height=8ex]{Figures/logos/springdatajpa.png}}
+
+\subsection{\jpalogo\hspace{0.5em}Spring Data JPA}
+\textit{Spring Data JPA facilita la implementació de la capa de persistència de dades en aplicacions Spring, abstraient gran part del codi necessari per a les operacions de base de dades}. La seva capacitat més destacada és la generació automàtica de consultes a partir de la signatura dels mètodes en una interfície de repositori.
+
+\paragraph{Justificació de l'elecció}
+Vaig adoptar Spring Data JPA per la seva integració nativa i sense fricció amb Spring Boot. L'objectiu era accelerar el desenvolupament de la capa de dades, i la seva capacitat per generar repositoris em permetia eliminar una gran quantitat de codi repetitiu en comparació amb l'ús de JPA estàndard o JDBC. A més, en fomentar l'ús de consultes parametritzades de manera inherent, proporciona una capa de seguretat fonamental en prevenir atacs de tipus injecció SQL, un requisit indispensable per garantir la integritat de les dades segons el RGPD.
+
+\newcommand{\postgresslogo}{\includegraphics[height=8ex]{Figures/logos/PostgreSQL.png}}
+
+\subsection{\postgresslogo\hspace{0.5em}PostgreSQL}
+\textit{PostgreSQL és un sistema de gestió de bases de dades relacional d'objectes, reconegut per la seva robustesa, extensibilitat i compliment estricte de l'estàndard SQL i les propietats ACID}.
+
+Per a la selecció del sistema de gestió de bases de dades, vaig comparar les opcions més consolidades del mercat \cite{dbengines-comparison}, tenint en compte tant requisits tècnics com factors pràctics.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|p{4.5cm}|p{4.5cm}|}
+\hline
+\textbf{SGBD} & \textbf{Avantatges (Pros)} & \textbf{Inconvenients (Contres)} \\
+\hline
+\textbf{PostgreSQL} & 
+\begin{itemize}
+    \item Codi obert i gratuït.
+    \item Altament extensible i personalitzable.
+    \item Suport avançat per a tipus de dades complexos (JSONB, GIS, etc.).
+    \item Compliment estricte de l'estàndard SQL.
+\end{itemize} & 
+\begin{itemize}
+    \item Pot tenir una corba d'aprenentatge lleugerament superior a MySQL per a tasques bàsiques.
+\end{itemize} \\
+\hline
+\textbf{MySQL} & 
+\begin{itemize}
+    \item Molt popular i fàcil d'iniciar per a aplicacions senzilles.
+    \item Bon rendiment en escenaris de lectura intensiva.
+    \item Gran comunitat d'usuaris.
+\end{itemize} & 
+\begin{itemize}
+    \item Menys funcionalitats avançades que PostgreSQL.
+    \item Propietat d'Oracle, la qual cosa genera incertesa sobre el seu futur com a projecte totalment obert.
+\end{itemize} \\
+\hline
+\textbf{Oracle} & 
+\begin{itemize}
+    \item Solució empresarial molt potent i amb un ampli ventall de funcionalitats.
+    \item Suport tècnic professional garantit pel proveïdor.
+\end{itemize} & 
+\begin{itemize}
+    \item Cost de llicències extremadament elevat.
+    \item Propietari, la qual cosa genera una forta dependència (vendor lock-in).
+    \item Complexitat elevada en la seva administració.
+\end{itemize} \\
+\hline
+\end{tabular}
+\caption{Comparativa de Sistemes de Gestió de Bases de Dades.}
+\label{tab:sgbd_comparison}
+\end{table}
+
+\paragraph{Justificació de l'elecció}
+Vaig escollir PostgreSQL no només per la seva reputació com a base de dades fiable i de codi obert, sinó també perquè és el sistema amb el qual tinc més experiència, la qual cosa em va permetre ser més productiu. A més, la seva coneguda robustesa en la gestió de rols i permisos s'alineava perfectament amb les exigències del RGPD per assegurar la confidencialitat i la integritat de les dades dels usuaris, sent aquest un factor clau en la decisió.
+
+\FloatBarrier
+\subsection{Ecosistema Spring Cloud}
+Una arquitectura de microserveis requereix un conjunt d'eines per gestionar la comunicació, el descobriment i l'enrutament de serveis. Vaig optar per la suite de Spring Cloud per garantir una \textbf{màxima cohesió i compatibilitat}, ja que les seves eines estan dissenyades per funcionar conjuntament de manera nativa.
+
+\newcommand{\gatewaylogo}{\includegraphics[height=8ex]{Figures/logos/SpringCloudGateway.png}}
+
+\subsubsection{\gatewaylogo\hspace{0.5em}Spring Cloud Gateway}
+\textit{Spring Cloud Gateway actua com la porta d'enllaç (API Gateway) del sistema.} La seva funció principal és ser l'únic punt d'entrada per a totes les peticions externes. Aquesta centralització és clau per a la seguretat i l'organització de l'arquitectura.
+
+\paragraph{Justificació i ús en el projecte}
+En aquest projecte, el Gateway s'encarrega de:
+\begin{itemize}
+    \item \textbf{Enrutament dinàmic:} Dirigir cada petició al microservei corresponent (gestió de fitxers, usuaris, etc.) basant-se en el camí de l'URL.
+    \item \textbf{Seguretat centralitzada:} Integrar-se amb Spring Security per aplicar un filtre d'autenticació a cada petició. Abans que una sol·licitud arribi a un servei intern, el Gateway valida el token JWT, garantint que només els usuaris autenticats tinguin accés. Això simplifica la lògica dels microserveis, que no necessiten implementar aquesta validació individualment.
+\end{itemize}
+L'elecció del Gateway va ser fonamental per crear una barrera de seguretat robusta i mantenir l'ordre en un sistema distribuït.
+
+\newcommand{\eureka}{\includegraphics[height=4ex]{Figures/logos/eureka.png}}
+
+\subsubsection{\eureka\hspace{0.5em}Eureka}
+\textit{Eureka és un servidor de descobriment de serveis (Service Discovery).} En un entorn de microserveis, les instàncies poden aparèixer i desaparèixer dinàmicament. Eureka soluciona el problema de com un servei pot trobar la ubicació de xarxa (IP i port) d'un altre.
+
+\paragraph{Justificació i ús en el projecte}
+Cada microservei es registra a Eureka en arrencar. Quan un servei necessita comunicar-se amb un altre, consulta a Eureka per obtenir la seva ubicació actualitzada. Això aporta:
+\begin{itemize}
+    \item \textbf{Resiliència i escalabilitat:} El sistema pot escalar horitzontalment o sobreviure a la caiguda d'una instància sense necessitat de reconfiguració manual.
+    \item \textbf{Desacoblament:} Els serveis no necessiten conèixer les adreces físiques dels altres, simplificant la configuració i el desplegament.
+\end{itemize}
+
+\subsubsection{Spring Cloud OpenFeign}
+\textit{OpenFeign és un client REST declaratiu que simplifica la comunicació entre serveis.} Permet definir la comunicació amb una API REST remota simplement creant una interfície de Java i anotant-la.
+
+\paragraph{Justificació i ús en el projecte}
+En lloc d'escriure manualment el codi per a peticions HTTP, OpenFeign ho automatitza. S'utilitza, per exemple, quan el servei de gestió de fitxers necessita dades del servei d'usuaris. Això ofereix:
+\begin{itemize}
+    \item \textbf{Codi més net i llegible:} La lògica de la petició HTTP queda abstracta darrere d'una simple interfície, reduint el codi repetitiu.
+    \item \textbf{Integració nativa:} Es connecta automàticament amb Eureka per resoldre els noms dels serveis i realitzar balanceig de càrrega.
+\end{itemize}
+L'ús d'OpenFeign va accelerar el desenvolupament i va millorar la mantenibilitat del codi de comunicació interna.
+
+\newcommand{\springsecurity}{\includegraphics[height=8ex]{Figures/logos/springSecurity.png}}
+
+\subsection{\springsecurity\hspace{0.5em}Spring Security}
+\textit{Spring Security és un framework potent i altament personalitzable que proporciona funcionalitats d'autenticació i control d'accés per a aplicacions Java.}
+
+\paragraph{Justificació de l'elecció}
+La implementació d'un sistema d'autenticació robust era un requisit no funcional crític, directament lligat al compliment del RGPD. Vaig escollit Spring Security per la seva maduresa i la seva integració completa amb Spring Boot. La seva implementació en el servei \texttt{UserAuthentication}, juntament amb el filtre del gateway, em va permetre configurar un flux d'autenticació segur basat en JWT, amb emmagatzematge de contrasenyes mitjançant l'algorisme BCrypt, garantint que les dades d'accés dels usuaris estiguin protegides en tot moment.
+
+\newcommand{\rabbit}{\includegraphics[height=8ex]{Figures/logos/rabbitmq.png}}
+
+\subsection{\rabbit\hspace{0.5em}RabbitMQ}
+\textit{RabbitMQ és un intermediari de missatges (message broker) que implementa el protocol AMQP, dissenyat per gestionar la comunicació asíncrona entre diferents components d'un sistema}.
+
+Per a la comunicació asíncrona, vaig avaluar dos dels intermediaris de missatges més populars \cite{cloudamqp-rabbitmq-kafka}.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|p{4.5cm}|p{4.5cm}|}
+\hline
+\textbf{Sistema} & \textbf{Avantatges (Pros)} & \textbf{Inconvenients (Contres)} \\
+\hline
+\textbf{RabbitMQ} & 
+\begin{itemize}
+    \item Configuració i gestió relativament senzilles.
+    \item Gran flexibilitat en l'enrutament de missatges.
+    \item Ideal per a patrons de desacoblament i tasques en segon pla.
+\end{itemize} & 
+\begin{itemize}
+    \item Menor rendiment que Kafka en escenaris de volum de dades massiu.
+    \item L'emmagatzematge no està dissenyat per a una retenció de dades a llarg termini per defecte.
+\end{itemize} \\
+\hline
+\textbf{Apache Kafka} & 
+\begin{itemize}
+    \item Rendiment extremadament alt i alta escalabilitat.
+    \item Sistema de log distribuït i persistent, ideal per a \textit{event sourcing}.
+\end{itemize} & 
+\begin{itemize}
+    \item Configuració, gestió i operació notablement més complexes.
+    \item Corba d'aprenentatge més pronunciada.
+\end{itemize} \\
+\hline
+\end{tabular}
+\caption{Comparativa d'Intermediaris de Missatges.}
+\label{tab:message_brokers_comparison}
+\end{table}
+
+\paragraph{Justificació de l'elecció}
+L'elecció d'un intermediari de missatges es va centrar en resoldre un repte específic: la comunicació asíncrona per millorar la resiliència. Vaig escollit \textbf{RabbitMQ} per la seva \textbf{simplicitat en la configuració i gestió}. El seu ús, per exemple, en l'eliminació de dades en cascada, no només millora l'experiència d'usuari, sinó que també garanteix la fiabilitat en el compliment de les sol·licituds d'eliminació de dades sota el RGPD, assegurant que l'operació es completi de manera fiable fins i tot si un servei falla temporalment.
+
+L'objectiu no era aplicar la comunicació asíncrona a tot el sistema, sinó utilitzar-la de manera estratègica. Concretament, es va implementar en processos com l'eliminació de dades en cascada entre microserveis. Aquest enfocament permet que la petició principal de l'usuari (p. ex., eliminar un fitxer) es completi ràpidament sense quedar bloquejada esperant la neteja de dades dependents. A més, proporciona un mecanisme de reintent transparent: si un servei consumidor falla temporalment, el sistema te un mecanisme de reintent asíncron que garanteix la consistència final de les dades sense que l'usuari ho percebi ni hagi d'intervenir. Per aquest cas d'ús, la facilitat d'implementació de RabbitMQ era ideal.
+
+\section{Pila Tecnològica del Frontend Web}
+Per al client web, necessitava una solució moderna que permetés construir una interfície d'usuari interactiva i eficient.
+
+\newcommand{\react}{\includegraphics[height=8ex]{Figures/logos/react.jpeg}}
+
+\subsection{\react\hspace{0.5em}React}
+\textit{React és una biblioteca de JavaScript per construir interfícies d'usuari, basada en un model de components reutilitzables i un flux de dades unidireccional}. El seu ús del \textit{Virtual DOM} optimitza les actualitzacions de la interfície i millora el rendiment en aplicacions complexes.
+
+A l'hora de seleccionar la tecnologia per al frontend, vaig comparar les biblioteques i frameworks més rellevants del mercat.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|p{4.5cm}|p{4.5cm}|}
+\hline
+\textbf{Framework/Biblioteca} & \textbf{Avantatges (Pros)} & \textbf{Inconvenients (Contres)} \\
+\hline
+\textbf{React} &
+\begin{itemize}
+    \item Arquitectura basada en components que fomenta la reutilització.
+    \item Alt rendiment gràcies al Virtual DOM.
+    \item Ecosistema de llibreries enorme i gran suport de la comunitat.
+    \item Flexibilitat per triar les eines complementàries (p. ex., gestió d'estat, enrutament).
+\end{itemize} &
+\begin{itemize}
+    \item És una biblioteca, no un framework complet, la qual cosa requereix integrar altres solucions.
+    \item La llibertat d'elecció pot portar a una major complexitat en la configuració inicial.
+\end{itemize} \\
+\hline
+\textbf{Angular} &
+\begin{itemize}
+    \item Framework complet i robust amb solucions integrades ("out-of-the-box").
+    \item Basat en TypeScript, que millora la mantenibilitat del codi.
+    \item Fort suport empresarial per part de Google.
+\end{itemize} &
+\begin{itemize}
+    \item Corba d'aprenentatge més pronunciada i major verbositat.
+    \item Menys flexible a causa de la seva naturalesa més rígida i opinionada.
+\end{itemize} \\
+\hline
+\textbf{Vue} &
+\begin{itemize}
+    \item Corba d'aprenentatge molt suau i excel·lent documentació.
+    \item Bon rendiment i flexibilitat.
+\end{itemize} &
+\begin{itemize}
+    \item Comunitat i ecosistema més petits en comparació amb React.
+    \item Menys presència en grans aplicacions empresarials.
+\end{itemize} \\
+\hline
+\end{tabular}
+\caption{Comparativa de tecnologies per al Frontend Web.}
+\label{tab:frontend_frameworks_comparison}
+\end{table}
+
+\paragraph{Justificació de l'elecció}
+L'elecció de React, tot i basar-se en una familiaritat prèvia, no va ser una decisió superficial. Més enllà de l'experiència inicial, vaig valorar positivament la seva \textbf{flexibilitat} i el seu \textbf{enfocament en el rendiment}. L'arquitectura basada en components i l'ús del Virtual DOM s'alineaven amb el meu objectiu de construir una interfície eficient i modular. A diferència d'Angular, que imposa una estructura més rígida, React em proporcionava la llibertat de seleccionar les millors eines per a cada necessitat específica (com React Query per a l'estat del servidor i Zustand per a l'estat global). A més, el seu vast ecosistema de llibreries i el gran suport de la comunitat em donava la confiança necessària per afrontar els reptes del projecte, sabent que disposaria de solucions provades per la indústria.
+
+\FloatBarrier
+\newcommand{\reactquery}{\includegraphics[height=8ex]{Figures/logos/reactQuery.png}}
+
+\subsection{\reactquery\hspace{0.5em}React Query (TanStack Query)}
+\textit{React Query és una llibreria per a la gestió de l'estat del servidor (server state) en aplicacions React}. S'encarrega de la consulta, la gestió de memòria cache i la sincronització de dades amb fonts externes com una API.
+
+\paragraph{Justificació de l'elecció}
+Per a la comunicació amb el backend, vaig voler evitar la gestió manual de l'estat de les dades amb \textit{hooks} com \texttt{useState} i \texttt{useEffect}, ja que pot portar a codi complex i propens a errors. Vaig triar React Query amb la intenció de disposar d'una solució més robusta i declarativa. El meu objectiu en adoptar-la era simplificar la lògica de peticions asíncrones, millorar l'experiència d'usuari amb estratègies de memòria cache intel·ligents i, en definitiva, mantenir la interfície sincronitzada amb el backend de manera eficient.
+
+\newcommand{\zustand}{\includegraphics[height=8ex]{Figures/logos/zustand.png}}
+
+\subsection{\zustand\hspace{0.5em}Zustand}
+\textit{Zustand és una llibreria minimalista per a la gestió d'estat global (client state) en React, basada en una API senzilla de hooks}.
+
+\paragraph{Justificació de l'elecció}
+Per l'estat global de la interfície (elements no dependents del servidor, com la selecció d'arxius), vaig avaluar diverses opcions. Vaig descartar Redux per considerar-lo excessivament complex per a les meves necessitats. Vaig escollit Zustand perquè buscava una solució lleugera, ràpida i amb una corba d'aprenentatge mínima. La seva simplicitat i el seu enfocament basat en \textit{hooks} em semblaven ideals per gestionar l'estat global necessari sense afegir una sobrecàrrega de configuració ni afectar negativament el rendiment de l'aplicació.
+
+\section{Pila Tecnològica del Client d'Escriptori}
+Per al client d'escriptori, el requisit principal era aconseguir una aplicació multiplataforma que fos nativa en rendiment i consum de recursos.
+
+\subsection{Tauri i Svelte}
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.5\textwidth}
+        \centering
+        \includegraphics[width=0.5\linewidth]{Figures/logos/tauri.png}
+        \caption{Logo tauri.}
+        \label{fig:react-login-impl}
+    \end{minipage}\hfill
+    \begin{minipage}{0.5\textwidth}
+        \centering
+        \includegraphics[width=0.5\linewidth]{Figures/logos/svelte.png}
+        \caption{Logo svelte.}
+        \label{fig:react-registre-impl}
+    \end{minipage}
+\end{figure}
+\textit{Tauri és un framework que permet construir aplicacions d'escriptori utilitzant tecnologies web per a la interfície i un backend natiu escrit en Rust}. 
+\textit{Svelte, per la seva banda, és un compilador que transforma components d'interfície en codi JavaScript imperatiu altament optimitzat}.
+
+\paragraph{Justificació de l'elecció}
+La meva decisió clau en aquest àmbit va ser \textbf{prioritzar el rendiment i la lleugeresa}. Vaig descartar l'alternativa més estesa, Electron, a causa del seu conegut alt consum de memòria i la gran mida dels binaris que genera. Vaig escollit \textbf{Tauri} perquè la seva arquitectura, basada en la \textit{WebView} nativa del sistema operatiu, em permetia crear una aplicació molt més eficient i amb una mida final significativament menor.
+
+Una de les capacitats clau implementades a Rust és la monitorització del sistema d'arxius local mitjançant la llibreria \texttt{notify}. Aquesta eina permet detectar en temps real qualsevol canvi que es produeixi a la carpeta sincronitzada (creació, modificació o eliminació de fitxers i directoris). Quan es detecta un esdeveniment, el backend de Rust ho comunica a la interfície i inicia el procés de sincronització amb el servidor, garantint així que l'estat local i remot es mantinguin sempre consistents, una funcionalitat essencial per a una experiència d'usuari fluida i fiable.
+
+De manera complementària, per a la interfície d'aquesta aplicació d'escriptori, vaig optar per \textbf{Svelte} en lloc de React. Atès que Svelte és un compilador, genera un codi final molt més petit i eficient, sense la sobrecàrrega d'un DOM virtual en temps d'execució. Aquesta combinació de Tauri i Svelte em sembla la idònia per assolir el meu objectiu d'una aplicació d'escriptori ràpida, lleugera i amb una experiència d'usuari fluida.
+
+La decisió per aixo va tenir un cost que no preveia en la corva d'aprenentage de rust, que va ser mes gran del que preveia. Si be encara ara crec que va ser una bona decisió, no puc assegurar que en cas de tornar a començar el projecte el tornaria a triar.
+
+\section{Maquinari i infraestructura}
+Durant el desenvolupament del projecte s'ha utilitzat un equip amb les especificacions següents:
+
+\begin{itemize}
+\item \textbf{CPU}: Intel Core i7-1185G7 (11a generació) amb 4 nuclis (8 fils) a 3.00 GHz.
+\item \textbf{Memòria RAM}: 32 GB.
+\item \textbf{Sistema operatiu}: Ubuntu 22.04.4 LTS (Linux).
+\end{itemize}
+
+Pel desplegament es recomana executar-la en qualsevol servidor o màquina virtual amb mínim 2 nuclis de CPU, 4 GB de RAM i 50 GB d'emmagatzematge, amb accés a internet i un \textit{reverse proxy} per gestionar els certificats SSL. El reverse proxy no és una obligatorietat tècnica perquè el projecte funcioni, però és la solució estàndard i recomanada per garantir la seguretat. No s'ha afegit al projecte la configuració d'un reverse proxy perquè el temps disponible no permetia abordar la recerca necessària per desplegar-ne un de manera segura. Es planteja com una millora futura, ja que per complir amb la normativa de protecció de dades (RGPD), que exigeix garantir la confidencialitat de les dades personals en trànsit, és imprescindible implementar el xifratge SSL/TLS. L'ús d'un reverse proxy és la via més eficient i robusta per assolir aquest objectiu.
+
+Les versions específiques recomanades per als serveis de tercers són \textbf{PostgreSQL 16 o superior} i \textbf{RabbitMQ 3.12 o superior}, ja que són les versions estables més recents amb les quals s'ha provat el sistema durant el desenvolupament. L'ús de versions anteriors podria causar incompatibilitats o comportaments inesperats en alguns microserveis.
+
+Els requisits detallats estan al capítol 6.
+
+\section{Eines de disseny i estil (UI/UX)}
+Per al disseny es va optar per Tailwind CSS per agilitzar el desenvolupament. Les llibreries complementàries utilitzades són:
+
+\begin{itemize}
+\item \textbf{Radix UI}: Biblioteca de components d'interfície sense estils, de baix nivell i accessibles, que serveix com a base per construir un sistema de disseny personalitzat.
+\item \textbf{Remix Icon i React Icons}: Col·leccions d'icones SVG de codi obert, fàcilment integrables en projectes React per millorar la usabilitat visual.
+\item \textbf{Tailwind Merge, clsx, Class Variance Authority}: Utilitats per gestionar i fusionar classes de Tailwind CSS de manera intel·ligent, evitant conflictes d'estils i simplificant la lògica de variants en components.
+\item \textbf{Dnd-kit/core}: Conjunt d'eines lleuger i modular per crear funcionalitats d'arrossegar i deixar anar ('drag-and-drop') accessibles i performants a React.
+\item \textbf{Selecto.js}: Llibreria per seleccionar elements mitjançant el ratolí o el tacte, utilitzada per implementar la selecció múltiple d'arxius i carpetes a la interfície web.
+\end{itemize}
+
+\section{Cadena d'eines i DevOps}
+S'han utilitzat les eines següents per a la construcció i el desplegament:
+
+\begin{itemize}
+\item \textbf{Backend}: Maven 3.9.x (Maven Wrapper).
+\item \textbf{Frontend}: Node.js v20.14.0 amb pnpm.
+\item \textbf{Contenidors}: Docker Engine 27.0.3 i Docker Compose v2.28.1.
+\end{itemize}
+
+Per a la orquestració dels contenidors del projecte, s'utilitza un fitxer \texttt{docker-compose.yml}. Es va optar per aquesta solució per la seva simplicitat, ja que satisfà les necessitats del sistema amb una configuració senzilla que es pot executar en qualsevol ordinador amb un script, basant-se en el coneixement ja adquirit sobre la tecnologia.
+
+Com a treball a futur, s'ha previst afegir fitxers de configuració de Helm que permetrien instal·lar el sistema en una infraestructura Kubernetes per a usuaris més avançats que ho puguin requerir, oferint més escalabilitat i robustesa. 
+
+El projecte és a GitHub, la qual cosa facilita aquesta futura integració. A més, en ser un repositori públic, facilita la col·laboració amb altres desenvolupadors i, tal com mostren les estadístiques, és l'eina més popular per a la gestió de projectes de codi obert \cite{kinsta_github_stats}.
+
+\section{Llicències i compliment legal}
+La llicència escollida és MIT per màxima flexibilitat:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Llicència} & \textbf{Ús comercial} & \textbf{Publicar derivats} & \textbf{Compatibilitat propietària} \\
+\hline
+\textbf{MIT (escollida)} & Sí & No & Molt alta \\
+\hline
+\textbf{Apache-2.0} & Sí & Parcial & Alta \\
+\hline
+\textbf{GPL-3.0} & Sí & Obligatori & Baixa \\
+\hline
+\textbf{LGPL-3.0} & Sí & Parcial & Mitjana \\
+\hline
+\end{tabular}
+\caption{Comparativa abreujada de llicències}
+\end{table}
+
+\section{Traçabilitat global amb els requisits}
+La Taula 7.6 resumeix la traçabilitat entre els criteris de decisió, la tecnologia escollida i els requisits que cobreix cadascuna.
+
+\begin{sidewaystable}[h]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Criteri Inicial} & \textbf{Tecnologia Escollida} & \textbf{Requisit cobert} \\
+\hline
+Experiència prèvia & Spring Boot, Maven, React & RF-1 a RF-10, RNF-Rendiment, RNF-Mantenibilitat \\
+Rendiment i eficiència & Tauri, Svelte, Tailwind & RNF-Rendiment, RNF-Compatibilitat, RNF-Usabilitat \\
+Cohesió ecosistema & Spring Cloud, Docker Compose & RNF-Escalabilitat, RNF-Portabilitat \\
+Capacitats tècniques & RabbitMQ, PostgreSQL & RF-Gestió dades, RNF-Escalabilitat \\
+Codi obert & GitHub, MIT License & Viabilitat econòmica, Legalitat \\
+\hline
+\end{tabular}
+\caption{Traçabilitat global criteris-tecnologia-requisits}
+\end{sidewaystable}

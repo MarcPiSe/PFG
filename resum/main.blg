@@ -1,0 +1,14 @@
+[0] Config.pm:307> INFO - This is Biber 2.17
+[0] Config.pm:310> INFO - Logfile is 'main.blg'
+[82] biber:340> INFO - === mié jul 23, 2025, 12:46:44
+[97] Biber.pm:418> INFO - Reading 'main.bcf'
+[206] Biber.pm:969> INFO - Using all citekeys in bib section 0
+[224] Biber.pm:4383> INFO - Processing section 0
+[233] Biber.pm:4574> INFO - Looking for bibtex file 'example.bib' for section 0
+[238] UCollate.pm:68> INFO - Overriding locale 'ca-AD' defaults 'variable = shifted' with 'variable = non-ignorable'
+[238] UCollate.pm:68> INFO - Overriding locale 'ca-AD' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[238] Biber.pm:4203> INFO - Sorting list 'none/global//global/global' of type 'entry' with template 'none' and locale 'ca-AD'
+[239] bbl.pm:654> INFO - Writing 'main.bbl' with encoding 'UTF-8'
+[239] bbl.pm:757> INFO - Output to main.bbl
+[239] Biber.pm:130> WARN - Data source 'example.bib' is empty, ignoring
+[239] Biber.pm:132> INFO - WARNINGS: 1

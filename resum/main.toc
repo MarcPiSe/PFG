@@ -1,0 +1,308 @@
+\babel@toc {catalan}{}\relax 
+\contentsline {chapter}{\numberline {1}Introducci\'o, motivacions, prop\'osits i objectius}{1}{chapter.2}%
+\contentsline {section}{\numberline {1.1}Context del projecte}{1}{section.3}%
+\contentsline {section}{\numberline {1.2}Motivacions}{1}{section.4}%
+\contentsline {section}{\numberline {1.3}Prop\'osit del projecte}{2}{section.5}%
+\contentsline {section}{\numberline {1.4}Objectius generals}{2}{section.6}%
+\contentsline {section}{\numberline {1.5}Objectius espec\'ifics}{2}{section.7}%
+\contentsline {section}{\numberline {1.6}Situaci\'o inicial i p\'ublic objectiu}{3}{section.8}%
+\contentsline {chapter}{\numberline {2}Estudi de viabilitat}{4}{chapter.9}%
+\contentsline {section}{\numberline {2.1}Viabilitat t\`ecnica}{4}{section.10}%
+\contentsline {section}{\numberline {2.2}Viabilitat econ\`omica}{5}{section.11}%
+\contentsline {section}{\numberline {2.3}Viabilitat humana}{5}{section.12}%
+\contentsline {section}{\numberline {2.4}Viabilitat legal}{6}{section.13}%
+\contentsline {section}{\numberline {2.5}Conclusi\'o}{6}{section.14}%
+\contentsline {chapter}{\numberline {3}Metodologia seguida}{7}{chapter.15}%
+\contentsline {section}{\numberline {3.1}Marc teòric: voluntat d'un enfocament àgil}{7}{section.16}%
+\contentsline {section}{\numberline {3.2}Seguiment i control}{7}{section.17}%
+\contentsline {section}{\numberline {3.3}Definition of Done: l'únic criteri formal}{7}{section.18}%
+\contentsline {section}{\numberline {3.4}Fases del projecte: del pla a la realitat}{8}{section.20}%
+\contentsline {section}{\numberline {3.5}Desglossament i revisió de les unitats de treball}{9}{section.22}%
+\contentsline {section}{\numberline {3.6}Feedback dels testers}{9}{section.23}%
+\contentsline {section}{\numberline {3.7}Dificultats de gestió i conciliació}{9}{section.24}%
+\contentsline {section}{\numberline {3.8}Gestió de riscos i lliçons apreses}{9}{section.25}%
+\contentsline {section}{\numberline {3.9}Lliçons apreses}{9}{section.27}%
+\contentsline {chapter}{\numberline {4}Planificació}{10}{chapter.28}%
+\contentsline {section}{\numberline {4.1}Pla original}{10}{section.29}%
+\contentsline {section}{\numberline {4.2}Execució real i validacions}{10}{section.31}%
+\contentsline {section}{\numberline {4.3}Pla vs. execució: la bretxa quantificada}{13}{section.33}%
+\contentsline {section}{\numberline {4.4}Causes de les desviacions}{13}{section.35}%
+\contentsline {section}{\numberline {4.5}Accions correctores aplicades}{13}{section.39}%
+\contentsline {section}{\numberline {4.6}Estimació d'hores dedicades}{13}{section.40}%
+\contentsline {section}{\numberline {4.7}Lliçons finals}{14}{section.42}%
+\contentsline {chapter}{\numberline {5}Marc de treball i conceptes previs}{15}{chapter.47}%
+\contentsline {section}{\numberline {5.1}Introducció}{15}{section.48}%
+\contentsline {section}{\numberline {5.2}Entorn de desenvolupament}{15}{section.49}%
+\contentsline {section}{\numberline {5.3}Eines de desenvolupament}{15}{section.50}%
+\contentsline {section}{\numberline {5.4}Frontend web}{17}{section.58}%
+\contentsline {section}{\numberline {5.5}Backend i microserveis}{22}{section.76}%
+\contentsline {section}{\numberline {5.6}Client d'escriptori}{27}{section.92}%
+\contentsline {section}{\numberline {5.7}Utilitats addicionals}{28}{section.96}%
+\contentsline {section}{\numberline {5.8}Versionat de dependències}{29}{section.100}%
+\contentsline {chapter}{\numberline {6}Requisits del sistema}{30}{chapter.102}%
+\contentsline {section}{\numberline {6.1}Introducció}{30}{section.103}%
+\contentsline {section}{\numberline {6.2}Requisits funcionals}{30}{section.104}%
+\contentsline {subsection}{\numberline {6.2.1}1. Gestió d'usuaris}{30}{subsection.105}%
+\contentsline {subsection}{\numberline {6.2.2}2. Gestió d'arxius}{30}{subsection.106}%
+\contentsline {subsection}{\numberline {6.2.3}3. Sistema de paperera}{31}{subsection.107}%
+\contentsline {subsection}{\numberline {6.2.4}4. Compartició d'arxius}{31}{subsection.108}%
+\contentsline {subsection}{\numberline {6.2.5}5. Sincronització en temps real}{31}{subsection.109}%
+\contentsline {subsection}{\numberline {6.2.6}6. Panell d'administració}{31}{subsection.110}%
+\contentsline {section}{\numberline {6.3}Requisits no funcionals}{31}{section.111}%
+\contentsline {subsection}{\numberline {6.3.1}1. Rendiment}{31}{subsection.112}%
+\contentsline {subsection}{\numberline {6.3.2}2. Seguretat}{32}{subsection.113}%
+\contentsline {subsection}{\numberline {6.3.3}3. Usabilitat}{32}{subsection.114}%
+\contentsline {subsection}{\numberline {6.3.4}4. Mantenibilitat}{32}{subsection.115}%
+\contentsline {subsection}{\numberline {6.3.5}5. Compatibilitat}{32}{subsection.116}%
+\contentsline {subsection}{\numberline {6.3.6}6. Escalabilitat}{32}{subsection.117}%
+\contentsline {subsection}{\numberline {6.3.7}7. Portabilitat}{33}{subsection.118}%
+\contentsline {section}{\numberline {6.4}Requisits de maquinari i programari}{33}{section.119}%
+\contentsline {section}{\numberline {6.5}Resum}{33}{section.120}%
+\contentsline {chapter}{\numberline {7}Estudis i decisions}{34}{chapter.121}%
+\contentsline {section}{\numberline {7.1}Introducció}{34}{section.122}%
+\contentsline {section}{\numberline {7.2}Pila Tecnològica del Backend}{34}{section.123}%
+\contentsline {subsection}{\numberline {7.2.1}\includegraphics [height=8ex]{Figures/logos/springboot.png}\hspace {0.5em}Spring Boot}{35}{subsection.124}%
+\contentsline {paragraph}{Justificació de l'elecció}{35}{section*.126}%
+\contentsline {subsection}{\numberline {7.2.2}\includegraphics [height=8ex]{Figures/logos/springdatajpa.png}\hspace {0.5em}Spring Data JPA}{36}{subsection.127}%
+\contentsline {paragraph}{Justificació de l'elecció}{36}{section*.128}%
+\contentsline {subsection}{\numberline {7.2.3}\includegraphics [height=8ex]{Figures/logos/PostgreSQL.png}\hspace {0.5em}PostgreSQL}{36}{subsection.129}%
+\contentsline {paragraph}{Justificació de l'elecció}{36}{section*.131}%
+\contentsline {subsection}{\numberline {7.2.4}Ecosistema Spring Cloud}{37}{subsection.132}%
+\contentsline {subsubsection}{\includegraphics [height=8ex]{Figures/logos/SpringCloudGateway.png}\hspace {0.5em}Spring Cloud Gateway}{37}{section*.133}%
+\contentsline {paragraph}{Justificació i ús en el projecte}{38}{section*.134}%
+\contentsline {subsubsection}{\includegraphics [height=4ex]{Figures/logos/eureka.png}\hspace {0.5em}Eureka}{38}{section*.135}%
+\contentsline {paragraph}{Justificació i ús en el projecte}{38}{section*.136}%
+\contentsline {subsubsection}{Spring Cloud OpenFeign}{38}{section*.137}%
+\contentsline {paragraph}{Justificació i ús en el projecte}{38}{section*.138}%
+\contentsline {subsection}{\numberline {7.2.5}\includegraphics [height=8ex]{Figures/logos/springSecurity.png}\hspace {0.5em}Spring Security}{39}{subsection.139}%
+\contentsline {paragraph}{Justificació de l'elecció}{39}{section*.140}%
+\contentsline {subsection}{\numberline {7.2.6}\includegraphics [height=8ex]{Figures/logos/rabbitmq.png}\hspace {0.5em}RabbitMQ}{39}{subsection.141}%
+\contentsline {paragraph}{Justificació de l'elecció}{39}{section*.143}%
+\contentsline {section}{\numberline {7.3}Pila Tecnològica del Frontend Web}{40}{section.144}%
+\contentsline {subsection}{\numberline {7.3.1}\includegraphics [height=8ex]{Figures/logos/react.jpeg}\hspace {0.5em}React}{40}{subsection.145}%
+\contentsline {paragraph}{Justificació de l'elecció}{40}{section*.147}%
+\contentsline {subsection}{\numberline {7.3.2}\includegraphics [height=8ex]{Figures/logos/reactQuery.png}\hspace {0.5em}React Query (TanStack Query)}{42}{subsection.148}%
+\contentsline {paragraph}{Justificació de l'elecció}{42}{section*.149}%
+\contentsline {subsection}{\numberline {7.3.3}\includegraphics [height=8ex]{Figures/logos/zustand.png}\hspace {0.5em}Zustand}{42}{subsection.150}%
+\contentsline {paragraph}{Justificació de l'elecció}{42}{section*.151}%
+\contentsline {section}{\numberline {7.4}Pila Tecnològica del Client d'Escriptori}{42}{section.152}%
+\contentsline {subsection}{\numberline {7.4.1}Tauri i Svelte}{42}{subsection.153}%
+\contentsline {paragraph}{Justificació de l'elecció}{43}{section*.155}%
+\contentsline {section}{\numberline {7.5}Maquinari i infraestructura}{43}{section.156}%
+\contentsline {section}{\numberline {7.6}Eines de disseny i estil (UI/UX)}{44}{section.157}%
+\contentsline {section}{\numberline {7.7}Cadena d'eines i DevOps}{44}{section.158}%
+\contentsline {section}{\numberline {7.8}Llicències i compliment legal}{45}{section.159}%
+\contentsline {section}{\numberline {7.9}Traçabilitat global amb els requisits}{45}{section.161}%
+\contentsline {chapter}{\numberline {8}An\`alisi i disseny del sistema}{47}{chapter.163}%
+\contentsline {section}{\numberline {8.1}Introducci\'o}{47}{section.164}%
+\contentsline {section}{\numberline {8.2}An\`alisi funcional}{47}{section.165}%
+\contentsline {subsection}{\numberline {8.2.1}Diagrama de casos d'ús}{47}{subsection.166}%
+\contentsline {subsection}{\numberline {8.2.2}Actors i m\`oduls}{49}{subsection.168}%
+\contentsline {subsection}{\numberline {8.2.3}Casos d'\'us principals}{49}{subsection.169}%
+\contentsline {paragraph}{UC-01: Registrar-se}{50}{section*.170}%
+\contentsline {paragraph}{UC-02: Iniciar sessi\'o}{50}{section*.175}%
+\contentsline {paragraph}{UC-08: Pujar un arxiu}{51}{section*.181}%
+\contentsline {paragraph}{UC-10: Descarregar un arxiu}{51}{section*.188}%
+\contentsline {paragraph}{UC-11: Moure un arxiu a la paperera}{52}{section*.193}%
+\contentsline {paragraph}{UC-12: Eliminar definitivament}{52}{section*.199}%
+\contentsline {paragraph}{UC-13: Compartir arxiu}{53}{section*.207}%
+\contentsline {subsection}{\numberline {8.2.4}Diagrames d'activitat dels Casos d'Ús Principals}{53}{subsection.214}%
+\contentsline {subsubsection}{UC-01: Registrar-se}{53}{section*.215}%
+\contentsline {subsubsection}{UC-02: Iniciar sessió}{54}{section*.217}%
+\contentsline {subsubsection}{UC-08: Crear o pujar arxius}{55}{section*.219}%
+\contentsline {subsubsection}{UC-10: Descarregar}{55}{section*.221}%
+\contentsline {subsubsection}{UC-11: Enviar a la paperera}{56}{section*.223}%
+\contentsline {subsubsection}{UC-12: Eliminar permanentment}{57}{section*.225}%
+\contentsline {subsubsection}{UC-13: Compartir arxius}{57}{section*.227}%
+\contentsline {subsection}{\numberline {8.2.5}Matriu de traçabilitat entre requisits i casos d'ús}{58}{subsection.229}%
+\contentsline {section}{\numberline {8.3}Arquitectura del sistema}{60}{section.231}%
+\contentsline {subsection}{\numberline {8.3.1}Visi\'o general i components}{60}{subsection.232}%
+\contentsline {subsection}{\numberline {8.3.2}Disseny dels microserveis}{62}{subsection.234}%
+\contentsline {subsubsection}{UserAuthentication}{62}{section*.235}%
+\contentsline {subsubsection}{UserManagement}{63}{section*.238}%
+\contentsline {subsubsection}{FileManagement}{63}{section*.241}%
+\contentsline {subsubsection}{FileAccessControl}{65}{section*.244}%
+\contentsline {subsubsection}{FileSharing}{66}{section*.247}%
+\contentsline {subsubsection}{Trash}{67}{section*.250}%
+\contentsline {subsubsection}{SyncService}{67}{section*.253}%
+\contentsline {subsection}{\numberline {8.3.3}Patrons de disseny i principis arquitectònics}{68}{subsection.256}%
+\contentsline {subsection}{\numberline {8.3.4}Justificació de l'arquitectura de microserveis}{70}{subsection.257}%
+\contentsline {section}{\numberline {8.4}Disseny de les interfícies d'usuari}{71}{section.258}%
+\contentsline {subsection}{\numberline {8.4.1}Client web}{71}{subsection.259}%
+\contentsline {subsubsection}{Autenticació}{71}{section*.260}%
+\contentsline {subsubsection}{Escriptori principal}{72}{section*.262}%
+\contentsline {paragraph}{Navegació i accions principals}{72}{section*.264}%
+\contentsline {paragraph}{Interacció amb elements}{75}{section*.268}%
+\contentsline {paragraph}{Gestió d'elements compartits}{76}{section*.273}%
+\contentsline {paragraph}{Paperera}{77}{section*.275}%
+\contentsline {paragraph}{Panell d'administració}{78}{section*.277}%
+\contentsline {subsection}{\numberline {8.4.2}Client d'escriptori}{78}{subsection.279}%
+\contentsline {section}{\numberline {8.5}Consideracions de seguretat}{82}{section.285}%
+\contentsline {subsection}{\numberline {8.5.1}Control d'accés basat en rols (RBAC)}{83}{subsection.286}%
+\contentsline {subsection}{\numberline {8.5.2}Mecanismes de protecció}{83}{subsection.288}%
+\contentsline {subsection}{\numberline {8.5.3}Justificació del compliment del RGPD}{84}{subsection.289}%
+\contentsline {section}{\numberline {8.6}Cobertura dels requisits no funcionals}{84}{section.290}%
+\contentsline {section}{\numberline {8.7}Conclusions}{85}{section.291}%
+\contentsline {chapter}{\numberline {9}Implementació i proves}{86}{chapter.292}%
+\contentsline {section}{\numberline {9.1}Visió general de la implementació}{86}{section.293}%
+\contentsline {section}{\numberline {9.2}Entorn de desenvolupament i desplegament}{87}{section.294}%
+\contentsline {section}{\numberline {9.3}Implementació del backend}{88}{section.306}%
+\contentsline {subsection}{\numberline {9.3.1}Gateway i filtre de JWT}{88}{subsection.307}%
+\contentsline {subsection}{\numberline {9.3.2}Gestió d'usuaris i autenticació}{91}{subsection.390}%
+\contentsline {subsubsection}{UC-01: Registrar-se}{92}{section*.404}%
+\contentsline {subsubsection}{UC-02: Iniciar sessió}{94}{section*.423}%
+\contentsline {subsubsection}{UC-15: Canviar contrasenya}{95}{section*.443}%
+\contentsline {subsubsection}{UC-16 i UC-07: Eliminació de comptes d'usuari}{96}{section*.458}%
+\contentsline {subsection}{\numberline {9.3.3}Gestió d'arxius (FileManagement)}{99}{subsection.502}%
+\contentsline {subsubsection}{UC-08: Crear i pujar elements}{99}{section*.503}%
+\contentsline {paragraph}{Endpoint Multipart per al client web.}{100}{section*.505}%
+\contentsline {paragraph}{Endpoint de Streaming per al client d'escriptori.}{101}{section*.553}%
+\contentsline {paragraph}{Estratègia d'emmagatzematge i ofuscació.}{103}{section*.600}%
+\contentsline {subsubsection}{UC-09: Modificar elements}{103}{section*.603}%
+\contentsline {paragraph}{UC-09A: Renomenar un element}{103}{section*.604}%
+\contentsline {paragraph}{UC-09B: Moure un element}{105}{section*.629}%
+\contentsline {paragraph}{UC-09C: Copiar un element}{107}{section*.682}%
+\contentsline {subsubsection}{UC-10: Descarregar elements}{109}{section*.731}%
+\contentsline {subsection}{\numberline {9.3.4}Compartició (FileSharing)}{110}{subsection.759}%
+\contentsline {subsubsection}{UC-13: Compartir un element}{111}{section*.772}%
+\contentsline {subsubsection}{UC-13A i UC-13B: Revocar accés i Deixar de compartir}{115}{section*.857}%
+\contentsline {subsection}{\numberline {9.3.5}Papelera i eliminació asíncrona (TrashService)}{117}{subsection.889}%
+\contentsline {subsubsection}{UC-11 i UC-17: Borrat lògic i restauració d'elements}{117}{section*.890}%
+\contentsline {subsubsection}{UC-12: Eliminació permanent i orquestració asíncrona}{118}{section*.922}%
+\contentsline {subsection}{\numberline {9.3.6}Servei de sincronització (SyncService)}{121}{subsection.976}%
+\contentsline {subsubsection}{Flux de connexió WebSocket}{121}{section*.977}%
+\contentsline {subsubsection}{Processament d'esdeveniments i actualització de l'estat}{123}{section*.1034}%
+\contentsline {subsubsection}{Estratègies de difusió i punts clau}{124}{section*.1080}%
+\contentsline {subsection}{\numberline {9.3.7}Refactor del codi}{126}{subsection.1115}%
+\contentsline {section}{\numberline {9.4}Implementació del client web}{127}{section.1116}%
+\contentsline {subsection}{\numberline {9.4.1}Introducció}{127}{subsection.1117}%
+\contentsline {subsubsection}{Estructura de directoris del client web}{127}{section*.1118}%
+\contentsline {subsection}{\numberline {9.4.2}Disseny Visual i Components de la Interfície}{129}{subsection.1119}%
+\contentsline {subsubsection}{Autenticació}{129}{section*.1120}%
+\contentsline {subsubsection}{Escriptori Principal i Navegació}{130}{section*.1123}%
+\contentsline {subsubsection}{Interacció amb Elements}{132}{section*.1129}%
+\contentsline {subsubsection}{Seccions Específiques}{135}{section*.1135}%
+\contentsline {paragraph}{Elements Compartits}{135}{figure.caption.1137}%
+\contentsline {paragraph}{Paperera}{136}{section*.1138}%
+\contentsline {paragraph}{Panell d'Administració}{136}{section*.1140}%
+\contentsline {subsection}{\numberline {9.4.3}Implementació per Casos d'Ús}{138}{subsection.1145}%
+\contentsline {subsubsection}{Gestió d'Usuaris}{138}{section*.1146}%
+\contentsline {paragraph}{UC-01: Registre d'Usuari \& UC-02: Inici de Sessió}{138}{section*.1147}%
+\contentsline {paragraph}{UC-03: Tancament de Sessió}{140}{section*.1210}%
+\contentsline {paragraph}{UC-04: Modificar Perfil \& UC-05: Eliminar Compte}{141}{section*.1246}%
+\contentsline {subsubsection}{Gestió d'Administració}{143}{section*.1310}%
+\contentsline {paragraph}{UC-06, UC-07, UC-15, UC-16: Panell d'Administració}{143}{section*.1311}%
+\contentsline {subsection}{\numberline {9.4.4}Gestió d'Arxius}{146}{subsection.1384}%
+\contentsline {paragraph}{UC-08: Crear o Pujar Arxius i Carpetes}{146}{section*.1385}%
+\contentsline {paragraph}{UC-09A/B/C: Operacions amb Arxius (Renomenar, Moure, Copiar)}{148}{section*.1466}%
+\contentsline {paragraph}{UC-10: Eliminar Arxiu (Moure a la Paperera)}{152}{section*.1575}%
+\contentsline {subsection}{\numberline {9.4.5}Compartició d'Arxius}{153}{subsection.1614}%
+\contentsline {paragraph}{UC-13, UC-13A, UC-13B: Compartir, Deixar de Compartir i Veure Compartits}{153}{section*.1615}%
+\contentsline {section}{\numberline {9.5}Implementació del client web}{159}{section.1773}%
+\contentsline {subsection}{\numberline {9.5.1}Introducció}{159}{subsection.1774}%
+\contentsline {subsubsection}{Estructura de directoris del client web}{159}{section*.1775}%
+\contentsline {subsection}{\numberline {9.5.2}Disseny Visual i Components de la Interfície}{160}{subsection.1776}%
+\contentsline {subsubsection}{Autenticació}{161}{section*.1777}%
+\contentsline {subsubsection}{Escriptori Principal i Navegació}{161}{section*.1780}%
+\contentsline {subsubsection}{Interacció amb Elements}{164}{section*.1786}%
+\contentsline {subsubsection}{Seccions Específiques}{167}{section*.1792}%
+\contentsline {paragraph}{Elements Compartits}{167}{figure.caption.1794}%
+\contentsline {paragraph}{Paperera}{168}{section*.1795}%
+\contentsline {paragraph}{Panell d'Administració}{168}{section*.1797}%
+\contentsline {subsection}{\numberline {9.5.3}Implementació per Casos d'Ús}{170}{subsection.1802}%
+\contentsline {subsubsection}{Gestió d'Usuaris}{170}{section*.1803}%
+\contentsline {paragraph}{UC-01: Registre d'Usuari \& UC-02: Inici de Sessió}{170}{section*.1804}%
+\contentsline {paragraph}{UC-03: Tancament de Sessió}{172}{section*.1867}%
+\contentsline {paragraph}{UC-04: Modificar Perfil \& UC-05: Eliminar Compte}{173}{section*.1903}%
+\contentsline {subsubsection}{Gestió d'Administració}{175}{section*.1967}%
+\contentsline {paragraph}{UC-06, UC-07, UC-15, UC-16: Panell d'Administració}{175}{section*.1968}%
+\contentsline {subsection}{\numberline {9.5.4}Gestió d'Arxius}{178}{subsection.2041}%
+\contentsline {paragraph}{UC-08: Crear o Pujar Arxius i Carpetes}{178}{section*.2042}%
+\contentsline {paragraph}{UC-09A/B/C: Operacions amb Arxius (Renomenar, Moure, Copiar)}{180}{section*.2123}%
+\contentsline {paragraph}{UC-10: Eliminar Arxiu (Moure a la Paperera)}{184}{section*.2232}%
+\contentsline {subsection}{\numberline {9.5.5}Compartició d'Arxius}{185}{subsection.2271}%
+\contentsline {paragraph}{UC-13, UC-13A, UC-13B: Compartir, Deixar de Compartir i Veure Compartits}{185}{section*.2272}%
+\contentsline {section}{\numberline {9.6}Implementació del client de escriptori}{191}{section.2430}%
+\contentsline {subsection}{\numberline {9.6.1}Introducció}{191}{subsection.2431}%
+\contentsline {subsection}{\numberline {9.6.2}Disseny Visual i Gestió de Finestres}{191}{subsection.2432}%
+\contentsline {subsubsection}{Flux Inicial: Configuració i Autenticació}{191}{section*.2433}%
+\contentsline {subsubsection}{Interfície Principal i Menú del Sistema}{194}{section*.2500}%
+\contentsline {subsubsection}{Finestra de Configuració}{196}{section*.2503}%
+\contentsline {subsection}{\numberline {9.6.3}Motor de Sincronització: El Nucli Reactiu}{198}{subsection.2529}%
+\contentsline {subsubsection}{Sincronització Local-a-Remot: Vigilant el Sistema d'Arxius}{199}{section*.2559}%
+\contentsline {subsubsection}{Lògica de Comparació i Detecció de Canvis}{201}{section*.2610}%
+\contentsline {subsubsection}{Sincronització Remot-a-Local: Escoltant el Servidor}{202}{section*.2681}%
+\contentsline {subsection}{\numberline {9.6.4}Proves d'integració manuals}{204}{subsection.2753}%
+\contentsline {section}{\numberline {9.7}Implementació dels sistemes d'instal·lació i desplegament}{205}{section.2754}%
+\contentsline {subsection}{\numberline {9.7.1}Desplegament mitjançant Docker Compose}{205}{subsection.2755}%
+\contentsline {subsubsection}{Arquitectura de desplegament}{205}{section*.2756}%
+\contentsline {subsubsection}{Estructura de l'arxiu compose.yml}{206}{section*.2757}%
+\contentsline {paragraph}{Serveis d'infraestructura}{206}{section*.2758}%
+\contentsline {paragraph}{Registre i enrutament}{207}{section*.2780}%
+\contentsline {paragraph}{Microserveis de negoci}{207}{section*.2806}%
+\contentsline {paragraph}{Interfície d'usuari}{208}{section*.2818}%
+\contentsline {subsubsection}{Configuració de xarxa i volums}{209}{section*.2833}%
+\contentsline {subsection}{\numberline {9.7.2}Scripts d'instal·lació automatitzada}{209}{subsection.2834}%
+\contentsline {subsubsection}{Script per a Linux (setup.sh)}{209}{section*.2835}%
+\contentsline {paragraph}{Dependències i construcció automàtica}{209}{section*.2836}%
+\contentsline {paragraph}{Compilació multiplataforma}{210}{section*.2840}%
+\contentsline {paragraph}{Configuració de credencials}{210}{section*.2843}%
+\contentsline {paragraph}{Mode de proves amb dades preconfigurades}{211}{section*.2846}%
+\contentsline {paragraph}{Persistència de la configuració}{211}{section*.2849}%
+\contentsline {subsubsection}{Script per a Windows (setup.ps1)}{212}{section*.2850}%
+\contentsline {subsubsection}{Procés de creació del superadministrador}{212}{section*.2851}%
+\contentsline {chapter}{\numberline {10}Implantació i resultats}{213}{chapter.2852}%
+\contentsline {section}{\numberline {10.1}Introducció}{213}{section.2853}%
+\contentsline {section}{\numberline {10.2}Autenticació i gestió d'usuaris}{213}{section.2854}%
+\contentsline {section}{\numberline {10.3}Gestió d'arxius}{215}{section.2860}%
+\contentsline {subsection}{\numberline {10.3.1}Pujada d'arxius}{215}{subsection.2861}%
+\contentsline {subsection}{\numberline {10.3.2}Descàrrega d'arxius}{216}{subsection.2864}%
+\contentsline {subsection}{\numberline {10.3.3}Creació de carpetes}{217}{subsection.2867}%
+\contentsline {section}{\numberline {10.4}Operacions amb arxius}{219}{section.2874}%
+\contentsline {subsection}{\numberline {10.4.1}Operacions de copiar, tallar i enganxar}{219}{subsection.2875}%
+\contentsline {subsection}{\numberline {10.4.2}Moviment i redenominació}{220}{subsection.2879}%
+\contentsline {subsection}{\numberline {10.4.3}Eliminació d'arxius}{221}{subsection.2883}%
+\contentsline {section}{\numberline {10.5}Sistema de paperera}{222}{section.2886}%
+\contentsline {section}{\numberline {10.6}Compartició d'arxius}{222}{section.2889}%
+\contentsline {subsection}{\numberline {10.6.1}Creació de comparticions}{222}{subsection.2890}%
+\contentsline {subsection}{\numberline {10.6.2}Gestió d'arxius compartits}{225}{subsection.2893}%
+\contentsline {subsection}{\numberline {10.6.3}Modificació i revocació de comparticions}{225}{subsection.2896}%
+\contentsline {section}{\numberline {10.7}Sincronització}{229}{section.2901}%
+\contentsline {section}{\numberline {10.8}Funcionalitats addicionals}{230}{section.2904}%
+\contentsline {subsection}{\numberline {10.8.1}Ordenació d'arxius}{230}{subsection.2905}%
+\contentsline {section}{\numberline {10.9}Panell d'administració}{230}{section.2908}%
+\contentsline {subsection}{\numberline {10.9.1}Gestió d'usuaris}{230}{subsection.2909}%
+\contentsline {subsection}{\numberline {10.9.2}Eliminació d'usuaris}{232}{subsection.2913}%
+\contentsline {section}{\numberline {10.10}Gestió de perfils}{233}{section.2917}%
+\contentsline {section}{\numberline {10.11}Compliment dels objectius}{235}{section.2923}%
+\contentsline {section}{\numberline {10.12}Demostració de sincronització en temps real}{235}{section.2924}%
+\contentsline {section}{\numberline {10.13}Avaluació del Compliment Normatiu}{236}{section.2925}%
+\contentsline {subsection}{\numberline {10.13.1}Enfocament del compliment en un projecte de Codi Obert}{236}{subsection.2926}%
+\contentsline {subsection}{\numberline {10.13.2}Mesures de compliment implementades al codi}{236}{subsection.2927}%
+\contentsline {subsection}{\numberline {10.13.3}Responsabilitats transferides a l'Administrador del Sistema}{237}{subsection.2928}%
+\contentsline {subsection}{\numberline {10.13.4}Mesures no aplicades i Treball a Futur (Capítol 12)}{237}{subsection.2929}%
+\contentsline {section}{\numberline {10.14}Conclusió}{238}{section.2930}%
+\contentsline {chapter}{\numberline {11}Conclusions}{240}{chapter.2931}%
+\contentsline {section}{\numberline {11.1}Assoliment dels objectius}{240}{section.2932}%
+\contentsline {subsection}{\numberline {11.1.1}Valoració com a Treball de Fi de Grau}{240}{subsection.2933}%
+\contentsline {subsection}{\numberline {11.1.2}Valoració del producte desenvolupat}{241}{subsection.2934}%
+\contentsline {section}{\numberline {11.2}Desviacions de la planificació}{241}{section.2935}%
+\contentsline {section}{\numberline {11.3}Discussió crítica dels resultats}{242}{section.2940}%
+\contentsline {section}{\numberline {11.4}Conclusions finals i lliçons apreses}{242}{section.2941}%
+\contentsline {chapter}{\numberline {12}Treball futur i línies de millora}{244}{chapter.2942}%
+\contentsline {section}{\numberline {12.1}Millores Crítiques de Seguretat i Compliment Normatiu (Prioritat Alta)}{244}{section.2943}%
+\contentsline {section}{\numberline {12.2}Completar Funcionalitats del Client d'Escriptori (Prioritat Alta)}{245}{section.2944}%
+\contentsline {section}{\numberline {12.3}Optimització del Rendiment i l'Escalabilitat (Prioritat Mitjana)}{245}{section.2945}%
+\contentsline {section}{\numberline {12.4}Millores en la Gestió i el Desplegament (Prioritat Mitjana)}{246}{section.2946}%
+\contentsline {section}{\numberline {12.5}Millores Funcionals i d'Usabilitat (Prioritat Baixa)}{246}{section.2947}%
+\contentsline {section}{\numberline {12.6}Reflexió sobre el Futur del Projecte}{247}{section.2948}%
+\contentsline {chapter}{\numberline {13}Manual d’instal·lació}{248}{chapter.2949}%
+\contentsline {section}{\numberline {13.1}Requisits previs}{248}{section.2950}%
+\contentsline {section}{\numberline {13.2}Procés d'instal·lació automatitzada}{248}{section.2951}%
+\contentsline {subsection}{\numberline {13.2.1}Obtenció del codi font}{249}{subsection.2952}%
+\contentsline {subsection}{\numberline {13.2.2}Execució de l'script}{249}{subsection.2953}%
+\contentsline {paragraph}{Per a Linux/macOS:}{249}{section*.2954}%
+\contentsline {paragraph}{Per a Windows (des d'una terminal PowerShell com a Administrador):}{249}{section*.2955}%
+\contentsline {paragraph}{Mode de dades de prova:}{249}{section*.2956}%
+\contentsline {section}{\numberline {13.3}Gestió del sistema}{250}{section.2962}%
+\contentsline {section}{\numberline {13.4}Accés a les aplicacions}{251}{section.2963}%

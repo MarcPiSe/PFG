@@ -48,6 +48,7 @@ usage() {
   echo "  -d  stop system"
   echo "  -r  stop system and remove all data"
   echo "  -b  update: rebuild services and restart containers"
+  echo "  -t  use test data (sample users, files and shares) - only valid with -i"
   echo "  -h  show this help"
   echo ""
   echo "Credential options (only valid with -i):"
@@ -60,6 +61,23 @@ usage() {
   echo "  -pa <password>  pgAdmin password"
   echo ""
   echo "Example: $0 -i -up myuser -pp mypass -dp mydb"
+  echo "Example with test data: $0 -i -t"
+}
+
+# Function to switch between init files based on test mode
+configure_init_file() {
+  local test_mode=$1
+  local compose_file="$COMPOSE_DIR/compose.yml"
+  
+  if [ "$test_mode" = true ]; then
+    echo "Configuring system with test data..."
+    # Replace init-creation.sql with init.sql in compose.yml
+    sed -i 's|init-creation\.sql|init.sql|g' "$compose_file"
+  else
+    echo "Configuring system with clean database..."
+    # Ensure init-creation.sql is used
+    sed -i 's|init\.sql|init-creation.sql|g' "$compose_file"
+  fi
 }
 
 install_docker() {
@@ -267,6 +285,7 @@ fi
 
 INSTALL_MODE=false
 SAVE_CONFIG=false
+TEST_MODE=false
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -290,6 +309,14 @@ while [[ $# -gt 0 ]]; do
     -b)
       update_system
       exit 0
+      ;;
+    -t)
+      if [ "$INSTALL_MODE" = false ]; then
+        echo "Error: -t option can only be used with -i"
+        exit 1
+      fi
+      TEST_MODE=true
+      shift
       ;;
     -up)
       if [ "$INSTALL_MODE" = false ]; then
@@ -359,6 +386,7 @@ if [ "$INSTALL_MODE" = true ]; then
   if [ "$SAVE_CONFIG" = true ]; then
     save_env_vars
   fi
+  configure_init_file "$TEST_MODE"
   install_docker
   install_node
   install_rust

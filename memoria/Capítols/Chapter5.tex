@@ -38,7 +38,7 @@ Visual Studio Code (VS Code) és un editor multiplataforma, lleuger i extensible
 Node.js és un entorn d'execució que permet fer servir JavaScript fora del navegador, principalment al servidor. Gràcies a Node.js, es poden crear aplicacions i scripts que s'executen directament a la màquina, com ara eines de desenvolupament, servidors web o processos d'automatització. En aquest projecte, Node.js s'utilitza per executar scripts que ajuden a preparar l'entorn i per donar suport a la construcció i execució del frontend web.
 
 \subsection*{pnpm}
-pnpm (performant npm) és un gestor de paquets per a Node.js, dissenyat per ser ràpid i eficient en l'ús de l'espai en disc. A diferència de npm, que pot duplicar paquets, pnpm utilitza un magatzem de contingut adreçable on només es desa una versió de cada paquet. Després, crea enllaços simbòlics (symlinks) a la carpeta \texttt{node\_modules} del projecte. Aquest enfocament no només redueix dràsticament l'espai en disc necessari, sinó que també accelera significativament els temps d'instal·lació. En aquest projecte, s'ha estandarditzat l'ús de pnpm per gestionar totes les dependències dels frontends (\texttt{@ui-new} i \texttt{@desktop}) i per executar scripts útils durant el desenvolupament i la construcció de les aplicacions, garantint consistència i eficiència.
+pnpm (performant npm) és un gestor de paquets per a Node.js, dissenyat per ser ràpid i eficient en l'ús de l'espai en disc. A diferència de npm, que pot duplicar paquets, pnpm utilitza un magatzem de contingut adreçable on només es desa una versió de cada paquet. Després, crea enllaços simbòlics (symlinks) a la carpeta \texttt{node\_modules} del projecte. Aquest enfocament no només redueix dràsticament l'espai en disc necessari, sinó que també accelera significativament els temps d'instal·lació. En aquest projecte, s'ha estandarditzat l'ús de pnpm per gestionar totes les dependències dels frontends (\texttt{ui-new} i \texttt{desktop}) i per executar scripts útils durant el desenvolupament i la construcció de les aplicacions, garantint consistència i eficiència.
 
 \subsection*{Postman}
 Postman és una eina gràfica molt utilitzada per desenvolupar, provar i documentar APIs REST. Permet enviar peticions HTTP (GET, POST, PUT, DELETE, etc.) a un servidor, veure les respostes, gestionar col·leccions de peticions i validar el comportament dels endpoints de manera ràpida i visual. Això facilita la detecció d'errors, la comprovació de contractes i la col·laboració entre equips de backend i frontend.
@@ -261,8 +261,6 @@ Svelte és un framework per al desenvolupament d'interfícies d'usuari que es di
 \subsection*{Rust}
 Rust és un llenguatge de programació de sistemes reconegut per la seva seguretat de memòria, absència de condicions de carrera i alt rendiment. El seu sistema de propietat i préstec (\emph{ownership \& borrowing}) evita errors comuns com accessos a memòria nul·la o dobles alliberaments sense necessitat de recollida d'escombraries (\emph{garbage collector}). En el context de Tauri, Rust s'utilitza per implementar el backend natiu de l'aplicació d'escriptori, gestionant operacions sensibles com l'accés a fitxers, la comunicació amb la xarxa, la criptografia i la integració amb APIs del sistema operatiu. Aquesta elecció garanteix que les operacions crítiques siguin ràpides, segures i fiables, i permet aprofitar l'ecosistema de llibreries de Rust per a funcionalitats avançades. A més, la interoperabilitat entre Rust i el frontend web de Tauri es realitza mitjançant canals segurs, assegurant la separació de privilegis i la protecció davant vulnerabilitats.
 
-Una de les capacitats clau implementades a Rust és la monitorització del sistema d'arxius local mitjançant la llibreria \texttt{notify}. Aquesta eina permet detectar en temps real qualsevol canvi que es produeixi a la carpeta sincronitzada (creació, modificació o eliminació de fitxers i directoris). Quan es detecta un esdeveniment, el backend de Rust ho comunica a la interfície i inicia el procés de sincronització amb el servidor, garantint així que l'estat local i remot es mantinguin sempre consistents, una funcionalitat essencial per a una experiència d'usuari fluida i fiable.
-
 %-------------------------------------------------------------------------------
 \section{Utilitats addicionals}
 %-------------------------------------------------------------------------------
@@ -304,7 +302,7 @@ Docker Compose és una eina que permet definir i gestionar aplicacions multi-con
 Java & 17 \\
 Spring Boot & 3.2.5 \\
 Spring Cloud Gateway & 2023.0.1 \\
-Spring Security & 6.2.4\footnote{Inclosa a Spring Boot 3.2.5} \\
+Spring Security & 6.2.4 \\
 PostgreSQL & 14.18 \\
 RabbitMQ & 4.1.2 \\
 React & 18.2.0 \\

@@ -131,9 +131,165 @@
       \verb https://kinsta.com/es/blog/github-estadisticas/
       \endverb
     \endentry
-    \entry{SpringBootDocs}{online}{}
+    \entry{tremor}{online}{}
+      \name{author}{1}{}{%
+        {{hash=68e74607c15e37d209b335c0c1b7bde4}{%
+           family={Tremor},
+           familyi={T\bibinitperiod}}}%
+      }
+      \strng{namehash}{68e74607c15e37d209b335c0c1b7bde4}
+      \strng{fullhash}{68e74607c15e37d209b335c0c1b7bde4}
+      \strng{bibnamehash}{68e74607c15e37d209b335c0c1b7bde4}
+      \strng{authorbibnamehash}{68e74607c15e37d209b335c0c1b7bde4}
+      \strng{authornamehash}{68e74607c15e37d209b335c0c1b7bde4}
+      \strng{authorfullhash}{68e74607c15e37d209b335c0c1b7bde4}
       \field{sortinit}{5}
       \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Getting started installation}
+      \field{year}{2023}
+      \verb{urlraw}
+      \verb https://www.tremor.so/docs/getting-started/installation
+      \endverb
+      \verb{url}
+      \verb https://www.tremor.so/docs/getting-started/installation
+      \endverb
+    \endentry
+    \entry{bitsrc_tokens_vs_cookies}{online}{}
+      \name{author}{1}{}{%
+        {{hash=c0c7b32d753f5493f31875899661454e}{%
+           family={Yeh},
+           familyi={Y\bibinitperiod},
+           given={R.},
+           giveni={R\bibinitperiod}}}%
+      }
+      \strng{namehash}{c0c7b32d753f5493f31875899661454e}
+      \strng{fullhash}{c0c7b32d753f5493f31875899661454e}
+      \strng{bibnamehash}{c0c7b32d753f5493f31875899661454e}
+      \strng{authorbibnamehash}{c0c7b32d753f5493f31875899661454e}
+      \strng{authornamehash}{c0c7b32d753f5493f31875899661454e}
+      \strng{authorfullhash}{c0c7b32d753f5493f31875899661454e}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Understanding Token Storage: Local Storage vs HttpOnly Cookies}
+      \field{year}{2025}
+      \verb{urlraw}
+      \verb https://www.wisp.blog/blog/understanding-token-storage-local-storage-vs-httponly-cookies
+      \endverb
+      \verb{url}
+      \verb https://www.wisp.blog/blog/understanding-token-storage-local-storage-vs-httponly-cookies
+      \endverb
+    \endentry
+    \entry{gdpr_cookies}{online}{}
+      \name{author}{1}{}{%
+        {{hash=21daa6bd5890853ac502dca42c74cce4}{%
+           family={Koch},
+           familyi={K\bibinitperiod},
+           given={R.},
+           giveni={R\bibinitperiod}}}%
+      }
+      \strng{namehash}{21daa6bd5890853ac502dca42c74cce4}
+      \strng{fullhash}{21daa6bd5890853ac502dca42c74cce4}
+      \strng{bibnamehash}{21daa6bd5890853ac502dca42c74cce4}
+      \strng{authorbibnamehash}{21daa6bd5890853ac502dca42c74cce4}
+      \strng{authornamehash}{21daa6bd5890853ac502dca42c74cce4}
+      \strng{authorfullhash}{21daa6bd5890853ac502dca42c74cce4}
+      \field{sortinit}{7}
+      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Cookies, the GDPR, and the ePrivacy Directive}
+      \field{year}{2025}
+      \verb{urlraw}
+      \verb https://gdpr.eu/cookies
+      \endverb
+      \verb{url}
+      \verb https://gdpr.eu/cookies
+      \endverb
+    \endentry
+    \entry{auth0_token_best_practices}{online}{}
+      \name{author}{1}{}{%
+        {{hash=2a723769d08b0732d8563ffe6bdaee7d}{%
+           family={Auth0},
+           familyi={A\bibinitperiod}}}%
+      }
+      \strng{namehash}{2a723769d08b0732d8563ffe6bdaee7d}
+      \strng{fullhash}{2a723769d08b0732d8563ffe6bdaee7d}
+      \strng{bibnamehash}{2a723769d08b0732d8563ffe6bdaee7d}
+      \strng{authorbibnamehash}{2a723769d08b0732d8563ffe6bdaee7d}
+      \strng{authornamehash}{2a723769d08b0732d8563ffe6bdaee7d}
+      \strng{authorfullhash}{2a723769d08b0732d8563ffe6bdaee7d}
+      \field{sortinit}{8}
+      \field{sortinithash}{a231b008ebf0ecbe0b4d96dcc159445f}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Token Storage Best Practices}
+      \field{year}{2025}
+      \verb{urlraw}
+      \verb https://auth0.com/docs/secure/security-guidance/data-security/token-storage
+      \endverb
+      \verb{url}
+      \verb https://auth0.com/docs/secure/security-guidance/data-security/token-storage
+      \endverb
+    \endentry
+    \entry{debounce_hook_react}{online}{}
+      \name{author}{1}{}{%
+        {{hash=a0b2814648a0a65d67da439a2afb7fae}{%
+           family={Shaviro},
+           familyi={S\bibinitperiod},
+           given={M.},
+           giveni={M\bibinitperiod}}}%
+      }
+      \strng{namehash}{a0b2814648a0a65d67da439a2afb7fae}
+      \strng{fullhash}{a0b2814648a0a65d67da439a2afb7fae}
+      \strng{bibnamehash}{a0b2814648a0a65d67da439a2afb7fae}
+      \strng{authorbibnamehash}{a0b2814648a0a65d67da439a2afb7fae}
+      \strng{authornamehash}{a0b2814648a0a65d67da439a2afb7fae}
+      \strng{authorfullhash}{a0b2814648a0a65d67da439a2afb7fae}
+      \field{sortinit}{9}
+      \field{sortinithash}{0a5ebc79d83c96b6579069544c73c7d4}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Implementing a Debounce Hook in React}
+      \field{year}{2021}
+      \verb{urlraw}
+      \verb https://dev.to/matan3sh/implementing-a-debounce-hook-in-react-15ej
+      \endverb
+      \verb{url}
+      \verb https://dev.to/matan3sh/implementing-a-debounce-hook-in-react-15ej
+      \endverb
+    \endentry
+    \entry{tauri_focus_bug}{online}{}
+      \name{author}{1}{}{%
+        {{hash=d26ce8e3578b3275cba0694b4c7bede4}{%
+           family={bachrc},
+           familyi={b\bibinitperiod}}}%
+      }
+      \strng{namehash}{d26ce8e3578b3275cba0694b4c7bede4}
+      \strng{fullhash}{d26ce8e3578b3275cba0694b4c7bede4}
+      \strng{bibnamehash}{d26ce8e3578b3275cba0694b4c7bede4}
+      \strng{authorbibnamehash}{d26ce8e3578b3275cba0694b4c7bede4}
+      \strng{authornamehash}{d26ce8e3578b3275cba0694b4c7bede4}
+      \strng{authorfullhash}{d26ce8e3578b3275cba0694b4c7bede4}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Cannot have focus on Ubuntu GNOME \#6310}
+      \field{year}{2023}
+      \verb{urlraw}
+      \verb https://github.com/tauri-apps/tauri/issues/6310
+      \endverb
+      \verb{url}
+      \verb https://github.com/tauri-apps/tauri/issues/6310
+      \endverb
+    \endentry
+    \entry{SpringBootDocs}{online}{}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labeltitlesource}{title}
       \field{title}{Spring Boot Reference Guide}
       \field{year}{2023}
@@ -146,8 +302,8 @@
       \endverb
     \endentry
     \entry{ReactDocs}{online}{}
-      \field{sortinit}{6}
-      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labeltitlesource}{title}
       \field{title}{React Documentation}
       \field{year}{2023}
@@ -160,8 +316,8 @@
       \endverb
     \endentry
     \entry{TauriDocs}{online}{}
-      \field{sortinit}{7}
-      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labeltitlesource}{title}
       \field{title}{Tauri Documentation}
       \field{year}{2023}
@@ -174,8 +330,8 @@
       \endverb
     \endentry
     \entry{SvelteDocs}{online}{}
-      \field{sortinit}{8}
-      \field{sortinithash}{a231b008ebf0ecbe0b4d96dcc159445f}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labeltitlesource}{title}
       \field{title}{Svelte Documentation}
       \field{year}{2023}
@@ -188,8 +344,8 @@
       \endverb
     \endentry
     \entry{DockerDocs}{online}{}
-      \field{sortinit}{9}
-      \field{sortinithash}{0a5ebc79d83c96b6579069544c73c7d4}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
       \field{labeltitlesource}{title}
       \field{title}{Docker Documentation}
       \field{year}{2023}
@@ -202,8 +358,8 @@
       \endverb
     \endentry
     \entry{PostgreSQLDocs}{online}{}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
       \field{labeltitlesource}{title}
       \field{title}{PostgreSQL Documentation}
       \field{year}{2023}
@@ -216,8 +372,8 @@
       \endverb
     \endentry
     \entry{RabbitMQDocs}{online}{}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
       \field{labeltitlesource}{title}
       \field{title}{RabbitMQ Tutorials}
       \field{year}{2023}
@@ -230,8 +386,8 @@
       \endverb
     \endentry
     \entry{RadixUIDocs}{online}{}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
       \field{labeltitlesource}{title}
       \field{title}{Radix UI Primitives}
       \field{year}{2023}
@@ -244,8 +400,8 @@
       \endverb
     \endentry
     \entry{TremorDocs}{online}{}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
       \field{labeltitlesource}{title}
       \field{title}{Tremor React Components}
       \field{year}{2023}
@@ -258,8 +414,8 @@
       \endverb
     \endentry
     \entry{ReactQueryDocs}{online}{}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
       \field{labeltitlesource}{title}
       \field{title}{TanStack React Query}
       \field{year}{2023}
@@ -272,8 +428,8 @@
       \endverb
     \endentry
     \entry{ZustandDocs}{online}{}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
       \field{labeltitlesource}{title}
       \field{title}{Zustand State Manager}
       \field{year}{2023}
@@ -286,8 +442,8 @@
       \endverb
     \endentry
     \entry{DndKitDocs}{online}{}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
       \field{labeltitlesource}{title}
       \field{title}{dnd-kit Documentation}
       \field{year}{2023}
@@ -300,8 +456,8 @@
       \endverb
     \endentry
     \entry{SelectoDocs}{online}{}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
       \field{labeltitlesource}{title}
       \field{title}{Selecto Library}
       \field{year}{2023}
@@ -314,8 +470,8 @@
       \endverb
     \endentry
     \entry{RemixIconDocs}{online}{}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
       \field{labeltitlesource}{title}
       \field{title}{Remix Icon Library}
       \field{year}{2023}
@@ -325,20 +481,6 @@
       \endverb
       \verb{url}
       \verb https://remixicon.com
-      \endverb
-    \endentry
-    \entry{UseHooksTS}{online}{}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
-      \field{labeltitlesource}{title}
-      \field{title}{useDebounce Hook - usehooks-ts}
-      \field{year}{2023}
-      \true{nocite}
-      \verb{urlraw}
-      \verb https://usehooks-ts.com/react-hook/use-debounce
-      \endverb
-      \verb{url}
-      \verb https://usehooks-ts.com/react-hook/use-debounce
       \endverb
     \endentry
     \entry{appleton-vdom}{online}{}
@@ -355,8 +497,8 @@
       \strng{authorbibnamehash}{8faf73e86645de12136be02681800488}
       \strng{authornamehash}{8faf73e86645de12136be02681800488}
       \strng{authorfullhash}{8faf73e86645de12136be02681800488}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{title}{What the Fork is the React Virtual DOM}
@@ -382,8 +524,8 @@
       \strng{authorbibnamehash}{7599546573eb97152c169abbfb60b7e7}
       \strng{authornamehash}{7599546573eb97152c169abbfb60b7e7}
       \strng{authorfullhash}{7599546573eb97152c169abbfb60b7e7}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{title}{Conceptualizing React Components through Data flow Diagrams}
@@ -396,8 +538,8 @@
       \endverb
     \endentry
     \entry{react-visualized}{online}{}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
       \field{labeltitlesource}{title}
       \field{title}{React Visualized}
       \true{nocite}
@@ -420,8 +562,8 @@
       \strng{authorbibnamehash}{35d827e2a8f2127b88fab45ef43a4f09}
       \strng{authornamehash}{35d827e2a8f2127b88fab45ef43a4f09}
       \strng{authorfullhash}{35d827e2a8f2127b88fab45ef43a4f09}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{title}{MIT License}
@@ -445,17 +587,18 @@
       \strng{authorbibnamehash}{b5ad2317f287bf06cab68e1b1c7406b8}
       \strng{authornamehash}{b5ad2317f287bf06cab68e1b1c7406b8}
       \strng{authorfullhash}{b5ad2317f287bf06cab68e1b1c7406b8}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{extraname}{1}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
-      \field{title}{Cómo redactar un aviso legal}
+      \field{title}{Cómo incluir información legal en tu página web y cumplir con la LOPDGDD}
       \true{nocite}
       \verb{urlraw}
-      \verb https://www.incibe.es/protege-tu-empresa/blog/como-redactar-aviso-legal
+      \verb https://www.incibe.es/empresas/blog/incluir-informacion-legal-tu-pagina-web-y-cumplir-lopdgdd
       \endverb
       \verb{url}
-      \verb https://www.incibe.es/protege-tu-empresa/blog/como-redactar-aviso-legal
+      \verb https://www.incibe.es/empresas/blog/incluir-informacion-legal-tu-pagina-web-y-cumplir-lopdgdd
       \endverb
     \endentry
     \entry{aepd-informar}{online}{}
@@ -471,17 +614,17 @@
       \strng{authornamehash}{8e996482e2df3bd53e26d8f5b62920d2}
       \strng{authorfullhash}{8e996482e2df3bd53e26d8f5b62920d2}
       \field{extraname}{1}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{title}{Guía para el cumplimiento del deber de informar}
       \true{nocite}
       \verb{urlraw}
-      \verb https://www.aepd.es/es/documento/guia-deber-informar.pdf
+      \verb https://www.aepd.es/guias/guia-modelo-clausula-informativa.pdf
       \endverb
       \verb{url}
-      \verb https://www.aepd.es/es/documento/guia-deber-informar.pdf
+      \verb https://www.aepd.es/guias/guia-modelo-clausula-informativa.pdf
       \endverb
     \endentry
     \entry{aepd-ropa}{online}{}
@@ -497,17 +640,17 @@
       \strng{authornamehash}{8e996482e2df3bd53e26d8f5b62920d2}
       \strng{authorfullhash}{8e996482e2df3bd53e26d8f5b62920d2}
       \field{extraname}{2}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{title}{Modelo de registro de actividades de tratamiento}
       \true{nocite}
       \verb{urlraw}
-      \verb https://www.aepd.es/es/documento/actuaciones-tratamiento-responsables.pdf
+      \verb https://www.aepd.es/guias/guia-rgpd-para-responsables-de-tratamiento.pdf
       \endverb
       \verb{url}
-      \verb https://www.aepd.es/es/documento/actuaciones-tratamiento-responsables.pdf
+      \verb https://www.aepd.es/guias/guia-rgpd-para-responsables-de-tratamiento.pdf
       \endverb
     \endentry
     \entry{ens-rd311}{online}{}
@@ -522,8 +665,8 @@
       \strng{authorbibnamehash}{a5e4c87aa1b1ad044d4566421e02f784}
       \strng{authornamehash}{a5e4c87aa1b1ad044d4566421e02f784}
       \strng{authorfullhash}{a5e4c87aa1b1ad044d4566421e02f784}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{title}{Real Decreto 311/2022, Esquema Nacional de Seguridad}
@@ -547,8 +690,8 @@
       \strng{authorbibnamehash}{4f94d8651db2370d2397c3cd3e6e07d0}
       \strng{authornamehash}{4f94d8651db2370d2397c3cd3e6e07d0}
       \strng{authorfullhash}{4f94d8651db2370d2397c3cd3e6e07d0}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{title}{¿Qué aspectos legales debe cumplir una página web?}
@@ -558,6 +701,33 @@
       \endverb
       \verb{url}
       \verb https://www.grupovadillo.com/aspectos-legales-pagina-web/
+      \endverb
+    \endentry
+    \entry{incibe-aviso-legal}{online}{}
+      \name{author}{1}{}{%
+        {{hash=b5ad2317f287bf06cab68e1b1c7406b8}{%
+           family={{INCIBE}},
+           familyi={I\bibinitperiod}}}%
+      }
+      \strng{namehash}{b5ad2317f287bf06cab68e1b1c7406b8}
+      \strng{fullhash}{b5ad2317f287bf06cab68e1b1c7406b8}
+      \strng{bibnamehash}{b5ad2317f287bf06cab68e1b1c7406b8}
+      \strng{authorbibnamehash}{b5ad2317f287bf06cab68e1b1c7406b8}
+      \strng{authornamehash}{b5ad2317f287bf06cab68e1b1c7406b8}
+      \strng{authorfullhash}{b5ad2317f287bf06cab68e1b1c7406b8}
+      \field{extraname}{2}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{El aviso legal, una parte importante de tu web}
+      \field{year}{2021}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://www.incibe.es/empresas/blog/aviso-legal-parte-importante-tu-web
+      \endverb
+      \verb{url}
+      \verb https://www.incibe.es/empresas/blog/aviso-legal-parte-importante-tu-web
       \endverb
     \endentry
     \entry{tailwind-css}{online}{}
@@ -572,8 +742,8 @@
       \strng{authorbibnamehash}{766d42c0267fcbdbbd0d67b32f6642ff}
       \strng{authornamehash}{766d42c0267fcbdbbd0d67b32f6642ff}
       \strng{authorfullhash}{766d42c0267fcbdbbd0d67b32f6642ff}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{title}{Tailwind CSS}
@@ -597,8 +767,8 @@
       \strng{authorbibnamehash}{4af44ed0e42dc586f14591c4e92cbea7}
       \strng{authornamehash}{4af44ed0e42dc586f14591c4e92cbea7}
       \strng{authorfullhash}{4af44ed0e42dc586f14591c4e92cbea7}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{title}{Radix UI}
@@ -622,8 +792,8 @@
       \strng{authorbibnamehash}{3b185c250b064420790b79b44f42e30b}
       \strng{authornamehash}{3b185c250b064420790b79b44f42e30b}
       \strng{authorfullhash}{3b185c250b064420790b79b44f42e30b}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{title}{Tauri Framework}

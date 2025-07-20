@@ -2345,7 +2345,6 @@
   <!-- SECTION 0 -->
   <bcf:bibdata section="0">
     <bcf:datasource type="file" datatype="bibtex" glob="false">example.bib</bcf:datasource>
-    <bcf:datasource type="file" datatype="bibtex" glob="false">example.bib</bcf:datasource>
   </bcf:bibdata>
   <bcf:section number="0">
     <bcf:citekey order="0" nocite="1">*</bcf:citekey>
@@ -2353,10 +2352,27 @@
     <bcf:citekey order="2">dbengines-comparison</bcf:citekey>
     <bcf:citekey order="3">cloudamqp-rabbitmq-kafka</bcf:citekey>
     <bcf:citekey order="4">kinsta_github_stats</bcf:citekey>
-    <bcf:citekey order="5">baeldung-spring-alternatives</bcf:citekey>
-    <bcf:citekey order="6">dbengines-comparison</bcf:citekey>
-    <bcf:citekey order="7">cloudamqp-rabbitmq-kafka</bcf:citekey>
-    <bcf:citekey order="8">kinsta_github_stats</bcf:citekey>
+    <bcf:citekey order="5">tremor</bcf:citekey>
+    <bcf:citekey order="6">bitsrc_tokens_vs_cookies</bcf:citekey>
+    <bcf:citekey order="7">gdpr_cookies</bcf:citekey>
+    <bcf:citekey order="8">auth0_token_best_practices</bcf:citekey>
+    <bcf:citekey order="9">debounce_hook_react</bcf:citekey>
+    <bcf:citekey order="10">tremor</bcf:citekey>
+    <bcf:citekey order="11">bitsrc_tokens_vs_cookies</bcf:citekey>
+    <bcf:citekey order="12">gdpr_cookies</bcf:citekey>
+    <bcf:citekey order="13">auth0_token_best_practices</bcf:citekey>
+    <bcf:citekey order="14">debounce_hook_react</bcf:citekey>
+    <bcf:citekey order="15">tauri_focus_bug</bcf:citekey>
+    <bcf:citekey order="16">baeldung-spring-alternatives</bcf:citekey>
+    <bcf:citekey order="17">dbengines-comparison</bcf:citekey>
+    <bcf:citekey order="18">cloudamqp-rabbitmq-kafka</bcf:citekey>
+    <bcf:citekey order="19">kinsta_github_stats</bcf:citekey>
+    <bcf:citekey order="20">tremor</bcf:citekey>
+    <bcf:citekey order="21">bitsrc_tokens_vs_cookies</bcf:citekey>
+    <bcf:citekey order="22">gdpr_cookies</bcf:citekey>
+    <bcf:citekey order="23">auth0_token_best_practices</bcf:citekey>
+    <bcf:citekey order="24">debounce_hook_react</bcf:citekey>
+    <bcf:citekey order="25">tauri_focus_bug</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="none">
