@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes fadeToTransparent {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.toast-fadeout {
+  animation: fadeToTransparent 5s ease-in-out;
+  animation-delay: 1s;
+  animation-fill-mode: forwards;
+}

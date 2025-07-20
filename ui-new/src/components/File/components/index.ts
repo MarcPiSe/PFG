@@ -1,0 +1,1 @@
+export {FileDetailsDrawer} from './FileDetailsDrawer';

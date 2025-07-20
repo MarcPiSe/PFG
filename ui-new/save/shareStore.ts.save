@@ -1,0 +1,110 @@
+import { create } from "zustand";
+import { sharingServiceInstance as sharingService, fileServiceInstance as fileService } from "../lib/services";
+import { SharedUser } from "../types";
+
+
+interface ShareState {
+  isLoading: boolean;
+  sharedUrl: string | null;
+  sharedUsers: SharedUser[];
+  
+  setIsLoading: (loading: boolean) => void;
+  setSharedUrl: (url: string | null) => void;
+  setSharedUsers: (users: SharedUser[]) => void;
+  
+  // Operaciones
+  generateShareUrl: (fileId: string) => Promise<string>;
+  shareWithUser: (fileId: string, username: string, accessType?: 'READ' | 'WRITE' | 'ADMIN') => Promise<boolean>;
+  getSharedUsers: (fileId: string) => Promise<SharedUser[]>;
+  unshareFile: (fileId: string) => Promise<boolean>;
+  updateUserAccess: (fileId: string, username: string, accessType: 'READ' | 'WRITE' | 'ADMIN') => Promise<boolean>;
+}
+
+export const useShareStore = create<ShareState>((set) => ({
+  isLoading: false,
+  sharedUrl: null,
+  sharedUsers: [],
+  
+  setIsLoading: (loading) => set({ isLoading: loading }),
+  setSharedUrl: (url) => set({ sharedUrl: url }),
+  setSharedUsers: (users) => set({ sharedUsers: users }),
+  
+  generateShareUrl: async (fileId) => {
+    try {
+      set({ isLoading: true });
+      const url = await sharingService.generateShareUrl(fileId);
+      set({ sharedUrl: url, isLoading: false });
+      return url;
+    } catch (error) {
+      console.error('Error al generar enlace de compartir:', error);
+      set({ isLoading: false });
+      throw error;
+    }
+  },
+  
+  shareWithUser: async (fileId, username, accessType = 'READ') => {
+    try {
+      set({ isLoading: true });
+      await fileService.getElement(fileId); 
+      await sharingService.shareFile(fileId, username, accessType);
+      
+      // Actualizar la lista de usuarios con los que se comparte
+      const users = await sharingService.getSharedUsers(fileId);
+      set({ sharedUsers: users, isLoading: false });
+      
+      return true;
+    } catch (error) {
+      console.error('Error al compartir archivo:', error);
+      set({ isLoading: false });
+      return false;
+    }
+  },
+  
+  getSharedUsers: async (fileId) => {
+    try {
+      set({ isLoading: true });
+      const users = await sharingService.getSharedUsers(fileId);
+      set({ sharedUsers: users, isLoading: false });
+      return users;
+    } catch (error) {
+      console.error('Error al obtener usuarios compartidos:', error);
+      set({ isLoading: false, sharedUsers: [] });
+      return [];
+    }
+  },
+  
+  unshareFile: async (fileId) => {
+    try {
+      set({ isLoading: true });
+      const users = await sharingService.getSharedUsers(fileId);
+      
+      await Promise.all(users.map((user: SharedUser) => 
+        sharingService.revokeAccess(fileId, user.username)
+      ));
+      
+      set({ sharedUsers: [], isLoading: false });
+      return true;
+    } catch (error) {
+      console.error('Error al dejar de compartir archivo:', error);
+      set({ isLoading: false });
+      return false;
+    }
+  },
+  
+  updateUserAccess: async (fileId, username, accessType) => {
+    try {
+      set({ isLoading: true });
+      await sharingService.updateAccess(fileId, username, accessType);
+      
+      // Actualizar la lista de usuarios
+      const users = await sharingService.getSharedUsers(fileId);
+      set({ sharedUsers: users, isLoading: false });
+      
+      return true;
+    } catch (error) {
+      console.error('Error al actualizar permisos:', error);
+      set({ isLoading: false });
+      return false;
+    }
+  }
+})); 
