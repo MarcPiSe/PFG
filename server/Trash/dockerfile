@@ -1,0 +1,4 @@
+FROM amazoncorretto:17-alpine-jdk
+EXPOSE 8761
+COPY jar/Trash-0.0.1.jar Trash.jar
+ENTRYPOINT ["java","-jar","/Trash.jar"]

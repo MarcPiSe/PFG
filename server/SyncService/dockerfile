@@ -1,0 +1,4 @@
+FROM amazoncorretto:17-alpine-jdk
+EXPOSE 8761
+COPY jar/SyncService-0.0.1.jar SyncService.jar
+ENTRYPOINT ["java","-jar","/SyncService.jar"]

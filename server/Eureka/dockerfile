@@ -1,0 +1,5 @@
+FROM amazoncorretto:17-alpine-jdk
+EXPOSE 8761
+COPY jar/Eureka-0.0.1.jar Eureka.jar
+CMD apt-get update && apt-get install -y curl
+ENTRYPOINT ["java","-jar","/Eureka.jar"]

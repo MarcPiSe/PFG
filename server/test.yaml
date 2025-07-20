@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: mydb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "80:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+
+  # eureka:
+  #   build: ./eureka
+  #   ports:
+  #     - "8761:8761"
+  #   networks:
+  #     - spring-net
+
+  # gateway:
+  #   build: ./gateway
+  #   ports:
+  #     - "8762:8762"
+  #   networks:
+  #     - spring-net
+
+  # user-authentication:
+  #   build: ./userauthentication
+  #   ports:
+  #     - "8763:8763"
+  #   environment:
+  #     - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
+  #     - SPRING_ACTIVEMQ_BROKER_URL=tcp://activemq:61616
+  #     - SPRING_ACTIVEMQ_USER=test
+  #     - SPRING_ACTIVEMQ_PASSWORD=test
+  #     - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/mydb
+  #     - SPRING_DATASOURCE_USERNAME=admin
+  #     - SPRING_DATASOURCE_PASSWORD=admin
+  #     - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+  #     - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.PostgreSQLDialect
+  #     - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+  #   networks:
+  #     - spring-net
+
+  # user-management:
+  #   build: ./user-management
+  #   ports:
+  #     - "8764:8764"
+  #   networks:
+  #     - spring-net
+
+  # file-access-control:
+  #   build: ./file-access-control
+  #   ports:
+  #     - "8765:8765"
+  #   networks:
+  #     - spring-net
+
+  # file-management:
+  #   build: ./file-management
+  #   ports:
+  #     - "8767:8767"
+  #   networks:
+  #     - spring-net
+
+  # activemq:
+  #   image: rmohr/activemq
+  #   ports:
+  #     - "61616:61616"
+  #   networks:
+  #     - spring-net
+
+volumes:
+  postgres_data:
+
+networks:
+  spring-net:
+    driver: bridge

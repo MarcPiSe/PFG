@@ -1,0 +1,4 @@
+FROM amazoncorretto:17-alpine-jdk
+EXPOSE 8761
+COPY jar/Gateway-0.0.1.jar Gateway.jar
+ENTRYPOINT ["java","-jar","/Gateway.jar"]

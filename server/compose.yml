@@ -1,0 +1,154 @@
+version: '3.8'
+
+services:
+
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "80:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@admin.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin}
+      POSTGRES_DB: ${POSTGRES_DB:-mydb}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-admin}
+
+  eureka:
+    build: ./Eureka
+    container_name: eureka
+    ports:
+      - "8761:8761"
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "-O", "-", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  file-access:
+    build: ./FileAccessControl
+    container_name: fileaccess
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+    depends_on:
+      eureka:
+        condition: service_healthy
+
+  file-sharing:
+    build: ./FileSharing
+    container_name: filesharing
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+    depends_on:
+      eureka:
+        condition: service_healthy
+
+  trash:
+    build: ./Trash
+    container_name: trash
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+    depends_on:
+      eureka:
+        condition: service_healthy
+
+  file-manager:
+    build: ./FileManagement
+    container_name: fiulemanagement
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+    depends_on:
+      eureka:
+        condition: service_healthy
+    volumes:
+      - ./storage_data:/app/files
+
+  user-management:
+    container_name: usermanagement
+    build: ./UserManagement
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+    depends_on:
+      eureka:
+        condition: service_healthy
+
+  sync:
+    build: ./SyncService
+    container_name: sync
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+    depends_on:
+      eureka:
+        condition: service_healthy
+
+  user-auth:
+    build: ./UserAuthentication
+    container_name: userauth
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+    depends_on:
+      eureka:
+        condition: service_healthy
+
+  gateway:
+    container_name: gateway
+    build: ./Gateway
+    ports:
+      - "8762:8762"
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+    depends_on:
+      eureka:
+        condition: service_healthy
+
+  ui-new:
+    build:
+      context: ../ui-new
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://gateway:8762
+        VITE_WS_URL: ws://gateway:8762/websocket/web
+    container_name: ui-new
+    ports:
+      - "8080:80"
+    depends_on:
+      gateway:
+        condition: service_started
+
+#  build:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    volumes:
+#      - ./output:/output
+#    container_name: installer_builder
+#    restart: "no"
+
+#networks:
+#  spring-net:
+#    driver: bridge
+
+volumes:
+  postgres_data:

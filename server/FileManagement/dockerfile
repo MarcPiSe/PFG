@@ -1,0 +1,4 @@
+FROM amazoncorretto:17-alpine-jdk
+EXPOSE 8761
+COPY jar/FileManagement-0.0.1.jar FileManagement.jar
+ENTRYPOINT ["java","-jar","/FileManagement.jar"]

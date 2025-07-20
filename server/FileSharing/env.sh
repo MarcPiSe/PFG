@@ -1,0 +1,2 @@
+export JWT_SECRET_KEY=your_secret_key
+export JWT_EXPIRATION=86400000

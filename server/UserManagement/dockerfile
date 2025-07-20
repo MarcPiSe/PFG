@@ -1,0 +1,4 @@
+FROM amazoncorretto:17-alpine-jdk
+EXPOSE 8761
+COPY jar/UserManagement-0.0.1.jar UserManagement.jar
+ENTRYPOINT ["java","-jar","/UserManagement.jar"]

@@ -1,0 +1,4 @@
+FROM amazoncorretto:17-alpine-jdk
+EXPOSE 8761
+COPY jar/UserAuthentication-0.0.1.jar UserAuthentication.jar
+ENTRYPOINT ["java","-jar","/UserAuthentication.jar"]

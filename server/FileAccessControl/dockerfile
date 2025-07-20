@@ -1,0 +1,4 @@
+FROM amazoncorretto:17-alpine-jdk
+EXPOSE 8761
+COPY jar/FileAccessControl-0.0.1.jar FileAccessControl.jar
+ENTRYPOINT ["java","-jar","/FileAccessControl.jar"]
