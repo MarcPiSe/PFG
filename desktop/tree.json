@@ -1,0 +1,25 @@
+{
+  "type": "folder",
+  "hash": "7e327cc7b72bf9913605e758a4b796a9e3101dd216aa6802ff0b19131022ffb7",
+  "content": {
+    "Documents2": {
+      "type": "folder",
+      "hash": "9a246d775d0dde05a6ac5cb237aca7a13464c687510da37c74f67e80fa74b123",
+      "content": {
+        "report.txt": {
+          "type": "file",
+          "hash": "e63c00064610bce79fd1503622ed2636260f489666778d1eb2dac15829ba95ab",
+          "path": "Documents2/report.txt",
+          "id": null,
+          "parent_id": null
+        }
+      },
+      "path": "Documents2",
+      "id": null,
+      "parent_id": null
+    }
+  },
+  "path": "/home/mpi/newTestTfg",
+  "id": null,
+  "parent_id": null
+}
