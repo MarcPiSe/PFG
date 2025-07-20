@@ -1,0 +1,1124 @@
+\section{Implementació del client web}
+
+\subsection{Introducció}
+El client web és una \textit{Single Page Application} (SPA) desenvolupada amb les tecnologies més modernes de l'ecosistema de JavaScript, com són React, Vite i TypeScript. La interfície d'usuari s'ha construït utilitzant el framework CSS \textbf{Tailwind CSS} per a un disseny àgil i personalitzable, juntament amb un conjunt de components reutilitzables i accessibles de \textbf{Radix UI}, que han estat encapsulats i estilitzats al directori \texttt{ui-new/src/components}. La gestió de l'estat global de l'aplicació es realitza mitjançant \textbf{Zustand}, una solució lleugera i potent, mentre que les operacions asíncrones, el cacheig de dades del servidor i les actualitzacions optimistes es gestionen amb la llibreria \textbf{TanStack React Query}, garantint una experiència d'usuari fluida i reactiva.
+
+L'arquitectura del codi font segueix un enfocament modular i organitzat, separant clarament les diferents responsabilitats: la lògica de negoci s'encapsula en \textit{hooks} reutilitzables, l'estat global en \textit{stores} de Zustand, les crides a l'API del backend s'abstrauen en serveis, i els components d'interfície són purs i centrats exclusivament en la representació visual.
+
+\subsubsection{Estructura de directoris del client web}
+El projecte del client web, ubicat a \texttt{ui-new/}, presenta una estructura de directoris clara i modular que separa les diferents responsabilitats de l'aplicació. A continuació, es detallen els directoris principals i el seu contingut:
+\begin{itemize}
+    \item \texttt{src/components/}: Aquest directori conté tots els components reutilitzables de React que conformen la interfície d'usuari. Alguns dels components més rellevants són:
+    \begin{itemize}
+        \item \textbf{Components de Tremor}: S'han integrat diversos components de la llibreria de components de React de codi obert Tremor \cite{tremor}, adaptats per a aquest projecte. Aquests inclouen \texttt{Accordion}, \texttt{Card}, \texttt{Dialog}, \texttt{Drawer}, \texttt{Input}, \texttt{Popover}, \texttt{Toast}, i \texttt{Tooltip}. Aquests components proporcionen una base sòlida i accessible per a la construcció d'interfícies d'usuari complexes.
+        \item \texttt{Button}: Un botó personalitzat amb diferents variants visuals (primari, secundari, fantasma, etc.).
+        \item \texttt{CreateNewFolderDialog}: Un diàleg modal per a la creació de noves carpetes.
+        \item \texttt{File}: Component que representa un fitxer o carpeta a la interfície, amb la seva icona i nom. Inclou subcomponents com \texttt{RenameDialog} i \texttt{ShareDialog} per a la gestió d'aquestes accions.
+        \item \texttt{Tabs} i \texttt{TabsSubHeader}: Components per a la creació de navegació per pestanyes.
+        \item \texttt{Toaster}: Component que gestiona la cua i visualització de notificacions (toasts).
+    \end{itemize}
+    \item \texttt{src/pages/}: Conté els components que representen les pàgines completes de l'aplicació, com ara:
+    \begin{itemize}
+        \item \texttt{AdminDashboard}: El panell d'administració d'usuaris.
+        \item \texttt{FileManager}: La pàgina principal de gestió de fitxers.
+        \item \texttt{Login} i \texttt{SignUp}: Les pàgines d'inici de sessió i registre.
+    \end{itemize}
+    \item \texttt{src/hooks/}: Aquest directori és fonamental per a la lògica de negoci, ja que conté els \textit{hooks} personalitzats de React que encapsulen la majoria de la complexitat:
+    \begin{itemize}
+        \item \texttt{useAuth}: Gestiona l'estat d'autenticació de l'usuari, incloent l'inici de sessió, el tancament de sessió i el registre.
+        \item \texttt{useFileOperations}: Conté tota la lògica per a les operacions de fitxers (crear, moure, copiar, eliminar, etc.), utilitzant TanStack Query per a les actualitzacions optimistes.
+        \item \texttt{useFileSelection}: Gestiona la selecció de fitxers i el porta-retalls (copiar/tallar).
+        \item \texttt{useShareManager}: Encapsula la lògica per a compartir fitxers i gestionar els permisos.
+        \item \texttt{useValidation}: Proporciona funcions per a la validació de formularis.
+    \end{itemize}
+    \item \texttt{src/layouts/}: Conté els components d'estructura de la pàgina, com \texttt{AppLayout}, que defineix la disposició general amb la barra lateral i la capçalera.
+    \item \texttt{src/lib/}: Un directori per a utilitats i configuracions generals:
+    \begin{itemize}
+        \item \texttt{api.ts}: Configura Axios i defineix els serveis per a interactuar amb l'API del backend (\texttt{authService}, \texttt{fileService}, etc.).
+        \item \texttt{utils.ts}: Funcions d'utilitat genèriques.
+        \item \texttt{websocket.ts}: Gestiona la connexió WebSocket per a les actualitzacions en temps real.
+    \end{itemize}
+    \item \texttt{src/store/}: Conté els \textit{stores} de Zustand per a la gestió de l'estat global, com ara \texttt{fileStore} (estat dels fitxers) i \texttt{fileSelectionStore} (estat de la selecció de fitxers).
+    \item \texttt{src/types/}: Defineix els tipus de TypeScript utilitzats a tota l'aplicació, garantint la consistència i la seguretat del tipat.
+\end{itemize}
+
+\subsection{Disseny Visual i Components de la Interfície}
+A continuació, es presenta una descripció visual detallada de la implementació final del client web. Aquesta secció té un doble objectiu: d'una banda, il·lustrar com els esbossos conceptuals presentats al \textbf{Capítol 8 (secció 8.5.1)} s'han materialitzat en una interfície funcional i interactiva; de l'altra, justificar les decisions de disseny preses durant la implementació que divergeixen o milloren les propostes inicials, sempre amb l'objectiu de perfeccionar l'experiència d'usuari.
+
+\subsubsection{Autenticació}
+El flux d'autenticació és el primer punt de contacte de l'usuari amb la plataforma. El disseny s'ha centrat en la claredat i la simplicitat, evitant distraccions per facilitar un accés ràpid i segur.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/login.png}
+        \caption{Pantalla d'inici de sessió.}
+        \label{fig:react-login-impl}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/register.png}
+        \caption{Pantalla de registre.}
+        \label{fig:react-registre-impl}
+    \end{minipage}
+\end{figure}
+
+Com es pot observar, la implementació final de les pantalles d'inici de sessió (\textbf{Figura \ref{fig:react-login-impl}}) i registre (\textbf{Figura \ref{fig:react-registre-impl}}) és una traducció fidel dels esbossos conceptuals presentats a les \textbf{Figures 8.21 i 8.22} del Capítol 8. El disseny final és minimalista i funcional, utilitzant un component de \texttt{Card} per enmarcar els formularis i millorar-ne la llegibilitat. Una millora funcional no detallada en la fase de disseny inicial és el sistema de validació de dades. A més de la validació de la lògica de negoci que es produeix en el moment de l'enviament del formulari, s'ha incorporat una validació prèvia al client. Com es pot apreciar a la \textbf{Figura \ref{fig:react-error-signup-impl}}. Això millora l'experiència d'usuari i redueix la càrrega del servidor.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Figures/ui-web/error_signup.png}
+    \caption{Exemple de validació nativa del navegador en el formulari de registre.}
+    \label{fig:react-error-signup-impl}
+\end{figure}
+
+\subsubsection{Escriptori Principal i Navegació}
+L'escriptori principal és el nucli de l'aplicació, on es centralitzen totes les funcionalitats de gestió d'arxius. A diferència del boceto general de la \textbf{Figura 8.23}, la implementació final opta per un \textit{layout} més net i dinàmic, on els components s'organitzen de manera fluida per adaptar-se a diferents mides de pantalla.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{Figures/ui-web/Folder_tree.png}
+    \caption{Detall de l'arbre de navegació.}
+    \label{fig:react-arbre-carpetes-impl}
+\end{figure}
+
+L'arbre de navegació lateral (Figura \ref{fig:react-arbre-carpetes-impl}) és una implementació fidel i funcional del concepte descrit a la \textbf{Figura 8.25}. Permet a l'usuari desplaçar-se de manera intuïtiva entre els seus arxius, la secció de "Compartits amb mi" i la "Paperera", distingint visualment la carpeta seleccionada.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/upload_file.png}
+        \caption{Diàleg del sistema per a la selecció d'arxius.}
+        \label{fig:react-upload-file-impl}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/notification.png}
+        \caption{Notificació emergent o toast.}
+        \label{fig:react-notification-impl}
+    \end{minipage}
+\end{figure}
+
+La pujada de fitxers es realitza mitjançant el diàleg natiu del sistema operatiu (Figura \ref{fig:react-upload-file-impl}, esquerra), oferint a l'usuari una experiència familiar i intuïtiva per seleccionar arxius i carpetes. Com a millora clau per al \textit{feedback} a l'usuari, s'han incorporat notificacions emergents o \textit{toasts} (Figura \ref{fig:react-notification-impl}, dreta). Aquestes s'utilitzen a tota l'aplicació per comunicar l'èxit o el fracàs de les operacions, proporcionant una resposta visual immediata.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/user_settings_dialog.png}
+        \caption{Modal de configuració del perfil d'usuari.}
+        \label{fig:react-user-settings-impl}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/user_settings_dialog_not_super_admin.png}
+        \caption{Vista per a un usuari estàndard.}
+        \label{fig:react-user-settings-user-impl}
+    \end{minipage}
+    \caption{Modal de configuració del perfil, amb vistes diferenciades per rol.}
+    \label{fig:react-user-settings-impl}
+\end{figure}
+
+Pel que fa a les accions globals, la \textbf{Figura \ref{fig:react-user-settings-impl}} mostra el modal de configuració del perfil, que correspon al disseny de la \textbf{Figura 8.28}. La implementació, però, és més avançada i dinàmica. El contingut s'adapta al rol de l'usuari per motius de seguretat. Com es pot veure, la vista per a un usuari estàndard (dreta) inclou un botó per eliminar el seu propi compte. En canvi, a la vista per a un usuari amb rol \texttt{SUPER\_ADMIN} (esquerra), aquest botó no hi és. Aquesta és una restricció deliberada per impedir que l'administrador principal es pugui eliminar a si mateix, la qual cosa deixaria el sistema sense un compte amb control total.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Figures/ui-web/new_folder_dialog.png}
+    \caption{Diàleg modal per a la creació d'una nova carpeta.}
+    \label{fig:react-new-folder-impl}
+\end{figure}
+
+La creació de noves carpetes, una de les "accions sobre la carpeta actual" esmentades a la \textbf{Figura 8.26}, es gestiona mitjançant un diàleg modal simple, com es mostra a la \textbf{Figura \ref{fig:react-new-folder-impl}}. Aquesta elecció de disseny minimitza la interrupció del flux de treball de l'usuari, ja que el diàleg apareix superposat al gestor de fitxers i requereix una acció directa (crear o cancel·lar) per continuar.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.24\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/sort_options.png}
+        \caption{Ordenar.}
+    \end{minipage}\hfill
+    \begin{minipage}{0.24\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/admin_panel_button.png}
+        \caption{Panell admin.}
+    \end{minipage}\hfill
+    \begin{minipage}{0.24\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/user_settings_button.png}
+        \caption{Configuració.}
+    \end{minipage}\hfill
+    \begin{minipage}{0.24\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/logout_button.png}
+        \caption{Tancar sessió.}
+    \end{minipage}
+    \caption{Controls globals de l'aplicació.}
+    \label{fig:react-global-controls-impl}
+\end{figure}
+
+Els controls per a les "opcions globals" de la \textbf{Figura 8.27} s'han implementat a la cantonada superior dreta de la interfície. Com es pot apreciar a la \textbf{Figura \ref{fig:react-global-controls-impl}}, el disseny final agrupa de manera lògica les opcions per ordenar el contingut, accedir al panell d'administració, a la configuració de l'usuari i per tancar la sessió, utilitzant icones minimalistes per mantenir una estètica neta i organitzada.
+
+\subsubsection{Interacció amb Elements}
+La interacció amb arxius i carpetes s'ha dissenyat per ser rica i contextual. El menú d'accions, que s'activa tant amb el clic dret com a través d'un botó dedicat, és una implementació directa del concepte de la \textbf{Figura 8.29} i ofereix totes les operacions rellevants per a l'element seleccionat.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/context_menu_right_click.png}
+        \caption{Clic dret.}
+    \end{minipage}\hfill
+    \begin{minipage}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/contex_menu_button.png}
+        \caption{Botó d'opcions.}
+    \end{minipage}\hfill
+    \begin{minipage}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/root_section_options.png}
+        \caption{Opcions a l'arrel.}
+    \end{minipage}
+    \caption{Menú contextual dinàmic.}
+    \label{fig:react-context-menu-impl}
+\end{figure}
+
+La \textbf{Figura \ref{fig:react-context-menu-impl}} mostra com el menú contextual apareix tant en fer clic dret sobre un element o les opcions que es mostren tant al fer click dert pero a cap element, com en prémer el botó d'opcions. Aquest menú és dinàmic i adapta les seves opcions al context, com per exemple a la seccio dels fitxer del propietari (\textit{root}), on permet crear nous elements.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/selection.png}
+        \caption{Selecció múltiple.}
+        \label{fig:react-selection-impl}
+    \end{minipage}\hfill
+    \begin{minipage}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/cut_file.png}
+        \caption{Feedback visual de "Tallar".}
+        \label{fig:react-cut-impl}
+    \end{minipage}\hfill
+    \begin{minipage}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/file_details.png}
+        \caption{Panell de detalls.}
+        \label{fig:react-details-impl}
+    \end{minipage}
+\end{figure}
+
+La implementació final inclou millores significatives d'usabilitat. S'ha implementat la selecció múltiple (Figura \ref{fig:react-selection-impl}) per realitzar operacions en lot, i es proporciona un \textit{feedback} visual clar per a accions com "Tallar", on l'element es mostra semitransparent (Figura \ref{fig:react-cut-impl}). Per a la visualització de detalls, es va decidir substituir el modal proposat a la \textbf{Figura 8.30} per un panell lateral o \textit{Drawer} (Figura \ref{fig:react-details-impl}). Aquesta decisió millora l'experiència en permetre a l'usuari consultar la informació sense perdre el context de la vista d'arxius. A més, com a resultat d'una millora proposada per un \textit{beta tester}, aquest panell mostra també la llista d'usuaris amb qui s'ha compartit un fitxer, oferint l'opció de modificar el seu nivell d'accés o deixar de compartir-lo. Això permet gestionar la compartició d'un element de forma més àgil, sense haver de navegar a la secció de fitxers compartits.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Figures/ui-web/rename_dialog.png}
+    \caption{Diàleg per canviar el nom d'un element.}
+    \label{fig:react-rename-impl}
+\end{figure}
+
+El diàleg per canviar el nom d'un element (\textbf{Figura \ref{fig:react-rename-impl}}) és una implementació directa i funcional del concepte mostrat a la \textbf{Figura 8.31}, proporcionant una manera ràpida i senzilla de realitzar aquesta operació comuna.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/move_dialog.png}
+        \caption{Vista inicial.}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/move_dialog_afterclick.png}
+        \caption{Vista amb carpeta desplegada.}
+    \end{minipage}
+    \caption{Modal per moure elements.}
+    \label{fig:react-move-impl}
+\end{figure}
+
+El diàleg per moure elements (\textbf{Figura \ref{fig:react-move-impl}}) és una evolució significativa del seu esbós inicial (\textbf{Figura 8.32}). La implementació final és molt més avançada, ja que presenta un arbre de carpetes completament navegable. Com es pot apreciar, l'usuari pot desplegar les subcarpetes (dreta) per seleccionar la ubicació de destí de manera precisa, una millora substancial d'usabilitat respecte a un simple camp de text. Aquest dialeg es utilitzable tant per els fitxers o carpetes dintre de la seccio \textit{root} com per la seccio de \textit{Compartits amb mi} on es poden moure els elements dintre de l'arbre de carpetes compartides amb l'usuari (desde la primera carpeta a l'arrel dels compartits fins l'ultim fill), aquesta limitacio es va posar per motius de seguretar per evitar que es moguin fitxers entre carpetes d'usuaris diferents sense permis explicit, de forma nativa a l'aplicacio.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/share_dialog.png}
+        \caption{Vista principal.}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/share_dialog_search.png}
+        \caption{Cerca d'usuaris.}
+    \end{minipage}
+    \caption{Modal de compartició d'arxius.}
+    \label{fig:react-share-impl}
+\end{figure}
+
+Finalment, el diàleg per compartir arxius (\textbf{Figura \ref{fig:react-share-impl}}) és substancialment més complet que el seu concepte a la \textbf{Figura 8.33}. La versió implementada permet buscar usuaris pel seu nom (dreta), assignar permisos específics de lectura o escriptura, i mostra una llista clara dels usuaris que ja tenen accés, amb opcions per modificar o revocar els seus permisos directament des de la mateixa interfície, oferint una gestió de compartició molt més potent, ja que permet compartir llistes d'elements d'una sola accio, evitant que l'usuari hagi de compartir un per un.
+
+\subsubsection{Seccions Específiques}
+Les seccions de la Paperera, els Elements Compartits i el Panell d'Administració disposen de vistes i opcions contextuals pròpies.
+
+\paragraph{Elements Compartits}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Figures/ui-web/shared_section_options.png}
+    \caption{Menú contextual a la secció "Compartit amb mi".}
+    \label{fig:react-shared-options-impl}
+\end{figure}
+El menú contextual per a un element a la secció "Compartit amb mi" (\textbf{Figura \ref{fig:react-shared-options-impl}}) és un exemple de la naturalesa dinàmica de la interfície. Com es va planejar a la \textbf{Figura 8.34}, les opcions disponibles ("Descargar", "Dejar de seguir", etc.) canvien en funció dels permisos (lectura o escriptura) que l'usuari tingui sobre l'element, oferint només les accions permeses.
+
+\paragraph{Paperera}
+La vista de la paperera (\textbf{Figura \ref{fig:react-trash-impl}}) implementa fidelment les opcions conceptualitzades a la \textbf{Figura 8.36}, oferint les accions de "Restaurar" i "Eliminar definitivament" per a cada element.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/ui-web/trash_section.png}
+    \caption{Opcions contextuals de la paperera.}
+    \label{fig:react-trash-impl}
+\end{figure}
+
+
+\paragraph{Panell d'Administració}
+El panell d'administració (\textbf{Figura \ref{fig:react-admin-impl}}) representa una de les millores més significatives respecte al seu disseny inicial (\textbf{Figura 8.37}). En lloc d'una simple llista, s'ha implementat una taula de dades completa. A més, la interfície és dinàmica i conscient dels permisos.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Figures/ui-web/admin_panel.png}
+    \caption{Panell d'administració d'usuaris.}
+    \label{fig:react-admin-impl}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Figures/ui-web/user_settings_admin.png}
+    \caption{Diàleg per a l'edició d'un usuari des del panell d'administració (vista SUPER\_ADMIN).}
+    \label{fig:react-edit-user-admin-impl}
+\end{figure}
+
+L'edició d'usuaris és una de les funcionalitats clau del panell. En seleccionar l'opció d'editar, s'obre un diàleg modal que permet modificar les dades de l'usuari, tal com il·lustra la \textbf{Figura \ref{fig:react-edit-user-admin-impl}}. La implementació estableix una clara jerarquia de permisos: mentre que un administrador estàndard (\texttt{ADMIN}) pot actualitzar informació bàsica, només un superadministrador (\texttt{SUPER\_ADMIN}) té l'autoritat per canviar rols o restablir contrasenyes. Aquesta segregació de privilegis, que reserva les accions més crítiques al rol més alt, és una mesura de seguretat fonamental. La decisió d'atorgar aquests poders al \texttt{SUPER\_ADMIN} es fonamenta en la seva funció com a responsable últim del sistema. Tot i que aquesta centralització de permisos representa un risc de seguretat calculat, es considera una capacitat indispensable per a la gestió d'incidències crítiques, com ara la recuperació de l'accés per a un usuari que hagi perdut la contrasenya. Aquesta responsabilitat és coherent amb el seu rol com a responsable de la integritat de les dades i del compliment de la normativa vigent.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/delete_user_valid.png}
+        \caption{Botó d'eliminació actiu.}
+        \label{fig:react-delete-valid-impl}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/super_user_not_delete.png}
+        \caption{Botó d'eliminació desactivat.}
+        \label{fig:react-delete-invalid-impl}
+    \end{minipage}
+    \caption{Comportament dinàmic del botó d'eliminació.}
+\end{figure}
+Com es pot veure, el botó "Delete" és interactiu quan es tenen permisos sobre l'usuari (esquerra), però es mostra desactivat i no és funcional quan s'intenta eliminar un compte protegit, com el del propi \texttt{SUPER\_ADMIN} (dreta). Aquesta restricció visual i funcional és una mesura de seguretat clau per garantir la integritat del sistema.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Figures/ui-web/delete_user_admin_confirm.png}
+    \caption{Diàleg de confirmació per a l'eliminació d'un usuari.}
+    \label{fig:react-delete-confirm-impl}
+\end{figure}
+Finalment, abans de qualsevol eliminació, es mostra un diàleg de confirmació per prevenir accions accidentals (\textbf{Figura \ref{fig:react-delete-confirm-impl}}), una mesura de seguretat afegida durant la implementació que no estava als esbossos inicials.
+
+\subsection{Implementació per Casos d'Ús}
+A continuació, es detalla com l'arquitectura del client web i els seus components es combinen per donar resposta als principals casos d'ús del sistema. Cada secció descriu el flux d'implementació, els fitxers clau implicats i fragments de codi rellevants que il·lustren les decisions tècniques més importants.
+
+\subsubsection{Gestió d'Usuaris}
+
+\paragraph{UC-01: Registre d'Usuari \& UC-02: Inici de Sessió}
+La funcionalitat d'autenticació constitueix el punt d'entrada a l'aplicació. Per a un usuari no autenticat, el component principal \texttt{App.tsx} actua com a gestor de l'enrutament, presentant un interruptor que permet alternar entre les vistes de login (\texttt{/login}) i registre (\texttt{/sign-up}). Aquestes vistes, implementades a \texttt{ui-new/src/pages/Login/index.tsx} i \texttt{ui-new/src/pages/SignUp/index.tsx} respectivament, es construeixen amb components reutilitzables com \texttt{Card} per a l'estructura, i \texttt{Input} i \texttt{Button} per als formularis.
+
+Quan l'usuari interactua amb el formulari, la funció \texttt{submit} del component corresponent orquestra el procés. Abans d'enviar cap dada, es realitza una validació completa dels camps mitjançant la lògica encapsulada al hook \texttt{ui-new/src/hooks/useValidation.ts}. Només si la validació és exitosa, s'invoca la lògica de negoci principal.
+
+El cervell de l'autenticació resideix al hook \texttt{ui-new/src/hooks/userAuth.tsx}. Les seves funcions \texttt{login} i \texttt{register} són les responsables de gestionar tot el flux. Aquestes funcions no interactuen directament amb la xarxa, sinó que deleguen la comunicació al servei \texttt{authService}, definit a \texttt{ui-new/src/lib/api.ts}, que s'encarrega de construir i enviar la petició HTTP al backend.
+
+Després d'una resposta exitosa del servidor, el hook \texttt{userAuth} executa una seqüència d'accions crucials per actualitzar l'estat del client: desa els tokens d'accés i de refresc al \texttt{localStorage}, obté les dades completes del perfil de l'usuari, actualitza l'estat global de l'aplicació i, finalment, estableix la connexió WebSocket per a la sincronització en temps real.
+
+\begin{lstlisting}[language=typescript, caption={Fragment de la funció `login` al hook `userAuth.tsx`}]
+const login = useCallback(async (username: string, password: string): Promise<boolean> => {
+  try {
+    if(!isLogin) {
+      const response = await authService.login(username, password);
+      
+      localStorage.setItem("accessToken", response.accessToken);
+      localStorage.setItem("refreshToken", response.refreshToken);
+      
+      const userData = await userService.getCurrentUser();
+      localStorage.setItem("username", userData.username);
+
+      setUser(userData);
+      setIsLogin(true);
+      websocketService.connect();
+    }
+    return true;
+  } catch (error) {
+    // ... maneig d'errors
+    return false;
+  }
+}, [notifications, isLogin]);
+\end{lstlisting}
+
+Un cop l'usuari està autenticat, per mantenir la sessió activa de manera eficient, s'utilitza un mecanisme arquitectònic clau: un interceptor d'Axios, configurat a \texttt{ui-new/src/lib/api.ts}. Aquest interceptor s'activa automàticament quan una petició a l'API falla amb un codi d'estat 401 (No autoritzat). En aquest moment, intenta renovar el token d'accés utilitzant el token de refresc. Si la renovació té èxit, la petició original es reintenta amb el nou token, un procés completament imperceptible per a l'usuari.
+
+\begin{lstlisting}[language=typescript, caption={Interceptor d'Axios per a la renovació automàtica de tokens a \texttt{api.ts}}]
+api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
+        const authRoutes = ['/users/auth/login', '/users/auth/keep-alive', '/users/auth/register'];
+        const refreshToken = localStorage.getItem('refreshToken');
+
+        if (error.response?.status === 401 && !originalRequest._retry && !authRoutes.includes(originalRequest.url) && refreshToken) {
+            originalRequest._retry = true;
+
+            try {
+                const response = await api.post('/users/auth/keep-alive', null, {
+                    headers: {
+                        'X-Refresh-Token': refreshToken
+                    }
+                });
+
+                const newAccessToken = response.headers['authorization']?.split(' ')[1];
+                const newRefreshToken = response.headers['x-refresh-token'];
+
+                if (newAccessToken && newRefreshToken) {
+                    localStorage.setItem('accessToken', newAccessToken);
+                    localStorage.setItem('refreshToken', newRefreshToken);
+
+                    originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+                    return api(originalRequest);
+                }
+            } catch (refreshError) {
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                localStorage.removeItem('username');
+                window.location.href = '/login';
+                return Promise.reject(refreshError);
+            }
+        }
+
+        return Promise.reject(error);
+    }
+);
+\end{lstlisting}
+
+He de destacar que l'estratègia actual d'emmagatzematge de tokens al \texttt{localStorage} va ser una solució temporal. Inicialment, vaig intentar implementar un sistema basat en cookies \texttt{HttpOnly} per al transport dels tokens. Aquesta tècnica no només és una pràctica de seguretat estàndard que protegeix contra atacs de Cross-Site Scripting (XSS) en fer que els tokens siguin inaccessibles des del JavaScript del client \cite{bitsrc_tokens_vs_cookies}, sinó que també s'alinea amb les exigències de la normativa de protecció de dades com el RGPD. Segons aquesta regulació, els identificadors en línia com els tokens es consideren dades personals i requereixen mesures tècniques per garantir-ne la seguretat \cite{gdpr_cookies}.
+
+No obstant això, vaig trobar dificultats tècniques en la comunicació amb el servidor. Per tal de no bloquejar el desenvolupament, vaig optar per l'emmagatzematge local com a solució intermèdia, amb la intenció de refactoritzar-la en un futur. La implementació d'un flux d'autenticació robust basat en cookies no només és una millor pràctica de seguretat altament recomanada \cite{auth0_token_best_practices}, sinó també un pas necessari per a un compliment més estricte de la normativa. A causa de les limitacions de temps, vaig haver de deixar aquesta tasca registrada com una millora futura, tal com es detalla al Capítol 12.
+
+\paragraph{UC-03: Tancament de Sessió}
+El procés de tancament de sessió és una mesura de seguretat fonamental, dissenyada per ser directa i robusta. Assegura que la sessió de l'usuari finalitzi de forma definitiva mitjançant la invalidació dels tokens d'accés al client, prevenint així l'accés no autoritzat al compte si el dispositiu queda desatès i protegint contra el segrest de sessió. El flux comença a la interfície d'usuari, concretament quan l'usuari fa clic sobre el botó de logout situat al component \texttt{ui-new/src/layouts/AppLayout/Header/index.tsx}. Aquesta integració directa, on l'esdeveniment \texttt{onClick} invoca directament la funció \texttt{logoutEndpoint}, simplifica el component visual, que només s'ha de preocupar de renderitzar el botó i connectar-lo a l'acció corresponent.
+
+La lògica central resideix al hook \texttt{ui-new/src/hooks/userAuth.tsx}, que proporciona la funció \texttt{logoutEndpoint}. Aquesta funció és la responsable de garantir una sortida neta i segura. Primer intenta notificar al backend mitjançant \texttt{authService.logout}. Independentment del resultat d'aquesta crida, ja que s'asumeix que el servidor rep la petició i fa les accions necessaries per el logout, el bloc \texttt{finally} s'encarrega d'eliminar tota la informació de sessió del \texttt{localStorage}. Finalment, reinicia l'estat global de l'aplicació, desconnecta la sessió WebSocket activa i redirigeix forçosament l'usuari a la pàgina d'inici de sessió.
+
+\begin{lstlisting}[language=typescript, caption={Fragment del component `Header` amb el botó de logout}]
+import { useAuth } from "../../../hooks/userAuth"
+
+const Header = ({setAdminOpen}: {setAdminOpen: (open: boolean) => void}) => {
+    const { logoutEndpoint, user } = useAuth();
+
+    return (
+        <div id="39" className="flex justify-end gap-2">
+            <Tooltip side="left" content="Logout" triggerAsChild={true}>
+                <Button variant="primary" className="p-2" onClick={logoutEndpoint}>
+                    <RiLogoutBoxRLine className="h-4 w-4" />
+                </Button>
+            </Tooltip>
+            {/* ... */}
+        </div>
+    )
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=typescript, caption={Funció `logoutEndpoint` al hook `userAuth.tsx`}]
+const logoutEndpoint = useCallback(async () => {
+  try {
+    await authService.logout();
+  } catch {
+    // S'ignora l'error per assegurar que el logout en el client sempre ocorri
+  } finally {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("username");
+    
+    setUser(null);
+    setIsLogin(false);
+    websocketService.disconnect();
+    window.location.href = "/login";
+  }
+}, []);
+\end{lstlisting}
+
+\paragraph{UC-04: Modificar Perfil \& UC-05: Eliminar Compte}
+La gestió del perfil d'usuari, que va des de la modificació de dades personals fins a l'eliminació permanent del compte, es consolida en una única narrativa de flux de dades per garantir una experiència d'usuari coherent i eficient. El procés s'inicia quan l'usuari accedeix a la configuració del seu perfil, una acció que renderitza el component intel·ligent \texttt{ui-new/src/components/UserSettings/index.tsx}. Aquest component actua com el nucli central de la funcionalitat, encapsulant tota la lògica necessària. En ser muntat, invoca immediatament el mètode \texttt{userService.getCurrentUser()}, definit a \texttt{ui-new/src/lib/api.ts}, per carregar les dades actuals de l'usuari i popular el formulari.
+
+Un aspecte clau d'aquest component és la seva estratègia de validació en temps real, dissenyada per oferir feedback instantani sense sobrecarregar el sistema. Mentre que la validació de formats bàsics per a la majoria de camps s'implementa a través del hook \texttt{ui-new/src/hooks/useValidation.ts}, la comprovació de la disponibilitat de camps únics com el nom d'usuari i el correu electrònic requereix una solució més sofisticada. Per evitar una gran quantitat de peticions a l'API amb cada pulsació de tecla, s'utilitza el hook \texttt{ui-new/src/hooks/useDebounce.ts}. Aquest retrasa l'execució de les funcions de validació (\texttt{userService.checkUsernameExists} i \texttt{userService.checkEmailExists}) fins que l'usuari ha deixat d'escriure durant un breu període. Aquesta tècnica millora dràsticament el rendiment i l'experiència d'usuari, evitant validacions innecessàries i oferint un indicador d'estat només quan és rellevant.
+
+\begin{lstlisting}[language=typescript, caption={Ús de `useDebounce` per a la validació a `UserSettings/index.tsx`}]
+// ...
+const debouncedUsername = useDebounce(userData.username, 500);
+const debouncedEmail = useDebounce(userData.email, 500);
+
+useEffect(() => {
+    const checkUsernameAvailability = async () => {
+        // No validar si el valor no ha canviat del original
+        if (!initialUserData || debouncedUsername === initialUserData.username) {
+            // ...
+            return;
+        }
+        // ...
+        try {
+            const isTaken = await userService.checkUsernameExists(debouncedUsername);
+            // Actualitzar estat de la validació
+        } catch {
+            // Gestionar error de la comprovació
+        }
+    };
+    if (debouncedUsername && isOpen) checkUsernameAvailability();
+}, [debouncedUsername, initialUserData, errors.username, isOpen]);
+// ... (codi similar per a la validació de l'email)
+\end{lstlisting}
+
+\textit{Nota: La implementació del hook \texttt{useDebounce} es va adaptar de l'article "Implementing a Debounce Hook in React" \cite{debounce_hook_react}. Aquesta millora va ser suggerida durant les sessions de proves beta per un tester amb experiència professional en React per tal d'optimitzar la interacció de l'usuari.}
+
+Un cop les dades són validades, el component gestiona les dues accions principals. La funció \texttt{handleUpdateProfile} orquestra l'actualització del perfil, cridant \texttt{userService.updateUserProfile} i, si l'usuari ha introduït una nova contrasenya, \texttt{userService.changePassword}. Per altra banda, la funció \texttt{handleDeleteAccount} gestiona l'eliminació del compte. Per seguretat, primer mostra un diàleg de confirmació que requereix que l'usuari escrigui el seu nom d'usuari. Un cop confirmat, invoca \texttt{userService.deleteAccount}. Un detall crucial és que, després d'una eliminació exitosa, crida la funció \texttt{logoutEndpoint} del hook \texttt{useAuth} per netejar completament la sessió del client i redirigir-lo a la pàgina d'inici de sessió.
+
+\begin{lstlisting}[language=typescript, caption={Orquestració de les crides a l'API a `UserSettings/index.tsx`}]
+const handleUpdateProfile = async () => {
+    // ... (validació final)
+    await userService.updateUserProfile(userData);
+    if (newPassword && oldPassword) {
+        await userService.changePassword(oldPassword, newPassword);
+    }
+    notifications.success("Profile updated");
+    // ...
+};
+
+const handleDeleteAccount = async () => {
+    if (deleteConfirmation !== userData.username) {
+        // ...
+        return;
+    }
+    try {
+        await userService.deleteAccount();
+        notifications.success("Account deleted");
+        logoutEndpoint(); // Funció del hook useAuth
+    } catch (error) {
+        notifications.error("Delete failed");
+    }
+};
+\end{lstlisting}
+
+Finalment, per a cada operació, ja sigui d'èxit o de fracàs, s'utilitzen notificacions tipus "toast" per proporcionar un feedback clar i immediat a l'usuari, tancant així el cicle d'interacció. El servei \texttt{userService} a \texttt{api.ts} abstrau les crides a l'API, proporcionant mètodes que mapegen directament als endpoints del backend per a una gestió de perfil clara i mantenible.
+
+\begin{lstlisting}[language=typescript, caption={Mètodes del `userService` a `lib/api.ts`}]
+export const userService = {
+    // ...
+    updateUserProfile: async (userData: { /* ... */ }) => {
+        const response = await api.put('/users/profile', userData);
+        return response.data;
+    },
+
+    changePassword: async (oldPassword: string, newPassword: string) => {
+        await api.put('/users/password', { oldPassword, newPassword });
+    },
+
+    deleteAccount: async () => {
+        await api.delete('/users');
+    }
+};
+\end{lstlisting}
+
+\subsubsection{Gestió d'Administració}
+\paragraph{UC-06, UC-07, UC-15, UC-16: Panell d'Administració}
+El panell d'administració representa una funcionalitat crítica per a la gestió d'usuaris del sistema, accessible exclusivament per a usuaris amb privilegis elevats.
+
+L'accés al panell s'inicia a través d'un botó situat a la capçalera de l'aplicació, implementat a \texttt{ui-new/src/layouts/AppLayout/Header/index.tsx}. Aquest component utilitza el hook \texttt{useAuth} per verificar els permisos de l'usuari i renderitza el botó d'accés només si l'usuari té el rol \texttt{ADMIN} o \texttt{SUPER\_ADMIN}:
+
+\begin{lstlisting}[language=typescript, caption={Renderitzat condicional del botó d'administració}]
+{(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
+    <Tooltip side="left" content="Admin Panel" triggerAsChild={true}>
+        <Button variant="primary" className="p-2" onClick={() => setAdminOpen(true)}> 
+            <RiAdminLine className="h-4 w-4" />
+        </Button>
+    </Tooltip>
+)}
+\end{lstlisting}
+
+Quan s'activa el botó, el component \texttt{AppLayout} actua com a orquestrador, gestionant la transició entre la vista principal de l'aplicació i el panell d'administració. Aquest canvi es realitza mitjançant un estat local \texttt{adminOpen} que renderitza condicionalment el component \texttt{AdminDashboard} en lloc de la interfície principal:
+
+\begin{lstlisting}[language=typescript, caption={Renderitzat condicional del panell d'administració a `AppLayout`}]
+    if(adminOpen) {
+		return (
+			<div className="flex h-screen bg-gray-100 relative">
+				<button
+					className="absolute top-6 right-8 z-50 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition-colors font-semibold"
+					onClick={() => setAdminOpen(false)}
+				>
+					Volver
+				</button>
+				<main className="flex-1 overflow-auto">
+					<AdminDashboard  />
+				</main>
+			</div>
+		);
+	}
+\end{lstlisting}
+
+El component \texttt{AdminDashboard} serveix com a punt central per a la gestió d'usuaris. En el seu muntatge, utilitza l'\texttt{adminService} per carregar la llista d'usuaris del sistema. La visualització d'aquesta informació es realitza mitjançant una taula interactiva que permet als administradors realitzar operacions de modificació i eliminació d'usuaris.
+
+La gestió d'usuaris es realitza a través de dos diàlegs especialitzats: \texttt{EditUserDialog} i \texttt{DeleteUserDialog}. El primer és particularment complex, ja que implementa validacions en temps real i restriccions basades en rols. Per exemple, la capacitat de modificar el rol d'un usuari està estrictament controlada:
+
+\begin{lstlisting}[language=typescript, caption={Control d'accés per a la modificació de rols}]
+    {isSuperAdmin && editForm.role !== 'SUPER_ADMIN' &&(
+        <>
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-300">Role</label>
+        <select
+          className="w-full rounded-md border border-input bg-background px-3 py-2"
+          value={editForm.role}
+          onChange={e => setEditForm(prev => ({ ...prev, role: e.target.value as 'USER' | 'ADMIN' | 'SUPER_ADMIN' }))}
+          disabled={!currentUser || currentUser && currentUser.role !== 'SUPER_ADMIN' || (currentUser.role === 'ADMIN' && user.role === 'ADMIN')}
+        >
+          <option value="USER">User</option>
+          <option value="ADMIN">Administrator</option>
+        </select>
+      </div>
+        </>
+      )}
+\end{lstlisting}
+
+Aquest fragment de codi il·lustra el control d'accés per a la modificació de rols. La lògica implementada assegura que només un usuari amb el rol de \texttt{SUPER\_ADMIN} pugui canviar el rol d'un altre usuari. A més, s'estableix una restricció clau: el \texttt{SUPER\_ADMIN} no pot modificar el seu propi rol. Aquesta decisió de disseny, al igual que impedir que es pugui eliminar el seu propi compte, té com a objectiu garantir que sempre hi hagi un, i només un, superadministrador com a màxim responsable de l'aplicació i les seves dades. La condició \texttt{isSuperAdmin \&\& editForm.role !== 'SUPER\_ADMIN'} del codi és la que materialitza aquesta regla, mostrant el selector de rol únicament quan es compleixen aquestes condicions.
+
+L'execució de les operacions d'administració es gestiona a través de funcions específiques al component \texttt{AdminDashboard}. Aquestes funcions no només realitzen les operacions sol·licitades sinó que també gestionen la retroalimentació a l'usuari i l'actualització de l'estat de l'aplicació:
+
+\begin{lstlisting}[language=typescript, caption={Gestió d'operacions administratives}]
+    const handleSaveEdit = async (updatedUser: Partial<AdminUser>) => {
+        if (!selectedUser) return;
+        try {
+            await adminService.updateUser(selectedUser.username, updatedUser);
+            
+            notifications.success("User updated");
+            setLoaded(false);
+            await loadUsers();
+            setIsEditDialogOpen(false);
+        } catch {
+            notifications.error("Update failed");
+        }
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!selectedUser) return;
+        try {
+            await adminService.deleteUser(selectedUser.username);
+            if(selectedUser.username === user?.username) {
+                logoutEndpoint();
+            }
+            
+            notifications.success("User deleted");
+            setLoaded(false);
+            await loadUsers(); 
+            setIsDeleteDialogOpen(false);
+        } catch {
+            notifications.error("Delete failed");
+        }
+    };
+\end{lstlisting}
+
+Un aspecte notable de la implementació és el tractament especial del cas d'auto-eliminació (\textbf{UC-07}). Quan un administrador elimina el seu propi compte, el sistema detecta aquesta situació i executa automàticament el procés de tancament de sessió mitjançant la funció \texttt{logoutEndpoint}.
+
+Tota la comunicació amb el servidor es realitza a través de l'\texttt{adminService}, definit a \texttt{ui-new/src/lib/api.ts}, que proporciona una capa d'abstracció per a totes les operacions administratives. Aquest servei gestiona les crides a l'API REST del backend, mantenint la coherència i la seguretat en totes les operacions d'administració.
+
+Com es pot veure, el botó "Delete" és interactiu quan es tenen permisos sobre l'usuari (\textbf{Figura \ref{fig:react-delete-valid-impl}}), però es mostra desactivat i no és funcional quan s'intenta eliminar un compte protegit, com el del propi \texttt{SUPER\_ADMIN} (\textbf{Figura \ref{fig:react-delete-invalid-impl}}). Aquesta restricció visual i funcional és una mesura de seguretat clau per garantir la integritat del sistema.
+
+Finalment, abans de qualsevol eliminació, es mostra un diàleg de confirmació per prevenir accions accidentals (\textbf{Figura \ref{fig:react-delete-confirm-impl}}), una mesura de seguretat afegida durant la implementació que no estava als esbossos inicials.
+
+\subsection{Gestió d'Arxius}
+El gestor d'arxius, implementat principalment al component \texttt{ui-new/src/pages/FileManager/index.tsx}, constitueix el nucli funcional de l'aplicació web.
+
+\paragraph{UC-08: Crear o Pujar Arxius i Carpetes}
+Aquesta funcionalitat permet als usuaris afegir nou contingut al seu espai de treball, ja sigui creant carpetes o pujant arxius i estructures de carpetes completes des del seu dispositiu.
+
+La interacció de l'usuari s'inicia en el component \texttt{ui-new/src/components/AddButton/index.tsx}, que presenta un botó que, en ser premut, desplega un \texttt{Popover} amb tres opcions: ``New folder'', ``Upload file'' i ``Upload folder''. Aquest component implementa una tècnica comuna per a la pujada d'arxius: conté dos elements \texttt{<input type="file">} ocults que s'activen per codi mitjançant referències (\texttt{useRef}) quan l'usuari selecciona les opcions corresponents. Per a la pujada de carpetes, l'atribut no estàndard \texttt{webkitdirectory} és clau, ja que instrueix el navegador perquè permeti la selecció de carpetes completes.
+
+L'opció ``New folder'' obre el diàleg modal \texttt{ui-new/src/components/CreateNewFolderDialog/index.tsx}, mentre que les opcions de pujada activen directament els respectius inputs ocults. Aquests components de la UI actuen com a mers disparadors: tota la lògica de negoci complexa resideix en el hook \texttt{ui-new/src/hooks/useFileOperations.ts}, que centralitza les operacions d'arxius. Les accions de l'usuari en la UI invoquen les funcions \texttt{createFolder}, \texttt{uploadFile} i \texttt{uploadFolder} proporcionades per aquest hook.
+
+\begin{lstlisting}[language=typescript, caption={Activació de la pujada de carpetes a `AddButton/index.tsx`}]
+const folderInputRef = useRef<HTMLInputElement>(null);
+    
+    const handleFolderUploadLocal = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+        if (!files || files.length === 0) {
+            return;
+        }
+        try {
+        uploadFolder({ files: Array.from(files), parentId: currentDirectory.id!.toString() });
+        } catch (error) {
+            console.error('[AddButton] Error uploading folder:', error);
+    }
+        event.target.value = '';
+};
+    
+    // JSX del component
+<input
+    type="file"
+    ref={folderInputRef}
+        className="hidden"
+        webkitdirectory=""
+        directory=""
+        multiple={false}
+        onChange={handleFolderUploadLocal}
+    />
+    <Button
+        variant="ghost"
+        className="w-full justify-start gap-2"
+        onClick={() => {
+            folderInputRef.current?.click();
+        }}
+    >
+        <RiFolderUploadLine className="h-4 w-4" />
+        Upload folder
+    </Button>
+\end{lstlisting}
+
+El hook \texttt{useFileOperations.ts} constitueix una peça clau de l'arquitectura del client, utilitzant el hook \texttt{useMutation} de TanStack Query per a totes les operacions d'escriptura. Això permet una gestió d'estat molt avançada, incloent-hi les \textbf{actualitzacions optimistes}, que milloren dràsticament la percepció de velocitat de l'usuari. El flux d'una actualització optimista segueix un patró consistent: l'\texttt{onMutate} s'executa abans de la crida a l'API, actualitzant la memòria cache local de TanStack Query de manera immediata i fent que la interfície reflecteixi el canvi a l'instant. Es guarda una còpia de l'estat previ per poder-lo revertir en cas d'error. Si la crida a l'API falla, l'\texttt{onError} reverteix l'actualització optimista restaurant l'estat previ. Si la crida té èxit, l'\texttt{onSuccess} invalida la memòria cache per assegurar que les dades locals se sincronitzin amb les dades definitives provinents del servidor.
+
+\begin{lstlisting}[language=typescript, caption={Implementació d'una mutació optimista a `useFileOperations.ts`}]
+const createFolderMutation = useMutation({
+    mutationFn: async ({ name, parentId }: { name: string, parentId: string }) => {
+      return fileService.createFolder(name, parentId);
+    },
+    onMutate: async ({ name, parentId }) => {
+      // 1. Cancel·lar queries per evitar que sobreescriguin l'actualització optimista
+      await queryClient.cancelQueries({ queryKey: [QUERY_KEYS.CURRENT_DIRECTORY, parentId] });
+      await queryClient.cancelQueries({ queryKey: [QUERY_KEYS.FOLDER_STRUCTURE] });
+      
+      // 2. Guardar l'estat previ
+      const previousDirectory = queryClient.getQueryData([QUERY_KEYS.CURRENT_DIRECTORY, parentId]) as FileItem;
+      const previousStructure = queryClient.getQueryData([QUERY_KEYS.FOLDER_STRUCTURE]);
+      
+      // 3. Crear el nou objecte i actualitzar la UI de forma optimista
+      const newFolder: FileItem = {
+        id: `temp-${Date.now()}`,
+        name: generateUniqueName(name, previousDirectory.subfolders?.map((f: FileItem) => f.name) || [], name, true),
+        type: 'folder',
+        parent: parentId,
+        subfolders: []
+      };
+
+      const directoryCopy = JSON.parse(JSON.stringify(previousDirectory));
+      directoryCopy.subfolders = [...(directoryCopy.subfolders || []), newFolder];
+      queryClient.setQueryData([QUERY_KEYS.CURRENT_DIRECTORY, parentId], directoryCopy);
+      
+      return { previousDirectory, previousStructure };
+    },
+    onError: (err, variables, context) => {
+      // Revertir en cas d'error
+      if (context?.previousDirectory) {
+        queryClient.setQueryData([QUERY_KEYS.CURRENT_DIRECTORY, variables.parentId], context.previousDirectory);
+      }
+      if (context?.previousStructure) {
+        queryClient.setQueryData([QUERY_KEYS.FOLDER_STRUCTURE], context.previousStructure);
+      }
+      notifications.error('Error creating folder');
+    },
+    onSuccess: () => {
+      notifications.success('Folder created');
+      refreshAll(); // Sincronitzar amb el servidor
+    }
+});
+\end{lstlisting}
+
+Les funcions de mutació dins del hook són les que finalment comuniquen amb el backend a través dels mètodes corresponents del \texttt{fileService} (definits a \texttt{ui-new/src/lib/api.ts}), que s'encarreguen de la comunicació HTTP. La pujada de carpetes presenta una complexitat addicional: la funcionalitat \texttt{uploadFolderMutation} ha de processar la llista de fitxers (\texttt{FileList}) que proporciona el navegador, reconstruir l'estructura de directoris en el client i enviar-la de forma recursiva al backend per recrear-la.
+
+Aquesta implementació recursiva, si bé és robusta per a gestionar estructures de carpetes complexes, introdueix un important coll d'ampolla de rendiment. Cada fitxer dins de la carpeta es tradueix en una petició HTTP independent, la qual cosa pot generar una càrrega excessiva al backend en pujar directoris amb un gran volum d'elements. L'API actual no suporta operacions de pujada per lots (\textit{batch uploads}), una limitació tècnica que impedeix una solució més eficient. L'optimització d'aquest flux s'ha identificat com un treball futur, tal com s'exposa al Capítol 12.
+
+\paragraph{UC-09A/B/C: Operacions amb Arxius (Renomenar, Moure, Copiar)}
+Aquest conjunt de funcionalitats cobreix les manipulacions més habituals sobre els elements del gestor d'arxius, com canviar el nom, moure'ls de lloc o duplicar-los.
+
+El cervell que orquestra aquestes operacions resideix al \texttt{ui-new/src/store/fileSelectionStore.ts}, un store de Zustand que actua com a nucli centralitzat de l'estat. Aquest store gestiona un registre dels fitxers que l'usuari té seleccionats (\texttt{selectedFiles}) i, a més, actua com un porta-retalls virtual, emmagatzemant els fitxers copiats o tallats (\texttt{clipboard}) juntament amb l'estat de l'operació (\texttt{isCut}).
+
+Per alimentar aquesta llista de fitxers seleccionats, la interfície ofereix múltiples mètodes d'interacció. El hook \texttt{ui-new/src/hooks/useSelecto.ts}, que integra la llibreria \texttt{Selecto.js}, permet a l'usuari dibuixar un quadre de selecció amb el ratolí per seleccionar diversos elements de forma intuïtiva. A més, s'han implementat dreceres de teclat per a una navegació eficient: el hook \texttt{ui-new/src/hooks/useFileSelection.ts} exposa la funció \texttt{selectArrowKeys}, que permet expandir o moure la selecció utilitzant les tecles de fletxa, mentre que \texttt{ui-new/src/hooks/useFileShortcuts.ts} gestiona la drecera \texttt{Ctrl+A} per seleccionar tots els elements del directori. Tots aquests mecanismes convergeixen en la modificació de l'estat \texttt{selectedFiles} dins del \texttt{fileSelectionStore}. Aquesta arquitectura desacobla la lògica de selecció de la d'acció, permetent que la resta de funcionalitats operin sobre la selecció actual sense necessitat de conèixer com s'ha generat.
+
+
+Per determinar quins elements són seleccionables, el hook \texttt{useSelecto.ts} configura la llibreria \texttt{Selecto.js} perquè apunti a qualsevol element que tingui la classe CSS \texttt{.file-item}. Cada component \texttt{File} assigna aquesta classe al seu element principal, un component \texttt{Card}, fent-lo així un objectiu vàlid per a la selecció.
+
+Aquesta connexió permet que l'estil de cada fitxer reaccioni dinàmicament a l'estat de la selecció. Per exemple, quan un fitxer és seleccionat o marcat per a ser tallat, el component \texttt{File} actualitza les seves classes CSS amb Tailwind per reflectir visualment aquest canvi. Aquesta reactivitat s'aconsegueix mitjançant hooks personalitzats que se subscriuen a l'store de Zustand.
+
+\begin{lstlisting}[language=typescript, caption={Estils dinàmics del component `File` a `index.tsx`}]
+const File = ({ file }: FileProps) => {
+  // ...
+  const isItemSelected = useIsItemSelected(file);
+  const isCutFile = useIsCutFile(file);
+  // ...
+  return (
+    <Card
+      className={cx(
+        "file-item flex flex-col items-center justify-center p-2 rounded-lg cursor-pointer",
+        isItemSelected ? "bg-blue-100 border-blue-300" : "hover:bg-gray-100",
+        isCutFile && "opacity-50"
+      )}
+      // ...
+    >
+      {/* ... contingut del fitxer ... */}
+    </Card>
+  );
+};
+\end{lstlisting}
+
+\begin{lstlisting}[language=typescript, caption={Implementació dels hooks `useIsItemSelected` i `useIsCutFile` a `fileSelectionStore.ts`}]
+export function useIsItemSelected(file: FileItem) {
+  return useFileSelectionStore((state) => state.selectedFilesIds.some(f => f === file.id));
+}
+
+function isCutFile(file: FileItem, state: FileSelectionState) {
+  const res = Array.from(state.clipboard).filter(f => f.id === file.id);
+  return res.length > 0 && state.isCut;
+}
+
+export function useIsCutFile(file: FileItem) {
+  return useFileSelectionStore((state) => isCutFile(file, state));
+}
+\end{lstlisting}
+
+El fragment de codi anterior mostra com els booleans \texttt{isItemSelected} i \texttt{isCutFile} s'utilitzen per aplicar classes condicionalment. Aquests booleans no són estats locals del component, sinó el resultat de dos hooks personalitzats, \texttt{useIsItemSelected} i \texttt{useIsCutFile}. Aquests hooks implementen un patró de subscripció selectiva a l'store de Zustand (\texttt{fileSelectionStore}).
+
+Aquest mecanisme és clau per a l'eficiència de la interfície. Quan l'usuari selecciona un fitxer, l'estat \texttt{selectedFiles} de l'store canvia. Zustand notifica només aquells components que estan subscrits a aquesta part específica de l'estat. En aquest cas, només els components \texttt{File} afectats (el que s'acaba de seleccionar i el que s'acaba de deseleccionar) rebran el nou valor del hook \texttt{isItemSelected} i es tornaran a renderitzar per actualitzar el seu estil. La resta de fitxers a la graella no es veuen afectats i no es renderitzen de nou, evitant així càlculs innecessaris i mantenint una experiència d'usuari fluida, fins i tot en directoris amb centenars d'elements.
+
+Les accions de l'usuari s'inicien des de diversos punts d'entrada que utilitzen aquest estat centralitzat. El menú contextual (\texttt{ui-new/src/components/FileManagerContextMenu/index.tsx}) proporciona les opcions visuals. Paral·lelament, el hook \texttt{ui-new/src/hooks/useFileShortcuts.ts} afegeix un \textit{listener} global per a dreceres com \texttt{Ctrl+C} o \texttt{Ctrl+X}, que criden les funcions \texttt{copyFiles} o \texttt{cutFiles} de l'store. Finalment, el component \texttt{ui-new/src/pages/FileManager/index.tsx} utilitza \texttt{dnd-kit} per a la funcionalitat d'arrossegar i deixar anar. Cal destacar que, tot i que la lògica permet operacions amb múltiples fitxers mitjançant arrossegar i deixar anar, la representació visual actualment només mostra un únic element sent arrossegat. Aquesta és una millora pendent que s'exposa al Capítol 12.
+
+Independentment del disparador utilitzat, l'execució final de la lògica de negoci es delega sempre a les mutacions definides al hook \texttt{ui-new/src/hooks/useFileOperations.ts}. Per al \textbf{renombrament (UC-09A)}, l'opció del menú contextual obre el diàleg \texttt{ui-new/src/components/File/RenameDialog.tsx}. En confirmar el nou nom, una funció de callback al \texttt{FileManager/index.tsx} (\texttt{handleRename}) invoca la mutació \texttt{updateItem} del hook. Per al \textbf{moviment (UC-09B)}, tant l'acció d'arrossegar i deixar anar com la confirmació des del diàleg de selecció de carpeta acaben cridant a la mutació \texttt{moveItem}. Per a les operacions de \textbf{copiar i enganxar (UC-09C)}, la drecera \texttt{Ctrl+V} al \texttt{useFileShortcuts.ts} llegeix el contingut del \texttt{fileSelectionStore} i invoca la mutació \texttt{pasteFiles}. Aquesta única mutació gestiona tant la còpia (\texttt{fileService.copyElement}) com el tallat (\texttt{fileService.moveElement}), basant-se en el valor del booleà \texttt{isCut} de l'store.
+
+\begin{lstlisting}[language=typescript, caption={Gestió del Drag \& Drop a `FileManager/index.tsx`}]
+const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveDragItem(null);
+    
+    if (!over || active.id === over.id) {
+        return;
+      }
+    if(!active.data.current || !over.data.current) {
+      return;
+    }
+    
+    const draggedItem = active.data.current.file as FileItem;
+    const dropTarget = over.data.current.file as FileItem;
+    if (dropTarget && dropTarget.id) {
+        try {
+            if (draggedItem.id !== dropTarget.id && draggedItem.id !== dropTarget.parent && dropTarget.type === 'folder') {
+                const itemsToMove = selectedFiles.length > 0 && selectedFiles.some(f => f === draggedItem)
+                ? selectedFiles
+                : [draggedItem];
+            await fileOperations.moveItem({
+                items: itemsToMove, 
+                toFolderId: dropTarget.id.toString(), 
+                    fromFolderId: fileOperations.currentDirectory.id || 'root'
+            });
+            notifications.success('Items moved successfully');
+            }
+        } catch {
+            notifications.error('Could not move the item');
+        }
+    }
+}, [selectedFiles, fileOperations, notifications]);
+\end{lstlisting}
+
+\begin{lstlisting}[language=typescript, caption={Gestió de dreceres de teclat a `useFileShortcuts.ts`}]
+useEffect(() => {
+  const handleKeyDown = async (event: KeyboardEvent) => {
+    if (event.ctrlKey || event.metaKey) {
+      switch (event.key.toLowerCase()) {
+        case 'c':
+          event.preventDefault();
+          if(isInRoot || (isInShared && currentDirectory.shared && currentDirectory.accessLevel !== 'READ')) {
+          copyFiles(currentDirectory.id!.toString());
+          } else {
+            notifications.error("You don't have permission to copy files");
+          }
+          break;
+
+        case 'x':
+          event.preventDefault();
+          if(isInRoot || (isInShared && currentDirectory.shared && currentDirectory.accessLevel !== 'read')) {
+          cutFiles(currentDirectory.id!.toString());
+          } else {
+            notifications.error("You don't have permission to cut files");
+          }
+          break;
+
+        case 'v':
+          event.preventDefault();
+          if(isInRoot || (isInShared && currentDirectory.accessLevel !== 'read')) {
+          const items = Array.from(clipboard);
+          if(items.length > 0) {
+              pasteFiles({items: items, targetFolderId: currentDirectory.id!.toString(), prevParentId: clipboardParentId, isCut: isCut});
+            }
+            if(isCut) {
+              setClipboardFiles(new Set(), undefined);
+            }
+          } else {
+            notifications.error("You don't have permission to paste files");
+          }
+          break;
+      }
+    }
+  };
+
+  window.addEventListener('keydown', handleKeyDown);
+  return () => window.removeEventListener('keydown', handleKeyDown);
+}, [selectedFiles, currentDirectory, clipboard, isCut, clipboardParentId, /* ... */]);
+\end{lstlisting}
+
+Totes aquestes mutacions (\texttt{updateItem}, \texttt{moveItem}, \texttt{pasteFiles}) segueixen el patró d'\textbf{actualització optimista} implementat amb TanStack Query, proporcionant una resposta visual immediata a l'usuari mentre la comunicació amb el backend es processa en segon pla. 
+
+\paragraph{UC-10: Eliminar Arxiu (Moure a la Paperera)}
+Quan eliminem un arxiu des de la vista principal del gestor, no l'estem esborrant per sempre, sinó que el movem a la paperera de reciclatge, com si fos un pas intermedi.
+
+Podem començar a eliminar un arxiu de dues maneres: fent clic amb el botó dret per obrir el menú contextual a \texttt{ui-new/src/components/FileManagerContextMenu/index.tsx} o simplement prement la tecla \texttt{Delete}. El hook \texttt{ui-new/src/hooks/useFileShortcuts.ts} s'encarrega de capturar quan premem \texttt{Delete} i, igual que el menú contextual, crida la funció \texttt{deleteItem} del hook \texttt{ui-new/src/hooks/useFileOperations.ts}. Això fa que, independentment de com decidim eliminar l'arxiu, l'experiència sigui la mateixa.
+
+El que fa que aquesta funcionalitat sigui interessant és la lògica dual de la mutació \texttt{deleteItemMutation}. El que passa quan eliminem un arxiu depèn totalment de la secció on estem, informació que ens proporciona el \texttt{ui-new/src/store/fileContextStore.ts}. Aquest store ens diu on som (\texttt{root}, \texttt{shared} o \texttt{trash}), i això permet que la mateixa acció (prémer \texttt{Delete} o fer clic a "Eliminar") faci coses diferents segons el context.
+
+\begin{lstlisting}[language=typescript, caption={Gestió de la tecla Delete a `useFileShortcuts.ts`}]
+} else if (event.key === 'Delete') {
+  event.preventDefault();
+  if (fileContext.section === 'shared') {
+    revokeAccess({items: selectedFiles})
+  } else {
+    deleteItem({items: selectedFiles, section: fileContext.section});
+  }
+  clearSelection();
+}
+\end{lstlisting}
+
+Dins de la funció \texttt{mutationFn} de la mutació \texttt{deleteItemMutation}, un simple condicional decideix què fer. Si estem a la secció \texttt{'root'}, es crida a \texttt{fileService.deleteElement}, que mou l'element a la paperera al backend. Però si estem a la secció \texttt{'trash'}, es crida a \texttt{trashService.deleteItem}, que esborra l'element de manera permanent. Aquest disseny ens permet utilitzar la mateixa interfície d'usuari per a dues operacions molt diferents, fent que la lògica sigui més senzilla als components de la interfície mentre mantenim la complexitat al nivell de servei.
+
+\begin{lstlisting}[language=typescript, caption={Lògica dual de la mutació d'eliminació a `useFileOperations.ts`}]
+const deleteItemMutation = useMutation({
+  mutationFn: async ({ items, section }: { items: FileItem[], section: 'root' | 'trash' | 'shared' }) => {
+    try {
+      if(section === 'root') {
+        return Promise.all(items.map(item => fileService.deleteElement(item.id!.toString())));
+      } else if(section === 'trash') {
+        return Promise.all(items.map(item => trashService.deleteItem(item.id!.toString())));
+      } else {
+        notifications.error('Cannot delete items from this section');
+        return;
+      }
+    } catch (error) {
+      console.error('Error deleting items:', error);
+      notifications.error('Error deleting items');
+      return;
+    }
+  },
+  onSuccess: (_, variables) => {
+    notifications.success(
+      variables.section === 'root' 
+        ? 'Items moved to trash correctly'
+        : 'Items deleted permanently'
+    );
+    refreshAll();
+  }
+  // ... onMutate i onError per a l'actualització optimista
+});
+\end{lstlisting}
+
+Igual que les altres mutacions del sistema, \texttt{deleteItemMutation} utilitza el patró d'actualització optimista de TanStack Query. Quan eliminem un element, aquest desapareix de la interfície immediatament gràcies a l'\texttt{onMutate}, que actualitza la cache local, mentre que l'operació real es fa en segon pla. Les notificacions d'èxit ens donen un feedback específic segons el tipus d'operació: "Items moved to trash correctly" per al moviment a la paperera o "Items deleted permanently" per a l'esborrat definitiu.
+
+\subsection{Compartició d'Arxius}
+\paragraph{UC-13, UC-13A, UC-13B: Compartir, Deixar de Compartir i Veure Compartits}
+Aquesta funcionalitat permet als usuaris compartir els seus arxius i carpetes amb altres, gestionar els permisos i veure els elements que altres han compartit amb ells.
+
+La navegació entre les diferents seccions del gestor d'arxius (\texttt{root}, \texttt{shared}, \texttt{trash}) es gestiona a través d'un canvi de context en lloc d'un canvi de ruta. L'usuari inicia aquesta navegació fent clic a les icones corresponents a la barra lateral, implementada al component \texttt{ui-new/src/components/FileDirectorySidebar/index.tsx}. Aquesta acció invoca la funció \texttt{handleNavigateToSection}, que actualitza l'estat global a través del \texttt{ui-new/src/store/fileContextStore.ts}, establint la secció activa. Aquest canvi de context fa que el hook \texttt{useFileOperations} obtingui les dades del directori arrel corresponent a la secció seleccionada, poblant la vista principal amb els fitxers i carpetes adequats.
+
+\begin{lstlisting}[language=typescript, caption={Navegació entre seccions a `FileDirectorySidebar/index.tsx`}]
+const handleNavigateToSection = useCallback(async (section: 'root' | 'shared' | 'trash', e: React.MouseEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  try {
+    let folder: FileItem;
+    switch (section) {
+      case 'root':
+        folder = await fileService.getRootFolder();
+        break;
+      case 'shared':
+        folder = await sharingService.getSharedRootFolder();
+        folder.id = "shared";
+        break;
+      case 'trash':
+        folder = await trashService.getTrashRootFolder();
+        folder.id = "trash";
+        break;
+    }
+    await setCurrentDirectory(folder);
+    fileContext.setSection(section);
+  } catch {
+    notifications.error('Loading error');
+  }
+}, [fileContext, setCurrentDirectory, notifications]);
+\end{lstlisting}
+
+Un cop dins d'una secció, l'usuari pot navegar per l'arbre de directoris fent clic als elements de la barra lateral (\texttt{ui-new/src/components/FileDirectorySidebarItem/index.tsx}) o fent doble clic sobre una carpeta a la vista principal (\texttt{ui-new/src/components/File/index.tsx}). Ambdues accions invoquen la funció \texttt{setCurrentDirectory} del hook \texttt{useFileOperations}, que carrega el contingut de la carpeta seleccionada i actualitza la vista.
+
+La funció \texttt{setCurrentDirectory} és fonamental per a la gestió de l'estat de la navegació. Aquesta funció actualitza manualment la memòria cache de TanStack Query mitjançant \texttt{queryClient.setQueryData}, establint la carpeta seleccionada com el nou directori actual. Aquest procés actualitza l'estat global a Zustand a través de \texttt{setStoreCurrentDirectory} i persisteix l'ID del directori a la \texttt{sessionStorage} per mantenir l'estat entre recàrregues de la pàgina.
+
+Aquesta acció desencadena l'execució de la query \texttt{currentDirectoryQuery}, que utilitza el hook \texttt{useQuery} per obtenir les dades completes del directori des del backend. La clau d'aquesta query (\texttt{queryKey}) és un array que inclou l'identificador del directori actual, assegurant que cada directori tingui la seva pròpia entrada a la memòria cache. La configuració \texttt{staleTime} de 5 minuts indica a TanStack Query que consideri les dades a la memòria cache com a "fresques" durant aquest període, evitant crides innecessàries a l'API si l'usuari torna a un directori visitat recentment.
+
+\begin{lstlisting}[language=typescript, caption={Gestió del directori actual amb `useQuery` a `useFileOperations.ts`}]
+const setCurrentDirectory = async (folder: FileItem) => {
+  if (folder.id) {
+    const newId = folder.id.toString();
+    setStoreCurrentDirectory(folder);
+    safeSessionStorage.setItem(STORAGE_KEYS.CURRENT_DIRECTORY_ID, newId);
+  }
+  
+  await queryClient.setQueryData([QUERY_KEYS.CURRENT_DIRECTORY, folder.id], folder);
+  setStoreCurrentDirectory(folder);
+};
+
+const currentDirectoryQuery = useQuery({
+  queryKey: [QUERY_KEYS.CURRENT_DIRECTORY, currentDirectory.id],
+  queryFn: () => {
+    if(section === 'trash') {
+      return fileService.getFolderById(currentDirectory.id, true);
+    } else {
+      return fileService.getFolderById(currentDirectory.id, false);
+    }
+  }, 
+  staleTime: 1000 * 60 * 5,
+  enabled: !!localStorage.getItem('accessToken') && !!currentDirectory.id,
+});
+\end{lstlisting}
+
+Aquest mecanisme de memòria cache és essencial per a una experiència de navegació fluida. Quan l'usuari navega a un directori ja visitat, les dades es carreguen instantàniament des de la memòria cache, eliminant la latència de la xarxa. La dada només es torna a demanar al servidor si ha passat el \texttt{staleTime} o si la memòria cache s'invalida manualment després d'una operació (com crear o eliminar un fitxer), assegurant un equilibri òptim entre rendiment i consistència de les dades.
+
+\begin{lstlisting}[language=typescript, caption={Navegació per doble clic a `File/index.tsx`}]
+const handleDoubleClick = async () => {
+  if (file.type === 'folder') {
+    fileOperations.setCurrentDirectory(file);
+  } else {
+    // ... lògica per descarregar fitxers
+  }
+};
+\end{lstlisting}
+
+L'acció de compartir s'inicia des del menú contextual, que obre el component \texttt{ui-new/src/components/File/ShareDialog.tsx}, el centre neuràlgic de la gestió de permisos. Cal destacar que aquesta funcionalitat només està disponible per a fitxers i carpetes propis de l'usuari, és a dir, quan es troba a la secció \texttt{root}. En obrir-se el diàleg, aquest utilitza el hook \texttt{ui-new/src/hooks/useShareManager.ts} per carregar l'estat actual dels permisos per a tots els fitxers seleccionats, una informació que es desa per a una comparació posterior.
+
+Una de les optimitzacions clau d'aquesta funcionalitat rau en la lògica de la funció \texttt{share}, passada com a callback \texttt{onShare} des de \texttt{FileManager/index.tsx}. En lloc d'enviar simplement l'estat final dels permisos, aquesta funció realitza una operació de "diferència" entre l'estat original (guardat en obrir el diàleg) i l'estat final (quan l'usuari fa clic a "Share"). El codi itera sobre l'estat final per identificar nous permisos o modificacions, i sobre l'estat original per identificar permisos revocats. Això genera una llista precisa de les accions necessàries (\texttt{shareWithUser}, \texttt{handleUpdateAccess}, \texttt{handleUnshareToUser}), minimitzant el nombre de crides a l'API.
+
+\begin{lstlisting}[language=typescript, caption={Lògica de comparació de permisos a `FileManager/index.tsx`}]
+const share = useCallback(async (userAccess: {username: string, fileId: string, accessType: 'READ' | 'WRITE' }[], originalSharedAccess: Map<string, {username: string, fileId: string, accessType: 'READ' | 'WRITE' }[]>) => {
+  const promises = [];
+  if(originalSharedAccess.size > 0) { 
+    for (const access of userAccess) {
+      if(!originalSharedAccess.has(access.username) || !originalSharedAccess.get(access.username)!.some(a => a.fileId === access.fileId)) {
+        promises.push(shareManager.shareWithUser(access.fileId, access.username, access.accessType));
+      } else if(originalSharedAccess.get(access.username)!.some(a => a.fileId === access.fileId && a.accessType !== access.accessType)) {
+        promises.push(shareManager.handleUpdateAccess(access.fileId, access.username, access.accessType));
+      }
+    }
+    for (const user of originalSharedAccess.keys()) {
+      if(!userAccess.some(a => a.username === user)) {
+        originalSharedAccess.get(user)!.forEach(a => {
+          promises.push(shareManager.handleUnshareToUser(a.fileId, user));
+        });
+      } else {
+        originalSharedAccess.get(user)!.forEach(a => {
+          if(!userAccess.some(access => access.username === user && access.fileId === a.fileId)) {
+            promises.push(shareManager.handleUnshareToUser(a.fileId, user));
+          }
+        });
+      }
+    }
+    await Promise.all(promises);
+  } else {
+    for (const access of userAccess) {
+      promises.push(shareManager.shareWithUser(access.fileId, access.username, access.accessType));
+    }
+    await Promise.all(promises);
+  }
+}, [shareManager]);
+\end{lstlisting}
+
+Aquesta optimització va ser una millora directa basada en el feedback d'un \textit{beta tester}, que va assenyalar que compartir múltiples fitxers amb múltiples usuaris era un procés lent i afarragós. La funció de comparació utilitza el hook \texttt{useShareManager} com a intermediari, que conté funcions més granulars que són les que finalment criden als mètodes corresponents del \texttt{sharingService}.
+
+\begin{lstlisting}[language=typescript, caption={Funció per compartir amb un usuari a `useShareManager.ts`}]
+const shareWithUser = useCallback(async (fileId: string, username: string, accessType: 'READ' | 'WRITE' = 'READ') => {
+  if (!username) {
+    console.error("Please enter a username");
+    return false;
+  }
+  try {
+    await sharingService.shareFile(fileId, username, accessType);   
+    notifications.success('Item shared successfully');
+    console.log(`File ${fileId} shared with ${username} with access type ${accessType}`);
+    return true;
+  } catch (error) {
+    console.error('Error sharing file:', error);
+    notifications.error('Could not share item');
+    return false;
+  }
+}, []);
+\end{lstlisting}
+
+A més de mostrar els fitxers compartits, la secció \texttt{shared} ofereix opcions contextuals diferents. El menú contextual \texttt{ui-new/src/components/FileManagerContextMenu/index.tsx} adapta les seves opcions a la secció activa, mostrant l'opció "Stop seeing" quan l'usuari es troba a la secció de compartits. Aquesta acció invoca la funció \texttt{revokeAccess} del hook \texttt{useFileOperations}, que s'encarrega de revocar el permís de l'usuari sobre el fitxer seleccionat, eliminant-lo de la seva vista de compartits.
+
+Aquesta adaptabilitat s'aconsegueix mitjançant una sèrie de renderitzats condicionals dins del component, que comproven la secció activa (\texttt{isInRoot}, \texttt{isInTrash}, \texttt{isInShared}) i si s'ha seleccionat un fitxer per mostrar només les accions pertinents.
+
+\begin{lstlisting}[language=typescript, caption={Renderitzat condicional de les opcions del menú a `FileManagerContextMenu/index.tsx`}]
+const handleUnshare = useCallback(async () => {
+  if (!file) return;
+  
+  await revokeAccess({items: selectedFiles});
+  onClose();
+}, [file, selectedFiles, onClose, revokeAccess]);
+// ... //
+<div className="min-w-[220px] p-1">
+  {/* Opcions quan NO hi ha cap fitxer seleccionat (Crear, Pujar, Enganxar...) */}
+  {!file && (isInRoot || (isInShared && currentDirectory.accessLevel === 'WRITE')) ? (
+    <>
+      <div onClick={() => setIsCreateFolderOpen(true)}>
+        <RiFolderLine />
+        <span>New folder</span>
+      </div>
+      {/* ... Altres opcions de creació i enganxar ... */}
+    </>
+  ) : (
+    <>
+      {/* Opcions quan SÍ hi ha un fitxer seleccionat */}
+
+      {/* Opcions per a la secció ROOT */}
+      {isInRoot && (
+        <>
+          <div onClick={handleCopy}><span>Copy</span></div>
+          <div onClick={handleCut}><span>Cut</span></div>
+          <div onClick={() => setOpenShareDialog(true)}><span>Share</span></div>
+          <div onClick={handleDelete}><span>Delete</span></div>
+        </>
+      )}
+
+      {/* Opcions per a la secció TRASH */}
+      {isInTrash && (
+        <>
+          <div onClick={handleRestore}><span>Restore</span></div>
+          <div onClick={handleDelete}><span>Delete permanently</span></div>
+        </>
+      )}
+      
+      {/* Opcions per a la secció SHARED (renderitzades per una funció auxiliar) */}
+      {isInShared && renderSharedOptions()}
+
+      {/* Opció comuna per veure detalls si només hi ha un fitxer seleccionat */}
+      {selectedFiles.length === 1 && (
+        <div onClick={handleDetails}><span>Details</span></div>
+      )}
+    </>
+  )}
+</div>
+\end{lstlisting}
+
+Cal destacar que, de manera similar a l'operació de pujada de carpetes, el procés de compartir múltiples fitxers amb múltiples usuaris no està optimitzat per a grans volums de dades. Tot i que és menys probable que un usuari modifiqui milers de permisos manualment a través de la interfície, l'arquitectura actual realitza una crida a l'API per a cada modificació individual de permís. L'optimització d'aquest flux mitjançant operacions per lots (\textit{batch operations}) es considera una de les millores futures, tal com es detalla al Capítol 12.

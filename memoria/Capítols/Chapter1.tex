@@ -1,0 +1,67 @@
+% Indicate the main file. Must go at the beginning of the file.
+% !TEX root = ../main.tex
+
+%-------------------------------------------------------------------------------
+% CHAPTER 1
+%-------------------------------------------------------------------------------
+\nocite{*} 
+
+\chapter{Introducci\'o, motivacions, prop\'osits i objectius}
+
+\section{Context del projecte}
+
+En l'era digital actual, la gesti\'o d'arxius personals i compartits s'ha convertit en una necessitat fonamental tant per a usuaris individuals com per a grups de treball, fam\'ilies o petites organitzacions. La creixent depend\`encia de serveis d'emmagatzematge al n\'uvol ha facilitat l'acc\'es remot, la compartici\'o i la sincronitzaci\'o de documents, per\`o tamb\'e ha generat noves problem\`atiques relacionades amb el cost, la privacitat, la depend\`encia tecnol\`ogica i la manca de control per part de l'usuari final.
+
+Durant la meva experi\`encia personal amb serveis com Google Drive, OneDrive o Mega, vaig identificar diverses limitacions que em van portar a plantejar aquest projecte. Aquestes solucions, encara que funcionals, imposen restriccions pel que fa a l'espai disponible, requereixen subscripcions per accedir a funcionalitats completes i no ofereixen un control total sobre les dades. Davant d'aquesta situaci\'o, vaig decidir desenvolupar una alternativa lliure, extensible i autogestionada.
+
+La soluci\'o que proposo es basa en una arquitectura de microserveis, i est\`a dissenyada per ser accessible tant des d'una interf\'icie web com des d'una aplicaci\'o d'escriptori multiplataforma. Gr\`acies a l'\'us de contenidors Docker, el desplegament del sistema resulta senzill fins i tot per a usuaris sense coneixements t\`ecnics avan\c{c}ats en oferir tamb\'e un conjunt d'scripts d'instal·laci\'o automatitzats.
+
+\section{Motivacions}
+
+La meva motivaci\'o principal ha estat disposar d'una eina gratu\"ita, de codi obert i sense restriccions artificials d'\'us, que ofereixi una funcionalitat comparable a la dels serveis comercials actuals, retornant el control de les dades a l'usuari final.
+
+Durant el proc\'es de desenvolupament d'aquest projecte, va mancar l'an\`alisi de les eines lliures existents, ja que desconeixia la seva exist\`encia, un error per part meva que podria haver fet que replanteg\'es el projecte des d'una direcci\'o diferent, per\`o la meva experi\`encia amb serveis comercials va ser suficient per detectar mancan\c{c}es importants pel que fa a accessibilitat, privacitat i control. Aquest projecte neix del desig de superar aquestes limitacions, desenvolupant una soluci\'o que pogu\'es ser utilitzada per qualsevol, sense cap cost i amb plena autonomia sobre les seves dades.
+
+A m\'es, el car\`acter obert del projecte permet fomentar la col·laboraci\'o, l'aprenentatge i la millora cont\'inua per part de la comunitat, alineant-se amb els principis del programari lliure i la sobirania digital, oferint al final una soluci\'o lliure, distribu\"ida i extensible.
+
+\section{Prop\'osit del projecte}
+
+El prop\`osit general d'aquest treball \'es desenvolupar una plataforma de gesti\'o d'arxius al n\'uvol que permeti la sincronitzaci\'o i compartici\'o de fitxers entre m\'ultiples usuaris, mitjan\c{c}ant una arquitectura distribu\"ida basada en microserveis. El sistema haur\`a d'estar preparat per al seu \'us tant des d'una aplicaci\'o web com des d'una aplicaci\'o d'escriptori, adaptant-se aix\'i a diferents escenaris i dispositius.
+
+He dissenyat aquesta plataforma amb la intenci\'o que sigui autogestionada, reprodu\"ible mitjan\c{c}ant contenidors i accessible per a usuaris sense coneixements t\`ecnics, gr\`acies a la inclusi\'o de scripts d'instal·laci\'o automatitzats. El meu objectiu \'es facilitar a qualsevol persona la possibilitat de desplegar el seu propi n\'uvol privat de forma gratu\"ita, segura i senzilla.
+
+\section{Objectius generals}
+
+Els principals objectius generals que em proposo assolir amb aquest projecte s\'on:
+
+\begin{itemize}
+  \item Dissenyar una arquitectura backend modular, basada en microserveis, que permeti una alta escalabilitat, mantenibilitat i separaci\'o de responsabilitats.
+  \item Desenvolupar una interf\'icie web moderna utilitzant React i Tailwind CSS, amb un disseny centrat en l'experi\`encia d'usuari.
+  \item Crear una aplicaci\'o d'escriptori multiplataforma utilitzant Tauri i Svelte, que proporcioni acc\'es complet a les funcionalitats del sistema i sigui compatible amb diferents sistemes operatius a m\'es d'utilitzar el m\'inim de recursos perqu\`e pugui ser utilitzat en dispositius amb poca capacitat.
+  \item Facilitar el desplegament i \'us del sistema mitjan\c{c}ant contenidors Docker i scripts d'instal·laci\'o que minimitzin la intervenci\'o t\`ecnica de l'usuari.
+  \item Publicar tot el sistema sota llic\`encia de codi obert (MIT).
+\end{itemize}
+
+\section{Objectius espec\'ifics}
+
+A m\'es dels objectius generals, he definit una s\`erie d'objectius t\`ecnics concrets que permetran donar suport a les funcionalitats requerides per la plataforma:
+
+\begin{itemize}
+  \item Implementar un sistema d'autenticaci\'o d'usuaris segur i extensible.
+  \item Desenvolupar microserveis independents per a la gesti\'o de fitxers, compartici\'o entre usuaris, paperera de reciclatge i sincronitzaci\'o d'estats.
+  \item Implementar un sistema de control de permisos que permeti definir els nivells d'acc\'es als arxius compartits.
+  \item Integrar mecanismes de sincronitzaci\'o en temps real mitjan\c{c}ant WebSockets, que assegurin l'actualitzaci\'o immediata de l'estat dels arxius entre tots els clients connectats.
+  \item Incloure una interf\'icie de paperera per a la recuperaci\'o d'arxius eliminats de forma accidental.
+  \item Assegurar la portabilitat del sistema entre diferents plataformes mitjan\c{c}ant l'\'us de contenidors Docker i fitxers de configuraci\'o est\`andard (com \texttt{docker-compose.yml}).
+\end{itemize}
+
+\section{Situaci\'o inicial i p\'ublic objectiu}
+
+Abans de comen\c{c}ar el projecte, comptava amb una base s\`olida en programaci\'o amb Java i Spring Boot, aix\'i com en l'\'us de contenidors Docker. Tamb\'e tenia coneixements funcionals en desenvolupament web amb React i una comprensi\'o te\`orica del paradigma de microserveis, encara que sense experi\`encia pr\`actica pr\`evia.
+
+He dissenyat el sistema pensant en petits grups d'usuaris —com fam\'ilies o grups d'amics— que desitgin disposar d'una soluci\'o al n\'uvol privada i de f\`acil instal·laci\'o. Per aix\`o, he desenvolupat scripts automatitzats que simplifiquen el proc\'es de desplegament i configuraci\'o, eliminant la necessitat de coneixements t\`ecnics avan\c{c}ats.
+
+Finalment, la meva intenci\'o inicial era continuar el desenvolupament del sistema despr\'es de la finalitzaci\'o del Treball de Fi de Grau, incorporant noves funcionalitats i millores, i consolidant-lo com una eina lliure, distribu\"ida i extensible per a la gesti\'o d'arxius personals, per\`o durant el transcurs del desenvolupament del projecte vaig descobrir tota una comunitat de desenvolupadors que estaven treballant en un projecte similar, la qual cosa va fer que em plantegi a futur primer investigar les capacitats dels projectes ja establerts (ja que s\'on m\'es madurs i tenen una comunitat activa al darrere) i finalment decidir si el meu projecte pot aportar una soluci\'o millorada o si ja estan cobertes aquestes necessitats.
+
+
+

@@ -1,0 +1,75 @@
+\chapter{Treball futur i línies de millora}
+
+Aquest capítol final recull i organitza les diverses línies de treball que han quedat pendents, així com les possibles millores identificades al llarg del desenvolupament i la redacció d'aquesta memòria. Aquestes propostes no només busquen completar funcionalitats planificades que van ser descartades per limitacions de temps, sinó també enfortir l'arquitectura, la seguretat i la usabilitat del sistema per apropar-lo a un estat apte per a un entorn de producció real.
+
+Les millores s'han agrupat en blocs temàtics i s'han prioritzat segons la seva importància crítica per a la seguretat, la funcionalitat bàsica i la robustesa general de la plataforma.
+
+\section{Millores Crítiques de Seguretat i Compliment Normatiu (Prioritat Alta)}
+
+Aquest bloc agrupa les tasques més urgents, indispensables per garantir la seguretat de les dades i un compliment normatiu més estricte, especialment amb el RGPD.
+
+\begin{itemize}
+    \item \textbf{Implementació de Xifratge en Trànsit (HTTPS/TLS):} Com es va reconèixer als capítols 10 i 7, l'absència de xifratge en les comunicacions és la mancança de seguretat més crítica del sistema. La propera iteració ha d'implementar de manera prioritària la configuració d'un \textit{reverse proxy} (com Nginx o Traefik) que gestioni els certificats SSL/TLS, assegurant que tota la comunicació entre els clients i el Gateway, així com la comunicació interna entre microserveis, estigui xifrada.
+    
+    \item \textbf{Gestió Segura de Tokens Mitjançant Cookies HttpOnly:} L'estratègia actual d'emmagatzemar els tokens JWT al \texttt{localStorage} del navegador és vulnerable a atacs XSS. És prioritari refactoritzar el sistema d'autenticació per transportar els tokens en cookies amb els atributs \texttt{HttpOnly} i \texttt{Secure}, fent-los inaccessibles des del JavaScript del client i millorant substancialment la seguretat de la sessió.
+    
+    \item \textbf{Sistema de Registres (Logging) Centralitzat:} La manca actual d'un sistema de logs estructurat impedeix una traçabilitat adequada de les operacions i la detecció d'anomalies. Per solucionar-ho, es proposa el disseny i la implementació d'un nou microservei dedicat exclusivament a la gestió de registres. Aquest servei s'encarregaria de rebre esdeveniments de log de la resta de microserveis, per després agregar-los, correlacionar-los i persistir-los en un format estructurat que permeti consultar l'historial d'operacions de manera unificada.
+\end{itemize}
+
+\section{Completar Funcionalitats del Client d'Escriptori (Prioritat Alta)}
+
+El client d'escriptori és una peça clau del projecte, i completar la seva funcionalitat és essencial per assolir els objectius inicials.
+
+\begin{itemize}
+    \item \textbf{Sincronització dels Fitxers Compartits:} Aquesta és la funcionalitat més important que va quedar pendent (Capítols 4 i 11). La propera versió del client d'escriptori ha d'implementar la lògica necessària per detectar i sincronitzar els fitxers i carpetes de la secció "Compartits amb mi", permetent un accés transparent a aquests recursos des del sistema d'arxius local. La implementació actual del motor de sincronització ja proporciona una base sòlida i avançada des de la qual partir, fet que hauria de facilitar l'addició d'aquesta funcionalitat.
+
+    \item \textbf{Sistema Avançat de Resolució de Conflictes:} El motor de sincronització actual gestiona els conflictes de manera bàsica, sobreescrivint la versió més antiga. S'ha de dissenyar i implementar un sistema més sofisticat que, en cas de conflicte (modificació simultània en local i remot), notifiqui a l'usuari i li permeti escollir quina versió conservar, crear una còpia o intentar fusionar els canvis.
+\end{itemize}
+
+\section{Optimització del Rendiment i l'Escalabilitat (Prioritat Mitjana)}
+
+Aquestes millores busquen optimitzar l'eficiència del sistema, especialment en operacions que involucren un gran volum de dades o peticions.
+
+\begin{itemize}
+    \item \textbf{Implementació d'Operacions per Lots (Batch Operations):} Actualment, operacions com la pujada de carpetes o la compartició de múltiples fitxers generen una petició a l'API per cada element individual. S'han de dissenyar i implementar nous endpoints al backend que acceptin operacions per lots, reduint dràsticament el nombre de crides a la xarxa i millorant el rendiment percebut per l'usuari.
+
+    \item \textbf{Unificació dels Endpoints de Pujada:} Per simplificar el codi i millorar l'eficiència, l'endpoint de pujada de fitxers s'hauria d'unificar en una única solució basada en \textit{streaming}, eliminant la duplicitat actual entre el mètode \texttt{multipart/form-data} (web) i \texttt{application/octet-stream} (escriptori).
+
+    \item \textbf{Optimització de Consultes Complexes:} La càrrega de la vista "Compartit amb mi" actualment genera múltiples crides a altres serveis per enriquir les dades. Aquest procés s'ha d'optimitzar, ja sigui mitjançant una única crida que agregui les dades al backend o implementant un sistema de memòria cache per a les dades d'usuari i permisos, reduint la latència.
+
+    \item \textbf{Externalització de l'Estat de WebSockets:} Per permetre l'escalat horitzontal del \texttt{SyncService}, l'estat de les connexions WebSocket (actualment en memòria) s'hauria d'externalitzar a un magatzem de dades compartit.
+\end{itemize}
+
+\section{Millores en la Gestió i el Desplegament (Prioritat Mitjana)}
+
+Aquestes propostes se centren a millorar el cicle de vida del desenvolupament, les proves i el desplegament de la plataforma.
+
+\begin{itemize}
+    \item \textbf{Implementació de Proves Automatitzades:} La manca de tests automatitzats és un dels principals punts febles del projecte actual (Capítol 9). És crucial desenvolupar una estratègia de proves completa que inclogui tests unitaris, d'integració i E2E (End-to-End) per garantir la qualitat del codi, detectar regressions de manera primerenca i facilitar futures refactoritzacions.
+    
+    \item \textbf{Integració i Desplegament Continus (CI/CD):} S'ha de configurar un pipeline de CI/CD utilitzant eines com GitHub Actions. Aquest pipeline hauria d'automatitzar l'execució de les proves, la construcció de les imatges de Docker i la generació dels instal·ladors multiplataforma del client d'escriptori, publicant-los a GitHub Releases per a una distribució senzilla.
+    
+    \item \textbf{Suport per a Kubernetes:} Per a entorns de producció més exigents, es preveu la creació de fitxers de configuració de Helm que facilitin el desplegament, l'escalat i la gestió del sistema en un clúster de Kubernetes.
+
+    \item \textbf{Flexibilització de la Configuració:} S'ha de permetre la configuració dels ports dels serveis a través de variables d'entorn, oferint més flexibilitat en el desplegament.
+\end{itemize}
+
+\section{Millores Funcionals i d'Usabilitat (Prioritat Baixa)}
+
+Finalment, aquest bloc recull un conjunt de millores que, tot i no ser crítiques, enriquirien l'experiència d'usuari i afegirien valor a la plataforma.
+
+\begin{itemize}
+    \item \textbf{Revisió del Principi de Minimització de Dades:} Com es va mencionar al Capítol 10, s'analitzarà la possibilitat d'eliminar la recollida del nom i els cognoms de l'usuari durant el registre per alinear el projecte de forma més estricta amb el principi de minimització de dades del RGPD.
+
+    \item \textbf{Feedback Visual en Operacions d'Arrossegar i Deixar Anar:} Millorar la representació visual quan s'arrosseguen múltiples elements, mostrant una pila o un comptador en lloc d'un únic element.
+    
+    \item \textbf{Configuració Avançada del Client d'Escriptori:} Afegir opcions per limitar l'ample de banda, configurar el nombre de transferències concurrents i personalitzar les notificacions.
+
+    \item \textbf{Endpoint de Validació del Servidor:} Crear un endpoint específic (p. ex., \texttt{/api/v1/ping}) per a una validació més robusta del servidor per part del client d'escriptori.
+\end{itemize}
+
+\section{Reflexió sobre el Futur del Projecte}
+
+Com vaig reflexionar al Capítol 1, abans d'embarcar-se en la implementació d'aquestes millores, seria prudent realitzar una anàlisi exhaustiva de les alternatives de codi obert existents, com Nextcloud o Seafile. Aquesta anàlisi permetria determinar si el projecte, un cop madurat, pot oferir un valor diferencial clar —ja sigui per la seva arquitectura, el seu rendiment o la seva filosofia— o si els esforços de la comunitat estarien millor invertits contribuint a projectes ja consolidats.
+
+En conclusió, tot i que el sistema actual és una prova de concepte funcional, el camí per convertir-lo en una solució de producció robusta, segura i completa és llarg. Les línies de treball futur aquí exposades tracen un full de ruta clar per a aquesta evolució, abordant des de les mancances més crítiques fins a les millores que enriquirien l'experiència final de l'usuari.

@@ -1,0 +1,57 @@
+\chapter{Conclusions}
+
+En aquest capítol final, es realitza una anàlisi retrospectiva del projecte, avaluant el grau de compliment dels objectius establerts, tant des de la perspectiva acadèmica del Treball de Fi de Grau com des de la funcionalitat de l'aplicació desenvolupada. S'analitzaran les desviacions respecte a la planificació inicial, se'n discutiran les causes i es farà una reflexió crítica sobre els resultats obtinguts i les lliçons apreses durant el procés.
+
+\section{Assoliment dels objectius}
+
+A l'hora de valorar l'èxit del projecte, és imprescindible diferenciar entre els objectius acadèmics inherents a un Treball de Fi de Grau (TFG) i els requisits funcionals de l'aplicació com a producte de programari.
+
+\subsection{Valoració com a Treball de Fi de Grau}
+
+Des d'una perspectiva acadèmica, el projecte ha complert de manera satisfactòria els objectius d'aprenentatge que em vaig marcar. La finalitat principal d'un TFG és aplicar i consolidar els coneixements adquirits durant la carrera, i en aquest sentit, el desenvolupament d'aquesta plataforma ha representat un repte significatiu que m'ha permès:
+\begin{itemize}
+    \item \textbf{Dissenyar i implementar un sistema distribuït complex:} He pogut materialitzar els conceptes teòrics d'una arquitectura de microserveis, enfrontant-me a reptes reals com la comunicació entre serveis (síncrona i asíncrona), el descobriment, la seguretat centralitzada en un \textit{gateway} i la gestió de dades distribuïdes.
+    \item \textbf{Adquirir experiència pràctica amb una pila tecnològica moderna:} El projecte m'ha permès treballar amb un conjunt d'eines estàndard a la indústria, des de l'ecosistema de Spring Boot per al backend fins a React per al frontend web. Cal destacar l'aprenentatge en tecnologies més noves com Tauri i Rust, que, tot i la seva corba d'aprenentatge, han estat clau per assolir els objectius de rendiment del client d'escriptori.
+    \item \textbf{Gestionar un projecte de gran escala de forma autònoma:} M'he enfrontat al cicle de vida complet del desenvolupament de programari, des de la definició de requisits i la planificació fins a la implementació, les proves manuals i el desplegament amb Docker, la qual cosa ha estat una experiència formativa molt valuosa.
+\end{itemize}
+Com a exercici acadèmic, considero que el projecte ha servit com un camp de proves excel·lent per consolidar la meva formació com a enginyer de programari.
+
+\subsection{Valoració del producte desenvolupat}
+
+Si avaluem l'aplicació respecte als requisits funcionals definits al Capítol 6, el resultat és parcialment positiu. S'ha aconseguit una plataforma funcional que implementa el nucli de les característiques planificades: els usuaris poden registrar-se, gestionar els seus fitxers, utilitzar la paperera, compartir arxius (a la versió web) i sincronitzar la seva carpeta principal amb el client d'escriptori. El panell d'administració és operatiu i permet una gestió bàsica d'usuaris.
+
+No obstant això, cal ser transparent sobre les mancances. La funcionalitat més notable que va quedar pendent va ser la \textbf{sincronització dels fitxers compartits al client d'escriptori}. Aquesta era una característica complexa que va ser descartada per les limitacions de temps. A més, com s'ha reconegut al llarg de la memòria, el sistema en el seu estat actual \textbf{no està preparat per a un entorn de producció real}. L'absència de mesures de seguretat crítiques com el xifratge de les comunicacions (HTTPS) o un sistema de registres centralitzat són obstacles insalvables per al seu ús més enllà d'una prova de concepte.
+
+Malgrat que s'ha implementat una part considerable del projecte, no estic del tot satisfet amb el resultat final, especialment després del procés de redacció d'aquesta memòria. Aquest exercici de documentació m'ha fet plenament conscient de la gran quantitat de treball que queda pendent per poder presentar el projecte com una eina robusta i segura, preparada per a l'ús d'usuaris externs.
+
+\section{Desviacions de la planificació}
+
+Com es va detallar al Capítol 4, el projecte va patir desviacions molt significatives respecte al calendari inicial. La planificació original de vuit mesos va resultar ser excessivament optimista, i el desenvolupament es va allargar considerablement. Les causes principals d'aquesta desviació van ser:
+\begin{enumerate}
+    \item \textbf{Discontinuïtat en la dedicació:} La dificultat per compaginar el projecte amb obligacions laborals i personals va generar llargues pauses. Cada represa implicava un "peatge cognitiu" per recuperar el context, la qual cosa va alentir el progrés de manera considerable.
+    \item \textbf{Subestimació de la corba d'aprenentatge:} La decisió d'utilitzar tecnologies noves per a mi, com Tauri i Rust, va ser enriquidora però va requerir un temps d'aprenentatge molt superior al previst, retardant el desenvolupament del client d'escriptori.
+    \item \textbf{Reptes tècnics imprevistos:} El descobriment d'un error de disseny en l'arquitectura inicial del backend, que centralitzava massa responsabilitats al servei \texttt{FileManagement}, va obligar a una refactorització important que va consumir un temps valuós no planificat.
+    \item \textbf{Manca d'eines de gestió formal:} La gestió de tasques mitjançant una llibreta, en lloc d'una eina digital com un tauler Kanban, va dificultar la priorització i la visibilitat de l'estat real del projecte.
+\end{enumerate}
+
+\section{Discussió crítica dels resultats}
+
+Amb la perspectiva que dona haver finalitzat el projecte, és interessant reflexionar sobre algunes de les decisions tècniques clau. L'elecció d'una \textbf{arquitectura de microserveis} va ser, sens dubte, una decisió correcta des del punt de vista de l'aprenentatge. Em va forçar a pensar en termes de sistemes distribuïts i a aplicar principis de disseny de programari robustos. No obstant això, per a un únic desenvolupador, aquesta arquitectura introdueix una sobrecàrrega de gestió (múltiples serveis, comunicació, desplegament).
+
+La tria de \textbf{Tauri i Rust} per al client d'escriptori il·lustra perfectament el compromís entre l'objectiu de rendiment i el cost de desenvolupament. El resultat final és una aplicació nativa, lleugera i eficient, molt superior en consum de recursos a una alternativa basada en Electron. Tanmateix, el preu a pagar va ser una corba d'aprenentatge molt pronunciada que va ser una de les principals causes dels retards.
+
+Finalment, cal contextualitzar aquest projecte en el panorama de solucions existents. Com vaig admetre al Capítol 1, en iniciar el desenvolupament coneixia l'existència d'alternatives de codi obert madures com \textbf{Nextcloud} o \textbf{Seafile}. Aquestes plataformes ofereixen un conjunt de funcionalitats molt més ampli i tenen una comunitat consolidada. Aquest projecte no pretén competir directament amb elles en funcionalitats, sinó explorar una aproximació arquitectònica diferent. El seu principal valor diferencial rau en la seva arquitectura moderna basada en microserveis, que pot resultar més familiar, mantenible o extensible per a desenvolupadors que treballin amb aquest paradigma, oferint una base diferent per construir solucions personalitzades.
+
+\section{Conclusions finals i lliçons apreses}
+
+En conclusió, aquest Treball de Fi de Grau ha culminat amb la creació d'un sistema de programari complex i funcional que compleix la majoria dels seus objectius i serveix com una excel·lent prova de concepte. Tot i no estar llest per a producció, estableix una base arquitectònica sòlida sobre la qual es pot continuar construint.
+
+Més enllà del producte final, el valor més gran del projecte ha estat el propi procés. Les lliçons apreses són nombroses i aplicables a la meva carrera professional:
+\begin{itemize}
+    \item La \textbf{continuïtat és tan important com la quantitat d'hores} invertides. Les interrupcions tenen un cost ocult en la productivitat.
+    \item Una \textbf{planificació realista} ha de tenir en compte no només les tasques, sinó també les corbes d'aprenentatge i els imprevistos.
+    \item Les \textbf{eines de gestió de projectes i mètriques objectives} no són burocràcia, sinó instruments essencials per mantenir el rumb.
+    \item La integració de \textbf{proves automatitzades des de l'inici} és indispensable per garantir la qualitat i evitar regressions en projectes de certa mida.
+\end{itemize}
+
+En definitiva, el viatge ha estat tan o més important que la destinació, proporcionant-me una experiència pràctica inavaluable en la construcció de sistemes de programari moderns.

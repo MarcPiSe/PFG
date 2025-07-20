@@ -1,0 +1,128 @@
+\chapter{Requisits del sistema}
+
+Aquest capítol descriu de forma detallada tots els requisits que ha de complir el sistema per garantir el seu correcte funcionament. Es classifiquen en requisits funcionals i no funcionals, i es descriuen els aspectes relacionats tant amb el programari com amb el maquinari necessari per al desenvolupament i l'execució.
+
+\section{Introducció}
+La plataforma neix amb la voluntat d'oferir una alternativa lliure, autoallotjada i extensible per a la gestió d'arxius al núvol. Prenent com a punt de partida les motivacions descrites al \textit{Capítol~1}, s'emfatitza la necessitat de controlar completament l'emmagatzematge i la sincronització de dades sense dependre de proveïdors externs.\par
+En síntesi, el sistema comprèn:
+\begin{itemize}
+  \item Administració d'arxius i carpetes amb paperera de reciclatge.
+  \item Compartició segura entre usuaris amb permisos granulars.
+  \item Sincronització en temps real entre dispositius mitjançant WebSocket i notificacions d'esdeveniments.
+\end{itemize}
+
+\section{Requisits funcionals}
+
+\subsection{1. Gestió d'usuaris}
+\begin{itemize}
+  \item Registre de nous usuaris amb validació de correu electrònic.
+  \item Inici de sessió segur mitjançant autenticació amb JWT.
+  \item Edició i actualització de perfils d'usuari.
+  \item Control d'accés basat en rols: usuari estàndard i administrador.
+\end{itemize}
+
+\subsection{2. Gestió d'arxius}
+\begin{itemize}
+  \item Pujar arxius i carpetes a l'espai d'usuari.
+  \item Descarregar arxius de forma individual o en grup.
+  \item Eliminar arxius (amb trasllat a la paperera).
+  \item Crear i gestionar carpetes personals.
+  \item Navegar per l'estructura de directoris.
+\end{itemize}
+
+\subsection{3. Sistema de paperera}
+\begin{itemize}
+  \item Eliminació temporal d'arxius amb trasllat a la paperera.
+  \item Restauració d'arxius des de la paperera.
+  \item Eliminació permanent manual o automàtica.
+\end{itemize}
+
+\subsection{4. Compartició d'arxius}
+\begin{itemize}
+  \item Definició de permisos d'accés: lectura, escriptura, etc.
+  \item Visualització d'arxius compartits amb altres usuaris.
+  \item Llistat i revocació de comparticions actives.
+\end{itemize}
+
+\subsection{5. Sincronització en temps real}
+\begin{itemize}
+  \item Actualització automàtica de canvis entre clients.
+  \item Notificacions d'activitats (pujades, canvis, eliminacions).
+  \item Sincronització d'arxius entre diversos dispositius.
+\end{itemize}
+
+\subsection{6. Panell d'administració}
+\begin{itemize}
+  \item Gestió d'usuaris: creació, edició i eliminació.
+  \item Monitoratge del sistema i estat dels serveis.
+\end{itemize}
+
+\section{Requisits no funcionals}
+
+\subsection{1. Rendiment}
+\begin{itemize}
+  \item Temps de resposta inferior a 2 segons en operacions habituals. \textbf{(Prioritat mitjana)}
+  \item Suport per a la manipulació d'arxius grans (>1GB). \textbf{(Prioritat baixa)}
+  \item Optimització de la transferència de dades entre client i servidor. \textbf{(Prioritat mitjana)}
+  \item Escalabilitat horitzontal per suportar més càrrega. \textbf{(Prioritat alta)}
+\end{itemize}
+
+\subsection{2. Seguretat}
+\begin{itemize}
+  \item Autenticació segura amb tokens JWT. \textbf{(Prioritat alta)}
+  \item Protecció contra atacs comuns (XSS, CSRF, SQLi). \textbf{(Prioritat alta)}
+  \item Validació estricta de dades d'entrada i sortida. \textbf{(Prioritat mitjana)}
+  \item Control d'accés granular per arxiu i per usuari. \textbf{(Prioritat alta)}
+\end{itemize}
+
+\subsection{3. Usabilitat}
+\begin{itemize}
+  \item Interfície intuïtiva i adaptada a dispositius de diverses resolucions. \textbf{(Prioritat alta)}
+  \item Funcionalitat de \textit{drag and drop} per facilitar el moviment d'arxius. \textbf{(Prioritat alta)}
+  \item Missatges d'error clars i informatius. \textbf{(Prioritat alta)}
+  \item Ajuda contextual i indicacions visuals per guiar l'usuari. \textbf{(Prioritat mitjana)}
+\end{itemize}
+
+\subsection{4. Mantenibilitat}
+\begin{itemize}
+  \item Codi modular per facilitar el manteniment. \textbf{(Prioritat mitjana)}
+  \item Arquitectura extensible per afegir noves funcionalitats. \textbf{(Prioritat alta)}
+  \item Procés de desplegament fàcil i automatitzat. \textbf{(Prioritat mitjana)}
+  \item Diagnòstic i traçabilitat d'errors amb eines de logging. \textbf{(Prioritat mitjana)}
+\end{itemize}
+
+\subsection{5. Compatibilitat}
+\begin{itemize}
+  \item Suport per a tots els navegadors moderns (Chrome, Firefox, Edge). \textbf{(Prioritat alta)}
+  \item Funcionament en sistemes Windows i Linux. \textbf{(Prioritat alta)}
+  \item Adaptació a múltiples resolucions de pantalla. \textbf{(Prioritat alta)}
+  \item Gestió de formats de fitxer comuns (PDF, DOCX, PNG, etc.). \textbf{(Prioritat mitjana)}
+\end{itemize}
+
+\subsection{6. Escalabilitat}
+\begin{itemize}
+  \item Arquitectura distribuïda basada en microserveis. \textbf{(Prioritat alta)}
+  \item Gestió eficient de recursos i instàncies. \textbf{(Prioritat mitjana)}
+  \item Optimització de l'espai d'emmagatzematge. \textbf{(Prioritat baixa)}
+  \item Capacitat per a múltiples usuaris actius simultàniament. \textbf{(Prioritat mitjana)}
+\end{itemize}
+
+\subsection{7. Portabilitat}
+\begin{itemize}
+  \item Instal·lació senzilla a través de contenidors Docker. \textbf{(Prioritat alta)}
+  \item Configuració mitjançant fitxers \texttt{.env} editables. \textbf{(Prioritat alta)}
+  \item Dependències mínimes per executar cada component. \textbf{(Prioritat alta)}
+  \item Documentació clara per a desenvolupadors i usuaris. \textbf{(Prioritat alta)}
+  \item Guia d'instal·lació i configuració pas a pas. \textbf{(Prioritat alta)}
+\end{itemize}
+
+\section{Requisits de maquinari i programari}
+Per tal d'executar la solució completa –format microserveis basats en Spring Boot, PostgreSQL i RabbitMQ al costat del frontend React i del client d'escriptori Tauri–, cal comptar amb els recursos següents:
+\begin{itemize}
+  \item \textbf{Entorn servidor/desenvolupament (Docker Compose)}: un processador de com a mínim quatre nuclis (Intel Core i5 o equivalent), entre \textbf{8~GB i 16~GB} de memòria RAM i \textbf{5 GB} d'espai lliure per allotjar imatges i volums de dades. Es recomana un sistema operatiu de 64~bits amb Docker~20~+ i Docker Compose 2~+.
+  \item \textbf{Client d'escriptori (Tauri + Svelte)}: gràcies a la compilació a codi natiu, l'aplicació és molt lleugera i funciona sense problemes en equips de 64~bits amb \textbf{2~GB} de RAM i uns \textbf{200 MB} d'espai en disc. Compatible amb Windows, Linux i macOS.
+  \item \textbf{Generació de clients} (web i escriptori): cal disposar de \textbf{Node.js 18+}, \textbf{Rust 1.73+} i Docker per orquestrar els serveis durant el desenvolupament.
+\end{itemize}
+
+\section{Resum}
+Aquest capítol ha recollit tots els requisits –funcionals i no funcionals– que defineixen el producte. S'han desglossat les funcionalitats clau, els estàndards de seguretat i els objectius de rendiment, així com els requisits concrets de maquinari i programari obtinguts de l'anàlisi del codi dels directoris \texttt{@server} i \texttt{@ui-new}. Els capítols posteriors de disseny i implementació demostren com s'han abordat aquests requisits, tot i que algun objectiu, com la gestió d'arxius compartits al client d'escriptori, es va haver de descartar per la seva complexitat i falta de temps.

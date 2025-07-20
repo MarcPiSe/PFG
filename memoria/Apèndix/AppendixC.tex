@@ -1,0 +1,240 @@
+% !TEX root = ../main.tex
+
+\chapter{Diagrames de flux dels endpoints}
+\label{app:diagrames_flux}
+
+Aquest apèndix conté els diagrames de flux visuals que representen la interacció entre els diferents components del sistema per a cada endpoint de l'API. Cada diagrama il·lustra el camí que segueix una petició des que arriba al Gateway fins que es completa, incloent les comunicacions síncrones i asíncrones entre microserveis.
+
+\section{Gestió d'usuaris i autenticació}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/register_user.png}
+    \caption{Diagrama de flux per al registre d'un nou usuari (UC-01).}
+    \label{fig:flow_register_user}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/refresh_tokens.png}
+    \caption{Diagrama de flux per a refrescar els tokens de sessió.}
+    \label{fig:flow_refresh_tokens}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/flux/validar_tokens.png}
+    \caption{Diagrama de flux per a la validació interna de tokens.}
+    \label{fig:flow_validate_tokens}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/change_password_user.png}
+    \caption{Diagrama de flux per al canvi de contrasenya (UC-15).}
+    \label{fig:flow_change_password}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/get_user_info.png}
+    \caption{Diagrama de flux per obtenir el perfil d'un usuari.}
+    \label{fig:flow_get_user_info}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/update_user_info.png}
+    \caption{Diagrama de flux per a l'actualització del perfil d'usuari.}
+    \label{fig:flow_update_user_info}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/delete_user.png}
+    \caption{Diagrama de flux per a l'eliminació d'un compte d'usuari (UC-16, UC-07).}
+    \label{fig:flow_delete_user}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/delete_user_async.png}
+    \caption{Diagrama de flux de l'orquestració asíncrona per a l'eliminació d'usuaris.}
+    \label{fig:flow_delete_user_async}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/get_users_list.png}
+    \caption{Diagrama de flux per obtenir la llista de tots els usuaris (Admin).}
+    \label{fig:flow_get_users_list}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/get_other_user_info.png}
+    \caption{Diagrama de flux per obtenir el perfil d'un usuari concret (Admin).}
+    \label{fig:flow_get_other_user_info}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/update_other_user_info.png}
+    \caption{Diagrama de flux per a modificar el perfil d'un usuari (Admin).}
+    \label{fig:flow_update_other_user_info}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/search_user.png}
+    \caption{Diagrama de flux per a la cerca d'usuaris.}
+    \label{fig:flow_search_user}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/check_email.png}
+    \caption{Diagrama de flux per a comprovar la disponibilitat d'un email.}
+    \label{fig:flow_check_email}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/check_username.png}
+    \caption{Diagrama de flux per a comprovar la disponibilitat d'un nom d'usuari.}
+    \label{fig:flow_check_username}
+\end{figure}
+
+\section{Gestió d'arxius}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/get_root.png}
+    \caption{Diagrama de flux per a \texttt{GET /files/root}.}
+    \label{fig:flow_get_root}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/get_files_full.png}
+    \caption{Diagrama de flux per a \texttt{GET /files/\{folderId\}/full}.}
+    \label{fig:flow_get_files_full}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/get_files.png}
+    \caption{Diagrama de flux per a \texttt{GET /files/\{elementId\}}. }
+    \label{fig:flow_get_files}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/download_files.png}
+    \caption{Diagrama de flux per a la descàrrega d'arxius (UC-10).}
+    \label{fig:flow_download_files}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/post_files.png}
+    \caption{Diagrama de flux per a la pujada d'arxius (UC-08).}
+    \label{fig:flow_post_files}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/rename_files.png}
+    \caption{Diagrama de flux per a la modificació (renombrar) d'un element (UC-09A).}
+    \label{fig:flow_rename_files}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/move_files.png}
+    \caption{Diagrama de flux per a moure un element (UC-09B).}
+    \label{fig:flow_move_files}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/copy_files.png}
+    \caption{Diagrama de flux per a la còpia d'elements (UC-09C).}
+    \label{fig:flow_copy_files}
+\end{figure}
+
+\section{Compartició d'arxius}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/get_share_info.png}
+    \caption{Diagrama de flux per obtenir la informació de compartició d'un element.}
+    \label{fig:flow_get_share_info}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/share_files.png}
+    \caption{Diagrama de flux per a compartir un arxiu (UC-13).}
+    \label{fig:flow_share_files}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/modify_share_access.png}
+    \caption{Diagrama de flux per a modificar els permisos d'una compartició.}
+    \label{fig:flow_modify_share_access}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/revoke_share.png}
+    \caption{Diagrama de flux per a revocar l'accés a un element compartit (UC-13A/B).}
+    \label{fig:flow_revoke_share}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/get_shared_root.png}
+    \caption{Diagrama de flux per obtenir la carpeta virtual 'Compartit amb mi'.}
+    \label{fig:flow_get_shared_root}
+\end{figure}
+
+\section{Paperera}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/move_to_trash.png}
+    \caption{Diagrama de flux per a moure un element a la paperera (UC-11).}
+    \label{fig:flow_move_to_trash}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/get_trash_root.png}
+    \caption{Diagrama de flux per a obtenir el contingut de la paperera.}
+    \label{fig:flow_get_trash_root}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/restore_deleted_files.png}
+    \caption{Diagrama de flux per a restaurar un element de la paperera (UC-17).}
+    \label{fig:flow_restore_deleted_files}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/permanent_delete_files.png}
+    \caption{Diagrama de flux per a l'eliminació permanent d'un element (UC-12).}
+    \label{fig:flow_permanent_delete_files}
+\end{figure}
+
+\section{Sincronització}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/connect_websocket.png}
+    \caption{Diagrama de flux per a la connexió WebSocket (UC-14).}
+    \label{fig:flow_connect_websocket}
+\end{figure} 

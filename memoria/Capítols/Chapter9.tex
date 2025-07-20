@@ -1,0 +1,2405 @@
+\chapter{Implementació i proves}
+
+\section{Visió general de la implementació}
+
+Aquest capítol descriu com els conceptes teòrics, els requisits i les decisions de disseny exposades en capítols anteriors s'han materialitzat en una solució de programari funcional i robusta. L'objectiu aquí no és detallar cada línia de codi, sinó oferir una visió panoràmica de l'arquitectura final, les tecnologies emprades i els patrons de comunicació que garanteixen la cohesió del sistema. La implementació que presento és el resultat directe de l'estudi de viabilitat (Capítol 2), la metodologia de treball (Capítol 3) i, especialment, de les decisions tècniques justificades al Capítol 7, tot plegat per satisfer els requisits funcionals i no funcionals definits al Capítol 6.
+
+L'arquitectura del sistema es fonamenta en un model de microserveis, una decisió presa per garantir la modularitat, l'escalabilitat i la mantenibilitat a llarg termini, tal com es va raonar al Capítol 7. El backend està format per un conjunt de serveis independents, cadascun amb una responsabilitat única, que es despleguen en contenidors Docker i s'orquestren mitjançant un fitxer `compose.yml`. Aquesta estratègia compleix el requisit de portabilitat (RNF-7) i facilita enormement la posada en marxa de l'entorn. Els serveis principals són:
+
+\begin{itemize}
+    \item \textbf{UserAuthentication i UserManagement:} S'encarreguen del registre, l'autenticació (mitjançant JWT) i la gestió de les dades dels usuaris.
+    \item \textbf{FileManagement:} Constitueix el nucli de la gestió d'arxius, gestionant la pujada, la descàrrega, la creació de carpetes i l'estructura de directoris.
+    \item \textbf{TrashService:} Implementa la funcionalitat de la paperera de reciclatge, permetent l'eliminació temporal i la restauració d'arxius.
+    \item \textbf{FileSharing:} Gestiona la lògica per compartir arxius entre usuaris, incloent-hi el control de permisos.
+    \item \textbf{SyncService:} Orquestra la sincronització en temps real entre clients mitjançant WebSockets.
+\end{itemize}
+
+Aquests serveis es recolzen en components d'infraestructura com \textbf{Spring Cloud Gateway}, que actua com a única porta d'entrada per a totes les peticions externes, centralitzant la seguretat i l'enrutament, i \textbf{Eureka}, que proporciona el descobriment de serveis per a una comunicació interna resilient. Al front, tenim un \textbf{client web} desenvolupat amb React i un \textbf{client d'escriptori} natiu construït amb Tauri i Svelte, ambdós dissenyats per oferir una experiència d'usuari moderna i eficient.
+
+La comunicació entre aquests components segueix dos patrons principals, una decisió clau explicada al Capítol 7. Per a les operacions que requereixen una resposta immediata per part de l'usuari (com iniciar sessió o pujar un arxiu), s'utilitza una comunicació síncrona mitjançant \textbf{peticions HTTP}. Aquestes peticions flueixen des del client, a través del Gateway, fins al microservei corresponent. En canvi, per a processos que poden executar-se en segon pla sense bloquejar l'usuari (com la neteja de dades en cascada després d'eliminar un compte), he implementat un sistema de \textbf{missatgeria asíncrona amb RabbitMQ}. Aquest enfocament millora la resiliència i l'experiència d'usuari, ja que garanteix que les tasques es completin de manera fiable fins i tot si un servei pateix una fallada temporal. Finalment, la sincronització en temps real es duu a terme a través d'una connexió \textbf{WebSocket} persistent, que permet al servidor notificar canvis a tots els clients connectats de manera instantània.
+
+Els fluxos complets de cada funcionalitat, que demostren la interacció entre tots aquests components per satisfer els requisits del sistema, es troben detallats a l'\hyperref[AppendixA]{Apèndix A} (\texttt{@AppendixA.tex}, casos d'ús UC-01 a UC-22).
+
+En lloc de presentar fragments de codi aïllats, considero més il·lustratiu referir-se a la taula de versions i dependències principals que ja vaig detallar a la Taula 5.1 del Capítol 5. Aquesta taula proporciona una fotografia precisa de la pila tecnològica final del projecte, on destaquen \textbf{Java 17} amb \textbf{Spring Boot 3} per al backend, \textbf{React 18} per al client web i \textbf{Tauri 1.5} amb \textbf{Rust} per al client d'escriptori. Aquestes eleccions són el resultat de l'anàlisi i les decisions preses al llarg de tot el desenvolupament.
+
+En resum, la implementació del projecte tradueix una arquitectura distribuïda a un sistema tangible. El flux global es basa en una combinació estratègica de comunicació HTTP per a la interacció directa i missatgeria asíncrona per a la resiliència i el desacoblament, demostrant com l'aplicació pràctica de patrons de disseny moderns permet construir solucions complexes, escalables i robustes. 
+
+\section{Entorn de desenvolupament i desplegament}
+
+Per garantir la coherència i la reproduïbilitat del sistema, un dels requisits clau del projecte (RNF-4, RNF-7), vaig prestar una atenció especial a la definició de l'entorn de desenvolupament i al procés de desplegament. La decisió fonamental va ser estructurar tot el projecte en un \textbf{monorepo}, una elecció estratègica per simplificar la gestió de dependències i assegurar que totes les peces del sistema (backend, frontend, client d'escriptori i documentació) evolucionessin de manera sincronitzada. Aquesta centralització facilita la traçabilitat dels canvis i redueix la complexitat inherent a la gestió de múltiples repositoris.
+
+El cor de l'entorn de desenvolupament local és el fitxer \texttt{docker-compose.yml}, que actua com a orquestrador de tota l'arquitectura. A través d'aquest, s'inicien tant els microserveis del servidor com el client web, permetent aixecar l'ecosistema complet amb una única comanda: \texttt{docker compose up}. Com es va justificar al Capítol 7, l'ús de Docker i Docker Compose va ser una decisió presa per la seva simplicitat i per l'experiència prèvia. Aquest fitxer no només defineix cada servei, sinó també les seves relacions, les xarxes, els volums persistents i la configuració essencial.
+
+\begin{lstlisting}[language=bash, caption={Fragment del fitxer `compose.yml` definint un servei}]
+  file-manager:
+    build: ./FileManagement
+    container_name: filemanagement
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+    depends_on:
+      eureka:
+        condition: service_healthy
+    volumes:
+      - ./storage_data:/app/files
+\end{lstlisting}
+
+Com es pot observar en aquest fragment, cada servei es construeix a partir del seu propi directori (p. ex., \texttt{./FileManagement}), se li assigna un perfil de Spring específic per a Docker (\texttt{SPRING\_PROFILES\_ACTIVE=docker}) i s'estableixen dependències explícites. En aquest cas, el servei \texttt{file-manager} no s'iniciarà fins que Eureka estigui saludable (\texttt{service\_healthy}), garantint un ordre d'arrencada correcte i evitant errors en cascada. A més, es munta un volum local (\texttt{./storage\_data}) per persistir els arxius pujats pels usuaris, una configuració crítica per al desenvolupament i les proves.
+
+Per simplificar la posada en marxa a usuaris que no tinguin coneixements tècnics avançats, es va desenvolupar un script d'instal·lació (\texttt{setup.sh}), tal com es va mencionar al Capítol 5. Aquest permet una instal·lació ràpida i automatitzada de tots els passos necessaris: comprova les dependències del sistema (com Docker i Java), construeix les imatges de tots els contenidors i finalment invoca \texttt{docker compose up} per llançar la plataforma. Això redueix el procés a l'execució d'un sol fitxer, complint l'objectiu de fer el sistema accessible.
+
+La configuració dels serveis es gestiona principalment a través de \textbf{variables d'entorn} i els fitxers de propietats de Spring Boot, que inclouen perfils per a diferents entorns (com \texttt{dev} per a desenvolupament local i \texttt{docker} per a l'execució dins de contenidors). Les variables d'entorn crítiques, com les credencials de la base de dades o les claus per a la signatura de tokens JWT, es defineixen directament al \texttt{compose.yml} o en fitxers \texttt{.env} per evitar exposar informació sensible al codi font, una pràctica de seguretat fonamental.
+
+\section{Implementació del backend}
+
+A continuació, s'analitza la implementació de cada bloc funcional del backend, posant èmfasi en com els microserveis materialitzen els requisits del sistema i les decisions d'arquitectura preses.
+
+\subsection{Gateway i filtre de JWT}
+
+El microservei \texttt{Gateway}, basat en Spring Cloud Gateway, és la porta d'entrada única per a totes les peticions externes, una peça clau en l'arquitectura de microserveis que vaig escollir, tal com vaig justificar al Capítol 7. La seva funció no es limita a ser un simple proxy; actua com un vigilant que centralitza la seguretat i organitza el trànsit cap als diferents serveis interns. Totes les rutes de l'aplicació estan definides de manera declarativa en una classe de configuració, \texttt{GatewayConfig.java}, mitjançant un bean de \texttt{RouteLocator}.
+
+\begin{lstlisting}[language=Java, caption={Exemples de definició de rutes a `GatewayConfig`}]
+.route("user_login_post", r -> r.path("/users/auth/login")
+        .and().method(HttpMethod.POST, HttpMethod.OPTIONS)
+        .uri("lb://USERAUTHENTICATION"))
+
+.route("files_root_get", r -> r.path("/files/root")
+        .and().method(HttpMethod.GET, HttpMethod.OPTIONS)
+        .filters(f -> f.filter(jwtAuthenticationFilter))
+        .uri("lb://FileManagement"))
+        
+.route("admin_users_get", r -> r.path("/admin/users")
+        .and().method(HttpMethod.GET, HttpMethod.OPTIONS)
+        .filters(f -> f.filter(jwtAuthenticationFilter))
+        .uri("lb://UserManagement"))
+\end{lstlisting}
+
+Aquest enfocament permet una gestió centralitzada i clara de l'enrutament. Per exemple:
+\begin{itemize}
+    \item La ruta \texttt{user\_login\_post} (\textbf{UC-02}) és pública; les peticions a \texttt{/users/auth/login} es redirigeixen directament al servei \texttt{USERAUTHENTICATION} sense cap filtre de seguretat.
+    \item La ruta \texttt{files\_root\_get}, en canvi, aplica el filtre \texttt{jwtAuthenticationFilter} abans de redirigir la petició al servei \texttt{FileManagement}. Això assegura que només els usuaris autenticats puguin accedir als seus arxius.
+    \item La ruta \texttt{admin\_users\_get} (\textbf{UC-05}) també passa pel filtre, que, com veurem, conté lògica específica per validar rols administratius.
+\end{itemize}
+
+El component més crític del Gateway és el filtre global \texttt{JwtAuthenticationFilter}. Aquest filtre intercepta cada petició (excepte les públiques) i orquestra la validació del token JWT. La seva implementació gestiona dos mètodes d'extracció del token: per a les peticions HTTP convencionals, l'extreu de la capçalera \texttt{Authorization}; per a la connexió WebSocket desde el client web, l'obté d'un paràmetre a la URL (\texttt{?token=...}). Aquesta dualitat és necessària a causa d'una limitació de l'API de WebSockets dels navegadors, que no permet afegir capçaleres personalitzades a la petició inicial d'establiment de la connexió, tal com es pot comprovar al fitxer \texttt{websocket.ts}.
+
+\begin{lstlisting}[language=Java, caption={Implementació del filtre `JwtAuthenticationFilter`}]
+@Component
+public class JwtAuthenticationFilter implements GatewayFilter {
+    // ... injecció de WebClient i altres dependències ...
+
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        ServerHttpRequest request = exchange.getRequest();
+        HttpHeaders headers = request.getHeaders();
+        String authHeader = "Bearer ";
+        String p = request.getPath().toString();
+
+        if(p.toString().startsWith("/websocket/web")) {
+            authHeader = "Bearer ".concat(request.getQueryParams().getFirst("token"));
+        } else {
+
+            if (!headers.containsKey(HttpHeaders.AUTHORIZATION)) {
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
+            }
+
+            authHeader = headers.getFirst(HttpHeaders.AUTHORIZATION);
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
+            }
+        }
+
+        String accessToken = authHeader.substring(7); 
+
+        return webClient.method(HttpMethod.POST)
+                .uri("/users/auth/check")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken) 
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, response -> {
+                    logger.error("Invalid token response from auth service");
+                    return Mono.error(new InvalidTokenException());
+                })
+                .bodyToMono(UserAuthResponse.class)
+                .flatMap(userAuthResponse -> {
+                    if (userAuthResponse.getId() == null || userAuthResponse.getRole() == null) {
+                        logger.warn("User {} with role {} attempted to access admin route {}", userAuthResponse.getUsername(), userAuthResponse.getRole(), request.getPath());
+                        exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+                        return exchange.getResponse().setComplete();
+                    }
+                    if (request.getPath().toString().startsWith("/admin/") && !("ADMIN".equals(userAuthResponse.getRole()) || "SUPER_ADMIN".equals(userAuthResponse.getRole()))) {
+                        logger.warn("User {} with role {} attempted to access admin route {}", userAuthResponse.getUsername(), userAuthResponse.getRole(), request.getPath());
+                        exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+                        return exchange.getResponse().setComplete();
+                    }
+
+                    ServerHttpRequest modifiedRequest = request.mutate()
+                            .header(X_USER_ID_HEADER, userAuthResponse.getId().toString())
+                            .header(X_CONNECTION_ID_HEADER, userAuthResponse.getConnectionId())
+                            .build();
+                    return chain.filter(exchange.mutate().request(modifiedRequest).build());
+                })
+                .onErrorResume(e -> {
+                    logger.error("Error during authentication process", e);
+                    exchange.getResponse().setStatusCode(
+                            e instanceof InvalidTokenException ? HttpStatus.UNAUTHORIZED : HttpStatus.INTERNAL_SERVER_ERROR
+                    );
+                    return exchange.getResponse().setComplete();
+                });
+    }
+}
+\end{lstlisting}
+
+Com es pot observar al codi, el filtre primer comprova si la ruta de la petició correspon a l'endpoint de WebSocket (\texttt{/websocket/web}). Si és així, extreu el token del paràmetre de la consulta. En cas contrari, busca el token a la capçalera \texttt{Authorization}, com és habitual en peticions REST.
+
+Un cop extret el token, i en lloc de contenir la lògica de validació directament, el filtre delega aquesta responsabilitat al servei \texttt{UserAuthentication} fent una crida interna al seu endpoint \texttt{/users/auth/check}. Aquesta decisió de disseny manté el Gateway lleuger i respecta el principi de responsabilitat única. Si la resposta del servei d'autenticació és positiva, el filtre realitza dues accions clau:
+\begin{enumerate}
+    \item \textbf{Validació de rols:} Comprova si la ruta requereix permisos d'administrador i si l'usuari els té. Si no, retorna un error \textbf{403 Forbidden}, indicant que l'usuari està autenticat però no autoritzat per a aquest recurs. Això és diferent d'un \textbf{401 Unauthorized}, que es retorna quan el token és invàlid o no es proporciona.
+    \item \textbf{Enriquiment de la petició:} Afegeix les capçaleres \texttt{X-User-Id} i \texttt{X-Connection-Id} a la petició abans de passar-la al microservei de destinació. Això permet que els serveis interns confiïn en aquestes capçaleres per identificar l'usuari sense necessitat de validar el token de nou, optimitzant el rendiment.
+\end{enumerate}
+
+Tot i que aquest disseny és robust, soc conscient que la crida interna des del Gateway a \texttt{UserAuthentication} a cada petició protegida introdueix una latència addicional i podria convertir-se en un coll d'ampolla sota càrregues elevades. Una possible millora futura, discutida al Capítol 12, seria implementar un mecanisme de memòria cache al Gateway per als resultats de validació de tokens o compartir la clau pública de signatura perquè el Gateway pugui validar els tokens localment sense la crida de xarxa.
+
+\subsection{Gestió d'usuaris i autenticació}
+
+La gestió d'usuaris és una responsabilitat compartida entre dos microserveis diferents, \texttt{UserAuthentication} i \texttt{UserManagement}, que junts formen un patró d'agregació. Aquesta separació de responsabilitats és una decisió de disseny clau: \texttt{UserAuthentication} actua com l'arrel de l'agregat, gestionant exclusivament les dades crítiques per a la seguretat —com les credencials i els tokens—, mentre que \texttt{UserManagement} s'encarrega de les dades del perfil de l'usuari, com l'email o altres detalls personals.
+
+L'arquitectura interna de tots dos serveis segueix el patró per capes de Spring Boot, amb una clara separació de responsabilitats:
+\begin{itemize}
+    \item \textbf{Capa de controladors (\texttt{controllers}):} Exposa els endpoints REST que el client o altres serveis consumeixen.
+    \item \textbf{Capa de serveis (\texttt{services}):} Conté la lògica de negoci principal, com la validació de dades i l'orquestració de processos.
+    \item \textbf{Capa de repositoris (\texttt{repositories}):} Abstrau l'accés a la base de dades mitjançant Spring Data JPA.
+\end{itemize}
+
+Aquesta estructura modular facilita el manteniment i l'escalabilitat de cada microservei de manera independent. 
+
+Una decisió clau en la implementació de tots els controladors del sistema va ser la gestió d'errors. Per evitar embolcallar tota la lògica de negoci en blocs \texttt{try-catch} i per centralitzar la conversió d'errors interns a respostes HTTP, vaig optar per utilitzar les excepcions de Spring. La majoria d'errors controlats dins de la capa de serveis llancen una \texttt{ResponseStatusException}, una excepció especial que conté directament el codi d'estat HTTP i el missatge que es vol retornar. Als controladors, vaig implementar \textit{handlers} d'excepcions amb l'anotació \texttt{@ExceptionHandler}. Aquests mètodes capturen automàticament les excepcions llançades, incloent-hi les \texttt{ResponseStatusException}, i les mapegen a una resposta \texttt{ResponseEntity} adequada. A més, es va incloure un handler genèric per a \texttt{RuntimeException} que captura qualsevol error no controlat, registra la traça per a depuració i retorna un error \texttt{500 Internal Server Error} genèric. A continuació es mostra un exemple d'aquests gestors al \texttt{UserController}:
+
+\begin{lstlisting}[language=Java, caption={Exemple de gestors d'excepcions al UserController.}, label={lst:exception_handlers_user_controller}]
+@ExceptionHandler(RuntimeException.class)
+public ResponseEntity<String> handleRuntimeException(RuntimeException e) {
+    e.printStackTrace();
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                         .body(e.getMessage());
+}
+
+@ExceptionHandler(ResponseStatusException.class)
+public ResponseEntity<String> statusException(ResponseStatusException e) {
+    e.printStackTrace();
+    return ResponseEntity.status(e.getStatusCode()).body(e.getMessage());
+}
+\end{lstlisting}
+
+Aquest enfocament no només simplifica el codi, sinó que també assegura un maneig d'errors consistent i segur a tota l'API.
+
+\subsubsection{UC-01: Registrar-se}
+
+El cas d'ús de registre és un procés orquestrat per \texttt{UserAuthentication} que involucra múltiples serveis per assegurar la creació consistent de totes les dades d'un nou usuari.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/flux/register_user.png}
+    \caption{Flux de dades per al registre d'un nou usuari (UC-01).}
+\end{figure}
+
+El flux comença quan el client envia una petició de registre a l'endpoint \texttt{/users/auth/register} del Gateway. Aquest, després de validar la ruta, la reenvia a \texttt{UserAuthentication}. El controlador \texttt{AuthenticationController} rep la petició i delega la lògica al servei \texttt{UserService}.
+
+\begin{lstlisting}[language=Java, caption={Endpoint de registre a `AuthenticationController`}]
+@PostMapping("/register")
+public ResponseEntity<?> registerUser(@RequestBody @Valid UserRegisterRequest userInfoRequest, HttpServletResponse response) {
+    // ... validació de l'usuari i email ...
+    try {
+        userService.register(userInfoRequest);
+        UserEntity user = userService.loadUserByUsername(userInfoRequest.getUsername());
+        return addTokenHeaders(user);
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+}
+\end{lstlisting}
+
+Dins del mètode \texttt{userService.register}, el servei realitza les següents accions en una única transacció:
+\begin{enumerate}
+    \item \textbf{Validació:} Comprova que el nom d'usuari i l'email no estiguin ja en ús. Per a l'email, fa una crida a \texttt{UserManagement} a través d'un client Feign.
+    \item \textbf{Creació a UserAuthentication:} Si les dades són vàlides, es xifra la contrasenya amb BCrypt i es desa la nova \texttt{UserEntity} (amb nom d'usuari, contrasenya i rol \texttt{USER}) a la seva pròpia base de dades.
+    \item \textbf{Creació a UserManagement:} A continuació, crida a \texttt{UserManagement} per crear el perfil d'usuari associat, enviant l'ID, el nom i l'email. Això demostra el patró d'agregació, on \texttt{UserAuthentication} gestiona el cicle de vida de l'usuari complet.
+    \item \textbf{Creació de la carpeta arrel:} Fa una crida a \texttt{FileManagement} perquè creï la carpeta arrel per al nou usuari.
+    \item \textbf{Creació del snapshot inicial:} Finalment, publica un missatge a RabbitMQ que serà consumit per \texttt{SyncService} per generar la representació inicial de l'arbre de fitxers (\textit{snapshot}) de l'usuari.
+\end{enumerate}
+Si totes les operacions tenen èxit, el controlador genera els tokens JWT i els retorna al client, iniciant la seva sessió automàticament. L'ús d'excepcions permet un maneig d'errors clar, retornant un codi \texttt{400 Bad Request} si alguna validació falla.
+
+\subsubsection{UC-02: Iniciar sessió}
+
+L'inici de sessió és un procés gestionat íntegrament per \texttt{UserAuthentication}, ja que és l'únic servei que té accés a les credencials dels usuaris.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/login.png}
+    \caption{Flux de dades per a l'inici de sessió (UC-02).}
+\end{figure}
+
+El client envia el nom d'usuari i la contrasenya, i el \texttt{AuthenticationController} utilitza el mètode \texttt{checkCredentials} del \texttt{UserService} per validar-los.
+
+\begin{lstlisting}[language=Java, caption={Endpoint de login a `AuthenticationController`}]
+@PostMapping("/login")
+public ResponseEntity<?> loginUser(@RequestBody UserInfoRequest userInfoRequest) {
+    if(!userService.checkCredentials(userInfoRequest.getUsername(), userInfoRequest.getPassword())) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+    }
+    UserEntity user = userService.loadUserByUsername(userInfoRequest.getUsername());
+    return addTokenHeaders(user);
+}
+\end{lstlisting}
+
+Si les credencials són correctes, es generen dos tipus de tokens JWT a través de la utilitat \texttt{JwtTokenUtil}: un token d'accés de curta durada (p. ex., 1 hora) i un de refresc de llarga durada (p. ex., 7 dies). La gestió dels secrets, com la clau privada RSA per signar els tokens, es fa carregant-la des d'un fitxer al \textit{classpath} a l'inici de l'aplicació, evitant la seva exposició al codi font.
+
+\begin{lstlisting}[language=Java, caption={Generació de tokens a la classe `JwtTokenUtil`}]
+public String generateToken(UserEntity user, boolean isRefreshToken) {
+    long validity = isRefreshToken ? REFRESH_TOKEN_VALIDITY : ACCESS_TOKEN_VALIDITY;
+    Map<String, Object> claims = new HashMap<>();
+    claims.put("role", user.getRole());
+    claims.put("connection-id", UUID.randomUUID().toString());
+    claims.put("password-changed-at", String.valueOf(user.getLastPasswordChange().getTime()));
+    return createToken(claims, user.getUsername(), validity);
+}
+\end{lstlisting}
+
+Els tokens contenen \textit{claims} addicionals com el rol de l'usuari, que serà utilitzat pel Gateway per a l'autorització, i la marca de temps de l'últim canvi de contrasenya, clau per a la invalidació automàtica de sessions.
+
+\subsubsection{UC-15: Canviar contrasenya}
+
+Aquest cas d'ús permet a un usuari modificar la seva pròpia contrasenya i és gestionat per \texttt{UserAuthentication}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/change_password_user.png}
+    \caption{Flux de dades per al canvi de contrasenya (UC-15).}
+\end{figure}
+
+El procés comença amb una petició \texttt{PUT} a \texttt{/users/password}. El servei \texttt{UserService} primer verifica que la contrasenya antiga proporcionada per l'usuari coincideix amb la que hi ha a la base de dades. Si és així, valida que la nova contrasenya compleixi els requisits de seguretat, la xifra i l'actualitza.
+
+\begin{lstlisting}[language=Java, caption={Implementació del canvi de contrasenya a UserService}]
+    public void changePassword(UUID userId, String oldPassword, String newPassword) {
+        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Current password is incorrect");
+        }
+        
+        validatePassword(newPassword, true);
+        
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setLastPasswordChange(new Date());
+        userRepository.save(user);
+}
+\end{lstlisting}
+
+L'aspecte més important d'aquesta operació és que, just després de canviar la contrasenya, el servei actualitza la marca de temps \texttt{lastPasswordChange} a l'entitat de l'usuari. Com s'ha vist al codi de \texttt{JwtTokenUtil}, aquesta marca de temps s'inclou com un \textit{claim} a cada token JWT. El Gateway, en validar un token, comprova que aquest valor coincideixi amb el que hi ha a la base de dades. Per tant, un canvi de contrasenya invalida automàticament tots els tokens emesos anteriorment, tancant totes les sessions actives en altres dispositius i millorant significativament la seguretat del compte.
+
+\subsubsection{UC-16 i UC-07: Eliminació de comptes d'usuari}
+
+L'eliminació d'un compte és un procés crític que ha de garantir la purga completa de les dades de l'usuari a tot el sistema. A diferència d'altres operacions d'autenticació, el Gateway centralitza totes les peticions d'eliminació, tant les iniciades per un usuari sobre el seu propi compte com les realitzades per un administrador, i les redirigeix directament al microservei \texttt{UserManagement}. Aquest actua com a orquestrador de tot el procés.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/delete_user.png}
+    \caption{Flux de dades centralitzat per a l'eliminació d'un compte (UC-16).}
+\end{figure}
+
+La configuració de rutes al \texttt{GatewayConfig.java} és explícita en aquest sentit, demostrant que \texttt{UserManagement} és el punt d'entrada únic per a aquesta operació.
+
+\begin{lstlisting}[language=Java, caption={Rutes d'eliminació a `GatewayConfig.java`}]
+// A GatewayConfig.java
+
+// Ruta per a l'auto-eliminació de l'usuari
+.route("user_delete", r -> r.path("/users")
+        .and().method(HttpMethod.DELETE, HttpMethod.OPTIONS)
+        .filters(f -> f.filter(jwtAuthenticationFilter))
+        .uri("lb://UserManagement"))
+
+// Ruta per a l'eliminació per part d'un administrador
+.route("admin_user_delete", r -> r.path("/admin/users/{username}")
+        .and().method(HttpMethod.DELETE, HttpMethod.OPTIONS)
+        .filters(f -> f.filter(jwtAuthenticationFilter))
+        .uri("lb://UserManagement"))
+\end{lstlisting}
+
+Un cop la petició arriba a \texttt{UserManagement}, el controlador corresponent (per a usuaris o administradors) invoca el servei \texttt{UserDeletionService}. Aquest servei executa un procés híbrid en dues fases per garantir tant la rapidesa en el bloqueig com la resiliència en la neteja:
+
+\begin{enumerate}
+    \item \textbf{Eliminació síncrona i immediata:} El servei fa crides directes via Feign per esborrar les dades més crítiques. Primer, contacta amb \texttt{UserAuthentication} per eliminar les credencials, la qual cosa impedeix que l'usuari pugui tornar a iniciar sessió a l'instant. Seguidament, elimina el perfil de l'usuari de la seva pròpia base de dades.
+    
+    \item \textbf{Inici de la purga asíncrona:} Un cop bloquejat l'accés, el servei publica missatges a diferents cues de RabbitMQ. Aquests missatges són consumits per la resta de serveis per a una neteja completa.
+\end{enumerate}
+
+\begin{lstlisting}[language=Java, caption={Inici del procés d'eliminació a `UserDeletionService`}]
+public void startUserDeletion(UUID userId) {
+    // ... comprovació per evitar duplicats ...
+
+    // 1. Eliminació síncrona de les dades d'autenticació i perfil
+    userAuthClient.deleteAccountInternal(userId);
+    userService.deleteUserLocal(userId);
+
+    // Es crea un registre per seguir el procés i marcar-lo com a iniciat
+    UserDeletionProcess process = new UserDeletionProcess();
+    // ... s'estableixen els estats inicials ...
+    process.setUserId(userId);
+    process.setFileManagementStatus("PENDING");
+    // ...
+    process.setUserManagementStatus("DONE");
+    // ...
+    userDeletionProcessRepository.save(process);
+
+    // 2. S'envien missatges per a la purga asíncrona a tots els serveis implicats
+    sender.sendDeleteCommandToFileManagement(userId);
+    sender.sendDeleteCommandToFileSharing(userId);
+    sender.sendDeleteCommandToFileAccessControl(userId);
+    sender.sendDeleteCommandToTrash(userId);
+    sender.sendDeleteCommandToSyncService(userId);
+}
+\end{lstlisting}
+
+Aquest disseny desacoblat garanteix la resiliència del procés. Si un servei està temporalment inoperatiu, la comanda d'eliminació roman a la cua de RabbitMQ i es processarà quan el servei es recuperi. Tanmateix, el sistema no es limita a enviar les comandes, sinó que implementa un mecanisme d'orquestració i confirmació per garantir que la purga es completi de manera efectiva a tots els serveis.
+
+Per aconseguir aquesta orquestració, el servei \texttt{UserDeletionService} utilitza l'entitat \texttt{UserDeletionProcess}. Aquesta entitat actua com una màquina d'estats que registra el progrés de l'eliminació per a cada microservei implicat. Quan s'inicia el procés, es crea un registre a la base de dades amb l'identificador de l'usuari i l'estat de cada servei marcat com a \texttt{PENDING}.
+
+Cada microservei, un cop ha finalitzat la seva tasca de neteja, té la responsabilitat de notificar-ho a \texttt{UserManagement}. Ho fa publicant un missatge de confirmació a una cua específica de RabbitMQ. Un consumidor a \texttt{UserManagement} escolta aquesta cua i, en rebre una confirmació, actualitza l'estat del servei corresponent a \texttt{DONE} a l'entitat \texttt{UserDeletionProcess}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{@delete_user_async.png}
+\end{figure}
+
+Finalment, per garantir la màxima robustesa i evitar que processos d'eliminació quedin bloquejats indefinidament, s'ha implementat un sistema de tasques programades a través de la classe \texttt{ScheduledTasks}. Aquesta classe executa dues funcions de manera periòdica (diàriament a la 1:00 AM):
+\begin{itemize}
+    \item \textbf{Reintent de tasques pendents (\texttt{retryPendingDeletions}):} La tasca cerca a la base de dades tots els \texttt{UserDeletionProcess} que encara tinguin algun servei en estat \texttt{PENDING}. Per a cadascun, torna a enviar la comanda d'eliminació a través de RabbitMQ al servei corresponent. Això assegura que, fins i tot en cas de fallada, el sistema intentarà activament completar la purga. Donat el eliminar un element que no existeix a la base de dades no perjudica la coherencia de les dades encara que el servei acabi fent multiples crides per eliminar les mateixes dades no es fa cap tipus de gestio de la casoistica i nomes s'espera la resposta.
+    \item \textbf{Neteja de processos finalitzats (\texttt{cleanupCompletedDeletions}):} Un cop tots els serveis han confirmat l'eliminació i tots els estats d'un \texttt{UserDeletionProcess} són \texttt{DONE}, el registre de seguiment ja no és necessari. Aquesta tasca s'encarrega de localitzar aquests registres completats i eliminar-los de la base de dades, mantenint el sistema net.
+\end{itemize}
+Aquest cicle de comanda, confirmació i reintent programat converteix \texttt{UserManagement} en un orquestrador resilient que assegura la integritat i la neteja completa de les dades de l'usuari a tot l'ecosistema de microserveis.
+
+
+\subsection{Gestió d'arxius (FileManagement)}
+
+El microservei \texttt{FileManagement} és el cor operacional del sistema, responsable de tota la lògica relacionada amb la creació, modificació, consulta i eliminació d'arxius i carpetes. La seva implementació materialitza un gran nombre de casos d'ús, com \textbf{UC-08} (Crear/Pujar), \textbf{UC-09} (Renomenar, Moure, Copiar) i \textbf{UC-10} (Descarregar), els detalls dels quals es poden consultar a l'\hyperref[app:casos_us]{Apèndix A}.
+
+L'arquitectura d'aquest servei, igual que la dels altres, segueix el patró per capes de Spring Boot. El controlador principal, \texttt{ElementController}, exposa una API REST que permet manipular elements de manera genèrica, sense distingir inicialment entre fitxers i carpetes. Aquest delega la lògica de negoci a un servei de façana, \texttt{ElementService}, que actua com a punt d'entrada polimòrfic. La persistència de les dades es gestiona a través de tres entitats JPA clau: \texttt{FileEntity}, \texttt{FolderEntity} i \texttt{ElementEntity}. El disseny és el següent:
+\begin{itemize}
+    \item \texttt{FileEntity} i \texttt{FolderEntity} emmagatzemen totes les metadades específiques de cada tipus d'element (nom, mida, dates, etc.).
+    \item Cada \texttt{FileEntity} i \texttt{FolderEntity} té una relació \texttt{@OneToOne} amb una \texttt{ElementEntity}.
+    \item L'\texttt{ElementEntity} té un propòsit doble i fonamental: en primer lloc, proporciona un identificador únic i comú (\texttt{elementId}) que serveix per referenciar qualsevol element des d'altres parts del sistema; en segon lloc, conté un camp booleà, \texttt{isFolder}, que actua com a discriminador de tipus.
+\end{itemize}
+Aquesta estructura permet a \texttt{ElementService} funcionar de manera eficient: davant d'una petició sobre un \texttt{elementId}, primer consulta l'\texttt{ElementEntity} per determinar si es tracta d'un fitxer o una carpeta, i tot seguit delega l'operació al servei especialitzat corresponent: \texttt{FileService} o \texttt{FolderService}. Aquest disseny desacobla l'API externa del model de dades intern, permetent un tractament uniforme dels elements a la vegada que es manté una lògica de negoci ben separada i especialitzada.
+
+\subsubsection{UC-08: Crear i pujar elements}
+
+Aquest cas d'ús gestiona tant la creació de noves carpetes com la pujada de fitxers. Una decisió clau d'implementació va ser exposar dos endpoints diferents per a la pujada de fitxers, cadascun optimitzat per a un tipus de client diferent. Tots dos mètodes estan preparats no només per crear un fitxer nou des de zero, sinó també per actualitzar el contingut d'un fitxer existent si es proporciona el seu identificador. Tot i que la intenció a futur és unificar-los en una única solució basada en \textit{streams} per a màxima eficiència, actualment això respon a les necessitats específiques del client web i del client d'escriptori.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{@upload_files_both.png}
+\end{figure}
+
+El flux, com es veu a la figura \ref{fig:uc08-flow}, sempre comença amb una validació de permisos d'escriptura contra el microservei \texttt{FileAccessControl} abans de procedir.
+
+\paragraph{Endpoint Multipart per al client web.} El client web utilitza l'endpoint estàndard i polivalent \texttt{POST /files}, que accepta dades en format \texttt{multipart/form-data}. Aquest mètode és el responsable de gestionar tota la creació d'elements des del web: no només la pujada de fitxers, sinó també la creació de noves carpetes. Com es pot veure al codi, una comprovació sobre la petició (\texttt{request.isFolder()}) bifurca el flux per invocar \texttt{FolderService} o \texttt{FileService} segons correspongui. Això permet enviar en una única petició tant les metadades (en un objecte JSON) com, si s'escau, el contingut del fitxer. L'endpoint també contempla la lògica per actualitzar un fitxer existent si rep un \texttt{elementId}, encara que aquesta funcionalitat actualment no és utilitzada pel client web.
+
+\begin{lstlisting}[language=Java, caption={Endpoint per a la creació d'elements amb `MultipartFile` a `ElementController`}]
+@PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+public ResponseEntity<?> createElement(
+        @RequestHeader("X-User-Id") UUID userId,
+        @RequestHeader("X-Connection-Id") UUID connectionId,
+        @RequestPart("request") CreateFileRequest request,
+        @RequestPart(value = "file", required = false) MultipartFile file
+) throws IOException {
+    // ... lògica per determinar si es crea una carpeta o un fitxer ...
+    fileAccessService.checkAccessElement(userId, request.getParentFolderId(), true, AccessType.WRITE);
+
+    if (request.isFolder()) {
+        FolderEntity folder = folderService.createFolder(/* ... */);
+        String selectedConnection = folder.getUserId().equals(userId) ? connectionId.toString() : null;
+        commandService.sendCreate(folder.getElementId(), selectedConnection, folder.getUserId().toString(), folder.getParent(), "", folder.getName(), "folder");  
+        return ResponseEntity.status(HttpStatus.CREATED)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(folderMapper.map(folder));
+    } else {
+        FileEntity fileEntity;
+        if (request.getElementId() != null) {
+            fileEntity = fileService.getFolderByElementId(UUID.fromString(request.getElementId()), false);
+            fileEntity.setName(request.getName());
+            fileEntity.setMimeType(request.getContentType());
+            fileEntity.setSize(request.getSize());
+        } else {
+            fileEntity = fileService.createFile(
+                    request.getName(),
+                    request.getContentType(),
+                    request.getSize(),
+                    request.getParentFolderId(),
+                    userId,
+                    connectionId.toString()
+            );
+        }
+        
+        try {
+            // Pas clau: guardar el fitxer físic
+            fileUtil.storeFile(fileEntity.getId(), file);
+        } catch (IOException e) {
+            // Rollback si falla l'escriptura a disc
+            fileService.deleteFile(fileEntity.getElementId());
+        }
+        // ... notificació a RabbitMQ ...
+        return new ResponseEntity<>(fileMapper.map(fileEntity), HttpStatus.CREATED);
+    }
+}
+\end{lstlisting}
+
+En aquest flux, el controlador delega la creació de l'element al servei corresponent. Si es tracta d'un fitxer, primer invoca \texttt{FileService} per crear les metadades de \texttt{FileEntity} a la base de dades i, un cop l'entitat existeix i té un ID intern, crida a \texttt{fileUtil.storeFile} per desar el contingut físic del \texttt{MultipartFile} al sistema d'arxius. Si es tracta d'una carpeta, simplement invoca el \texttt{FolderService} per crear l'entitat corresponent a la base de dades, sense cap interacció amb el sistema d'arxius.
+
+\paragraph{Endpoint de Streaming per al client d'escriptori.} L'endpoint \texttt{POST /upload} es va afegir específicament per permetre al client d'escriptori pujar fitxers mitjançant streaming. Aquest endpoint rep el contingut del fitxer directament com un \texttt{application/octet-stream} en el cos de la petició, mentre que les metadades es transmeten a través de les capçaleres HTTP. El Gateway reescriu la ruta a \texttt{/files/upload} internament. Actualment, només el client de Tauri fa ús d'aquest mecanisme de streaming i de la capacitat d'actualització de continguts, ja que no s'ha disposat de temps per adaptar el client web per a utilitzar streams en lloc de \texttt{MultipartFile}.
+
+\begin{lstlisting}[language=Java, caption={Endpoint per a la pujada de fitxers amb `InputStream` a `ElementController`}]
+@PostMapping(value = "/upload", consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+public ResponseEntity<?> uploadFileStream(
+        @RequestHeader("X-User-Id") UUID userId,
+        @RequestHeader("X-Connection-Id") UUID connectionId,
+        @RequestHeader("parentId") String parentId,
+        @RequestHeader("fileName") String fileName,
+        // ... altres capçaleres ...
+        HttpServletRequest request
+) throws IOException {
+    String dfn = URLDecoder.decode(fileName, StandardCharsets.UTF_8.name());
+        FolderEntity parent = folderService.getFolderByElementId(UUID.fromString(parentId), false);
+
+        if (!fileAccessService.checkAccessFolder(parent, userId, AccessType.WRITE)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User does not have access to this resource");
+        }
+
+        FileEntity fileEntity;
+
+        if (elementId != null && !elementId.isEmpty()) {
+            FileEntity existingFile = fileService.getFileByElementId(UUID.fromString(elementId), false);
+            if (existingFile != null) {
+                if (!fileAccessService.checkAccessFile(userId, existingFile.getElementId(), AccessType.WRITE)) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User does not have access to this resource");
+                }
+                fileEntity = fileService.updateFileStream(existingFile, dfn, request.getContentType(), request.getContentLengthLong(), request.getInputStream());
+                String selectedConnection = fileEntity.getUserId().equals(userId) ? connectionId.toString() : null;
+                commandService.sendUpdate(fileEntity.getElementId(), selectedConnection, fileEntity.getUserId().toString(), fileEntity.getParent(), fileService.getHash(fileEntity.getId()), fileEntity.getName(), "file");
+                return new ResponseEntity<>(fileMapper.map(fileEntity), HttpStatus.OK);
+            }
+        }
+
+        fileEntity = fileService.createFileFromStream(
+                dfn,
+                request.getContentType(),
+                request.getContentLengthLong(),
+                parent.getElementId(),
+                userId,
+                request.getInputStream(),
+                connectionId.toString()
+        );
+        String selectedConnection = fileEntity.getUserId().equals(userId) ? connectionId.toString() : null;
+        commandService.sendCreate(fileEntity.getElementId(), selectedConnection, fileEntity.getUserId().toString(), fileEntity.getParent(), fileService.getHash(fileEntity.getId()), fileEntity.getName(), "file");
+
+        return new ResponseEntity<>(fileMapper.map(fileEntity), HttpStatus.CREATED);
+}
+\end{lstlisting}
+
+Aquí, la lògica està més encapsulada. La crida a \texttt{fileService.createFileFromStream} orquestra internament tant la creació de les metadades com l'emmagatzematge del fitxer llegint directament de l'\texttt{InputStream}, la qual cosa evita haver de carregar el fitxer sencer a la memòria del servidor.
+
+\paragraph{Estratègia d'emmagatzematge i ofuscació.} Una peça clau del disseny és com la utilitat \texttt{FileUtil} gestiona l'emmagatzematge físic. Quan es crida \texttt{storeFile}, ja sigui amb un \texttt{MultipartFile} o un \texttt{InputStream}, aquesta no utilitza el nom original del fitxer per desar-lo al disc. En lloc d'això, utilitza l'identificador intern i únic de l'entitat, \texttt{FileEntity.id} (un UUID), com a nom del fitxer.
+
+Aquesta tècnica proporciona dos avantatges importants:
+\begin{enumerate}
+    \item \textbf{Prevenció de col·lisions:} Com que cada ID és un UUID, es garanteix que no hi haurà dos fitxers amb el mateix nom al sistema d'arxius, eliminant la necessitat de gestionar noms duplicats.
+    \item \textbf{Ofuscació i seguretat:} Es desacobla completament el nom que veu l'usuari (\texttt{FileEntity.name}) i l'identificador extern (\texttt{elementId}) del nom real del fitxer al servidor. Això afegeix una capa de seguretat, ja que algú amb accés al sistema d'arxius no podria deduir fàcilment a quin element o usuari pertany cada fitxer només mirant el seu nom.
+\end{enumerate}
+
+Finalment, un cop l'element s'ha creat i guardat correctament, el servei corresponent publica un missatge a RabbitMQ per notificar a \texttt{SyncService} que s'ha produït un canvi, el qual s'encarregarà de propagar-lo als clients connectats.
+
+\subsubsection{UC-09: Modificar elements}
+
+La modificació d'elements inclou operacions com renomenar, moure i copiar, cadascuna amb les seves particularitats tècniques.
+
+\paragraph{UC-09A: Renomenar un element} El canvi de nom, igual que el moviment d'elements, es gestiona a través de l'endpoint genèric de modificació de metadades \texttt{PUT /files/\{elementId\}}. Per a una operació de canvi de nom, el cos de la petició (\texttt{UpdateFileRequest}) conté el nou nom que se li vol assignar a l'element.
+
+Un aspecte fonamental del flux és la seguretat. Com mostra el diagrama, abans de realitzar qualsevol canvi, el controlador invoca el microservei \texttt{FileAccessControl} per verificar que l'usuari té permisos d'escriptura (\texttt{WRITE}) sobre l'element que intenta modificar. Si la validació falla, l'operació es denega immediatament amb un estat \texttt{403 Forbidden}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Figures/rename_files.png}
+\end{figure}
+
+El mètode del controlador que gestiona aquesta lògica centralitza les modificacions de metadades.
+
+\begin{lstlisting}[language=Java, caption={Endpoint per a l'actualització de metadades a `ElementController`}]
+@PutMapping("/{elementId}")
+public ResponseEntity<?> updateElement(@RequestHeader("X-User-Id") UUID userId, @RequestHeader("X-Connection-Id") UUID connectionId, @RequestBody UpdateFileRequest request, @PathVariable("elementId") UUID elementId) {
+    elementService.elementNotDeleted(elementId);
+    
+    boolean isFolder = elementService.isFolder(elementId);
+    // Pas de seguretat clau: validació de permisos
+    fileAccessService.checkAccessElement(userId, elementId, isFolder, AccessType.WRITE);
+    
+    // La petició pot incloure un nou nom i/o un nou pare
+    if(request.getParentId() != null) {
+        fileAccessService.checkAccessElement(userId, UUID.fromString(request.getParentId()), true, AccessType.WRITE);
+    }
+
+    if (isFolder) {
+        FolderEntity folder = folderService.updateFolderMetadata(elementId, request.getName(), UUID.fromString(request.getParentId()));
+        commandService.sendUpdate(folder.getElementId(), connectionId.toString(), userId.toString(), folder.getParent(), "", folder.getName(), "folder");
+    } else {
+        FileEntity file = fileService.updateFile(elementId, request.getName(), UUID.fromString(request.getParentId()));
+        commandService.sendUpdate(file.getElementId(), connectionId.toString(), userId.toString(), file.getParent(), fileService.getHash(file.getId()), file.getName(), "file");
+    }
+    return ResponseEntity.accepted().build();
+}
+\end{lstlisting}
+
+Un cop validats els permisos, el controlador determina si l'element és un fitxer o una carpeta i delega l'operació al servei corresponent (\texttt{FileService} o \texttt{FolderService}). Aquests serveis contenen la lògica de negoci, com la validació per evitar noms duplicats a la mateixa carpeta, i executen l'actualització a la base de dades dins d'una transacció per garantir l'atomicitat. Finalment, es publica un missatge a RabbitMQ per notificar el canvi a \texttt{SyncService} i, conseqüentment, a la resta de clients connectats.
+
+\paragraph{UC-09B: Moure un element} La funcionalitat de moure un element actualment es pot invocar a través de dos endpoints diferents, una situació resultant de l'evolució del disseny. Inicialment, existia un endpoint dedicat, \texttt{PUT /files/\{elementId\}/move/\{folderId\}}. No obstant això, per optimitzar el funcionament del client d'escriptori, que necessitava poder canviar el nom i la ubicació en una única operació, donat que es possible utilitzar linies de comanda que facin tots dos canvis a la vegada, es va ampliar la funcionalitat de l'endpoint genèric \texttt{PUT /files/\{elementId\}} (explicat a la secció anterior) perquè també acceptés un canvi del \texttt{parentId}. Aquesta segona aproximació va resultar ser més lògica i robusta, ja que centralitza tota la lògica d'actualització de metadades en un sol punt.
+
+Com a treball futur, es contempla modificar el client web perquè utilitzi l'endpoint d'actualització genèric i poder així eliminar l'endpoint de moviment específic. A causa de la falta de temps, aquest canvi no s'ha realitzat, i el client web continua utilitzant l'endpoint original \texttt{move}. A continuació, es detalla el flux d'aquest mètode.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{@move_files.png}
+\end{figure}
+
+El flux comença amb una doble validació de permisos a través de \texttt{FileAccessControl}: el sistema verifica que l'usuari té permís d'escriptura tant sobre l'element que vol moure com sobre la carpeta de destinació. Aquesta doble comprovació és crucial per a la seguretat.
+
+\begin{lstlisting}[language=Java, caption={Endpoint específic per moure un element a `ElementController`}]
+@PutMapping("/{elementId}/move/{folderId}")
+public ResponseEntity<?> moveFolder(@RequestHeader("X-User-Id") UUID userId, @RequestHeader("X-Connection-Id") UUID connectionId, @PathVariable("elementId") UUID elementId, @PathVariable("folderId") UUID folderId) {
+    elementService.elementNotDeleted(elementId);
+    
+    boolean isFolder = elementService.isFolder(elementId);
+    // 1. Validar permís sobre l'element a moure
+    fileAccessService.checkAccessElement(userId, elementId, isFolder, AccessType.WRITE);
+    // 2. Validar permís sobre la carpeta de destí
+    fileAccessService.checkAccessElement(userId, folderId, true, AccessType.WRITE);
+
+    if (isFolder) {
+        // 3. Delegació al servei amb la lògica de negoci
+        folderService.moveFile(elementId, folderId, userId);
+        commandService.sendUpdate(elementId, connectionId.toString(), userId.toString(), folderService.getFolderByElementId(folderId, false), "", "", "folder");
+    } else {
+        fileService.moveFile(elementId, folderId, userId);
+        FileEntity fileEntity = fileService.getFile(elementId);
+        commandService.sendUpdate(elementId, connectionId.toString(), userId.toString(), folderService.getFolderByElementId(folderId, false), fileService.getHash(fileEntity.getId()), fileEntity.getName(), "file");
+    }
+
+    return ResponseEntity.accepted().build();
+}
+\end{lstlisting}
+
+Un cop superada la validació de permisos, el controlador delega l'operació al servei corresponent. En el cas de les carpetes, un dels reptes tècnics més importants és evitar les dependències circulars (no es pot moure una carpeta dins d'ella mateixa o una de les seves subcarpetes). Per solucionar-ho, abans de confirmar l'operació a la base de dades, el \texttt{FolderService} executa un mètode de validació específic.
+
+\begin{lstlisting}[language=Java, caption={Validació de dependències circulars a `FolderService`}]
+private void validateNoCircularDependency(FolderEntity elementToMove, FolderEntity targetParent) {
+    if (elementToMove.getId().equals(targetParent.getId())) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot move a folder to itself");
+    }
+    
+    // S'obté una llista plana amb els IDs de totes les subcarpetes descendents
+    List<UUID> allDescendantIds = getAllDescendantFolderIds(elementToMove);
+
+    // Si la carpeta de destí és una de les descendents, es llança una excepció
+    if (allDescendantIds.contains(targetParent.getElementId())) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot move a folder to one of its own subfolders");
+    }
+}
+
+// Mètode auxiliar per obtenir tots els descendents de manera recursiva
+private List<UUID> getAllDescendantFolderIds(FolderEntity folder) {
+    List<UUID> descendantIds = new ArrayList<>();
+    getAllDescendantFolderIdsRecursive(folder, descendantIds);
+    return descendantIds;
+}
+
+private void getAllDescendantFolderIdsRecursive(FolderEntity folder, List<UUID> accumulator) {
+    for (FolderEntity child : folder.getChildren()) {
+        accumulator.add(child.getElementId());
+        getAllDescendantFolderIdsRecursive(child, accumulator);
+    }
+}
+\end{lstlisting}
+
+Primer, fa una comprovació ràpida per veure si l'origen i el destí són la mateixa carpeta. Si no ho són, el mètode \texttt{getAllDescendantFolderIds} recorre de manera recursiva tota l'estructura de subcarpetes de l'element que es vol moure (\texttt{elementToMove}) i en construeix una llista plana amb tots els seus identificadors. Finalment, comprova si l'identificador de la carpeta de destí (\texttt{targetParent}) es troba en aquesta llista. Si és així, significa que s'està intentant fer un moviment il·legal, i es llança una excepció que atura la transacció, evitant que el sistema d'arxius entri en un estat inconsistent. Un cop superada aquesta validació, es procedeix amb el canvi i es notifica a través de RabbitMQ.
+
+\paragraph{UC-09C: Copiar un element} La còpia d'un element és una operació de creació que implica duplicar un element existent i tot el seu contingut, si n'hi ha, en una nova ubicació. El procés es gestiona a través de l'endpoint \texttt{POST /files/\{elementId\}/copy/\{newParentId\}}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{@copy_files.png}
+    \caption{Flux de dades per copiar un element, destacat la doble validació de permisos i la naturalesa recursiva del procés.}
+\end{figure}
+
+La seguretat en aquesta operació és clau i requereix una doble validació de permisos: l'usuari ha de tenir permís de \textbf{lectura (\texttt{READ})} sobre l'element original que vol copiar, i permís d'\textbf{escriptura (\texttt{WRITE})} a la carpeta de destinació.
+
+\begin{lstlisting}[language=Java, caption={Endpoint per a la còpia d'elements a `ElementController`}]
+@PostMapping("/{elementId}/copy/{newParentId}")
+public ResponseEntity<?> copyElement(
+        @RequestHeader("X-User-Id") UUID userId,
+        @RequestHeader("X-Connection-Id") UUID connectionId,
+        @PathVariable("elementId") UUID elementId,
+        @PathVariable("newParentId") UUID newParentId
+) throws IOException {
+    elementService.elementNotDeleted(elementId);
+    
+    boolean isFolder = elementService.isFolder(elementId);
+    // Doble validació de permisos
+    fileAccessService.checkAccessElement(userId, elementId, isFolder, AccessType.READ);
+    fileAccessService.checkAccessElement(userId, newParentId, true, AccessType.WRITE);
+
+    if (isFolder) {
+        folderService.copyFolder(elementId, newParentId, userId, connectionId.toString());
+        // ... notificació a RabbitMQ ...
+    } else {
+        fileService.copyFile(elementId, newParentId, userId);
+        // ... notificació a RabbitMQ ...
+    }
+
+    return ResponseEntity.accepted().build();
+}
+\end{lstlisting}
+
+La implementació varia significativament depenent de si l'element és un fitxer o una carpeta:
+\begin{itemize}
+    \item \textbf{Còpia d'un fitxer:} El \texttt{FileService} crea una nova entitat \texttt{FileEntity} amb un nou \texttt{elementId} i la desa a la base de dades. A continuació, invoca el mètode \texttt{fileUtil.copyFile(originalId, newId)}, que realitza la còpia física dels bytes del fitxer original al nou fitxer en el sistema d'emmagatzematge, utilitzant els identificadors interns.
+    
+    \item \textbf{Còpia d'una carpeta:} Aquesta és l'operació més complexa, ja que requereix una còpia en profunditat (\textit{deep copy}). El \texttt{FolderService} implementa un mètode recursiu que realitza les següents accions:
+    \begin{enumerate}
+        \item Crea una nova carpeta (la còpia) a la ubicació de destí.
+        \item Itèra sobre tots els fitxers de la carpeta original. Per a cada un, crida el mètode \texttt{fileService.copyFile} per duplicar-lo dins de la nova carpeta.
+        \item Itèra sobre totes les subcarpetes de la carpeta original. Per a cada una, es crida a si mateix de manera recursiva, passant la subcarpeta original i la nova carpeta com a nou pare.
+    \end{enumerate}
+\end{itemize}
+
+\begin{lstlisting}[language=Java, caption={Lògica de còpia recursiva a `FolderService`}]
+private FolderEntity copyFolderRecursive(FolderEntity folderToCopy, FolderEntity newParent, UUID userId, String connectionId) throws IOException {
+    // 1. Es crea la nova carpeta en el destí
+    FolderEntity newFolder = createFolder(folderToCopy.getName(), newParent, userId, false, connectionId);
+
+    // 2. Es copien tots els fitxers de dins
+    for (FileEntity fileToCopy : folderToCopy.getFiles()) {
+        if(fileToCopy.getDeleted()) continue;
+        fileService.copyFile(fileToCopy.getElementId(), newFolder.getElementId(), userId);
+    }
+
+    // 3. Es crida recursivament per a cada subcarpeta
+    for (FolderEntity subFolderToCopy : folderToCopy.getChildren()) {
+        if(subFolderToCopy.getDeleted()) continue;
+        copyFolderRecursive(subFolderToCopy, newFolder, userId, connectionId);
+    }
+
+    return newFolder;
+}
+\end{lstlisting}
+
+Aquest procés garanteix que tota l'estructura de directoris es dupliqui de manera íntegra. Igual que en les altres operacions, un cop finalitzada la còpia, s'envien els missatges corresponents a RabbitMQ per notificar la creació dels nous elements.
+
+\subsubsection{UC-10: Descarregar elements}
+
+La descàrrega d'elements es fa mitjançant l'endpoint \texttt{GET /files/\{elementId\}/download}. Aquest endpoint permet descarregar tant fitxers com carpetes (retornades com fitxers zip amb tot el contingut de la carpeta). La implementació utilitza streaming, de manera que les dades es llegeixen i s'envien al client directament des del disc, sense carregar tot el contingut a la memòria del servidor.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{@download_files.png}
+\end{figure}
+
+El procés de descàrrega segueix uns passos ben definits:
+\begin{enumerate}
+    \item \textbf{Validació de permisos:} Com sempre, el primer pas és una crida a \texttt{FileAccessControl} per assegurar que l'usuari té permisos de lectura (\texttt{READ}) sobre l'element que vol descarregar.
+    \item \textbf{Bifurcació de la lògica:} Es comprova si l'element és un fitxer o una carpeta per determinar com s'ha de gestionar la descàrrega.
+    \item \textbf{Construcció de la resposta:} El controlador construeix una resposta HTTP del tipus \texttt{ResponseEntity<Resource>}, establint les capçaleres necessàries (\texttt{Content-Type: application/octet-stream} i \texttt{Content-Disposition: attachment}) perquè el navegador iniciï una descàrrega.
+\end{enumerate}
+
+\begin{lstlisting}[language=Java, caption={Endpoint per a la descàrrega d'elements a `ElementController`}]
+@GetMapping(value = "/{elementId}/download", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+public ResponseEntity<?> serveFile(@RequestHeader("X-User-Id") UUID userId, @PathVariable("elementId") UUID elementId) {
+    Resource resource;
+    String filename;
+
+    boolean isFolder = elementService.isFolder(elementId);
+    fileAccessService.checkAccessElement(userId, elementId, isFolder, AccessType.READ);
+
+    if (isFolder) {
+        FolderEntity folder = folderService.getFolderByElementId(elementId, false);
+        resource = folderService.downloadFolder(elementId);
+        filename = folder.getName() + ".zip";
+    } else {
+        FileEntity fileEntity = fileService.getFile(elementId);
+        resource = fileUtil.loadAsResource(fileEntity.getId());
+        filename = fileEntity.getName();
+    }
+
+    // ... construcció de la resposta amb capçaleres ...
+
+    return response.body(resource);
+}
+\end{lstlisting}
+
+La gestió del recurs varia segons el tipus d'element:
+\begin{itemize}
+    \item \textbf{Si és un fitxer}, el controlador invoca \texttt{fileUtil.loadAsResource}, que obté un \texttt{InputStream} del fitxer emmagatzemat al disc (identificat pel seu ID intern) i l'embolcalla en un objecte \texttt{Resource} sense carregar-lo completament a la memòria.
+    \item \textbf{Si és una carpeta}, la tasca és més complexa. El \texttt{FolderService} s'encarrega de crear un fitxer ZIP "al vol". Recorre l'estructura de la carpeta, afegeix cada fitxer i subcarpeta a un \texttt{ZipOutputStream} que escriu directament al flux de sortida de la resposta HTTP. D'aquesta manera, es poden descarregar carpetes de mida considerable sense esgotar la memòria del servidor.
+\end{itemize}
+
+Aquesta implementació basada en \textit{streaming} és un exemple clar d'optimització, ja que proporciona una solució eficient i escalable que funciona de manera transparent per a qualsevol client capaç de processar una resposta HTTP estàndard.
+
+\subsection{Compartició (FileSharing)}
+
+El microservei \texttt{FileSharing} gestiona la lògica de compartir arxius i carpetes entre usuaris, una de les funcionalitats centrals del sistema. La seva implementació materialitza els casos d'ús \textbf{UC-13} (Compartir), \textbf{UC-13A} (Revocar accés) i \textbf{UC-13B} (Deixar de seguir un element compartit). Una de les fortaleses del disseny del sistema és com la funcionalitat de crear un element dins d'una carpeta compartida s'integra de manera natural en el flux de creació ja existent, gràcies a l'abstracció que proporciona el servei de control d'accés.
+
+Com s'ha vist a la secció anterior (UC-08), quan un usuari crea un fitxer o una carpeta, el servei corresponent a \texttt{FileManagement} comprova si l'ID de l'usuari que fa la petició és el mateix que el del propietari de la carpeta pare. Si no coincideixen, el sistema interpreta que l'acció es realitza dins d'una carpeta compartida. En aquest punt, a més de crear l'element, fa una crida interna a \texttt{FileSharing} per registrar la compartició i assignar els permisos corresponents: d'escriptura (\texttt{WRITE}) per al creador i d'administrador (\texttt{ADMIN}) per a l'amo original. Aquest comportament es pot observar al següent fragment de codi.
+
+\begin{lstlisting}[language=Java, caption={Gestió de permisos en crear un fitxer a `FileService`}]
+// ... dins del metode de creacio de fitxers ...
+if(userId.equals(folder.getUserId())) {
+    // Si l'usuari es el propietari de la carpeta, s'assigna ADMIN sobre el nou fitxer
+    fileAccessService.addFileAccess(fileEntity.getElementId(), userId, AccessType.ADMIN);
+} else {
+    // Si no es el propietari, es gestiona com un element en una carpeta compartida
+    UserDTO userDetails = userManagementClient.get(userId);
+    fileShareClient.shareFileInternal(userId, connectionId, new SharedRequest(file.getElementId(), folder.getElementId(), userDetails.getUsername(), AccessType.WRITE));
+    fileAccessService.addFileAccess(fileEntity.getElementId(), userId, AccessType.WRITE);
+    fileAccessService.addFileAccess(fileEntity.getElementId(), folder.getUserId(), AccessType.ADMIN);
+}
+\end{lstlisting}
+
+\subsubsection{UC-13: Compartir un element}
+
+El procés per compartir un element amb un altre usuari s'inicia a través de l'endpoint \texttt{POST /share}. El servei orquestra una sèrie de validacions i operacions per garantir la integritat i la seguretat.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{@share_files.png}
+\end{figure}
+
+La lògica, encapsulada a \texttt{FileSharingService}, segueix aquests passos:
+\begin{enumerate}
+    \item \textbf{Validació de permisos de l'emissor:} Es fa una crida a \texttt{FileAccessControl} per comprovar que l'usuari que inicia la compartició té permisos d'\texttt{ADMIN} sobre l'element. Això és una mesura de seguretat per asegurar que nomes el propietari del element el pot compartir.
+    \item \textbf{Obtenció de l'usuari receptor:} Es contacta amb \texttt{UserManagement} per obtenir l'ID de l'usuari amb qui es vol compartir, a partir del seu nom d'usuari (les ids dels usuaris no surten mai del sistema, tota funcio que es favi amb un usuari que no sigui el que crida i es pot identificar amb el JWT es fa em el nom d'usuari que també l'identifica.).
+    \item \textbf{Creació de la regla d'accés principal:} Es crida a \texttt{FileAccessControl} per crear la nova regla d'accés que atorga al receptor el permís especificat sobre l'element.
+    \item \textbf{Creació del registre de compartició:} Es crea i desa una entitat \texttt{SharedAccess}, que serveix per identificar quins elements són l'arrel d'una compartició per a un usuari determinat. A més, s'assigna un valor booleà (\texttt{root}) a aquest registre. Aquest indicador és clau: si un element es comparteix directament, es marca com a arrel (\texttt{root = true}). Aquesta distinció és fonamental perquè el client web pugui construir la vista "Compartit amb mi" de manera eficient, mostrant només els elements arrel al primer nivell. La navegació posterior dins d'aquests elements ja funciona de manera estàndard, sense necessitar un tractament especial.
+    
+\begin{lstlisting}[language=Java, caption={Lògica per determinar si una compartició és arrel a `FileSharingService`}]
+boolean isRootShared;
+if (parent != null) {
+    // Si l'element te un pare, es comprova si el pare ja estava compartit amb l'usuari
+    Optional<SharedAccess> parentSharedAccess = sharedAccessRepository.findByElementIdAndUserId(parent.getId(), userId);
+    isRootShared = !parentSharedAccess.isPresent();
+} else {
+    // Si no te pare, es una comparticio arrel per definicio
+    isRootShared = true;
+}
+sharedAccess.setRoot(isRootShared);
+\end{lstlisting}
+    
+    \item \textbf{Propagació de permisos (recursiva):} Si l'element compartit és una carpeta, el servei obté la llista de tots els seus descendents i crida a \texttt{FileAccessControl} per crear les regles d'accés corresponents per a cada un, assegurant que el permís es propagui a tota l'estructura.
+    \item \textbf{Notificació asíncrona:} Finalment, es publica un missatge a RabbitMQ per notificar a \texttt{SyncService} que l'element ha estat compartit.
+\end{enumerate}
+
+\begin{lstlisting}[language=Java, caption={Lògica principal per compartir un element a `FileSharingService`}]
+@Transactional
+public void shareElement(UUID userId, ShareRequest shareRequest, String connectionId) {
+    // 1. Validació de permisos
+    AccessResponse requesterAccess = fileAccessControlClient.getFileAccess(
+        shareRequest.getElementId(), userId);
+    if (requesterAccess == null || requesterAccess.getAccessType() != AccessType.ADMIN.ordinal()) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin permission required...");
+    }
+
+    // 2. Obtenció del receptor
+    UUID shareWithUserId = userManagementClient.getUserId(shareRequest.getUser());
+
+    // 3. Creació de la regla d'accés
+    AccessRequest accessRequest = new AccessRequest(shareWithUserId, shareRequest.getElementId(), shareRequest.getAccessType().ordinal());
+    fileAccessControlClient.createAccess(accessRequest);
+    
+    // 4. Creació del registre SharedAccess
+    SharedAccess sharedAccess = new SharedAccess();
+    // ... s'estableixen les dades ...
+    
+    // 5. Propagació recursiva de permisos
+    try {
+        List<UUID> ids = fileManagementClient.getChildren(shareRequest.getElementId());
+        updateChildren(ids, shareWithUserId, shareRequest.getAccessType().ordinal());
+    } catch (FeignException.NotFound e) {}
+
+    sharedAccessRepository.save(sharedAccess);
+    
+    // 6. Notificació
+    commandService.sendShared(shareRequest.getElementId(), connectionId, userId.toString(), parentIdString);
+}
+\end{lstlisting}
+
+Perquè el client web pugui mostrar aquesta llista d'elements compartits, s'ha creat un endpoint específic, \texttt{GET /share/root}. Aquest retorna una carpeta virtual que conté tots els elements marcats com a \texttt{root = true} per a l'usuari que fa la petició. El flux de crides per a aquesta operació, demostra la naturalesa col·laborativa de l'arquitectura: el servei \texttt{FileSharing} actua com a orquestrador, consultant la seva pròpia base de dades i comunicant-se amb \texttt{FileManagement}, \texttt{UserManagement} i \texttt{FileAccessControl} per enriquir la informació abans de retornar-la, tal com es mostra al següent diagrama.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{@get_shared_root.png}
+    \caption{Diagrama de flux per obtenir la carpeta virtual d'elements compartits.}
+\end{figure}
+
+El controlador exposa l'endpoint, que simplement delega la feina al servei.
+
+Aquest endpoint ara mateix no esta optimitzat per a dades complexes, ja que es fa una crida a \texttt{FileManagement} per a cada element compartit, i després es fa una crida a \texttt{UserManagement} per a cada element compartit. Aixo es pot millorar en futur, per exemple, fent una sola crida a \texttt{FileManagement} per a tots els elements compartits i després iterar sobre els resultats per enriquir-los amb les dades del propietari real de cada element (obtingudes de \texttt{UserManagement}) i el nivell de permís de l'usuari actual (des de \texttt{FileAccessControl}) i/o amb la implementació d'una cache de dades a nivell de servei.
+
+\begin{lstlisting}[language=Java, caption={Endpoint per obtenir la carpeta arrel compartida a `FileSharingController`}]
+@GetMapping("/share/root")
+public ResponseEntity<FolderInfo> getSharedWithUserRoot(@RequestHeader("X-User-Id") UUID userId) {
+    FolderInfo sharedRoot = fileSharingService.getSharedWithUserRoot(userId);
+    return ResponseEntity.ok(sharedRoot);
+}
+\end{lstlisting}
+
+La implementació al servei recull tots els registres de \texttt{SharedAccess} d'un usuari, filtra aquells que són arrel, i fa una crida a \texttt{FileManagement} per obtenir l'estructura de dades completa d'aquests elements. Posteriorment, itera sobre els resultats per enriquir-los amb les dades del propietari real de cada element (obtingudes de \texttt{UserManagement}) i el nivell de permís de l'usuari actual (des de \texttt{FileAccessControl}). El resultat és un objecte \texttt{FolderInfo} que representa la carpeta "Compartit amb mi", llest per ser renderitzat pel client.
+
+\begin{lstlisting}[language=Java, caption={Construcció de la carpeta virtual d'elements compartits a `FileSharingService`}]
+public FolderInfo getSharedWithUserRoot(UUID userId) {
+    // 1. Obtenir tots els registres d'elements compartits directament amb l'usuari
+    List<SharedAccess> sharedAccesses = sharedAccessRepository.findByUserIdAndRoot(userId, true);
+    
+    // ... (s'obtenen també els no arrel per a informació addicional posterior) ...
+
+    // 2. Extreure els IDs dels elements arrel
+    List<UUID> elementIds = sharedAccesses.stream()
+        .map(SharedAccess::getElementId)
+        .collect(Collectors.toList());
+
+    if (elementIds.isEmpty()) {
+        return new FolderInfo(); // Retorna una carpeta buida si no hi ha res compartit
+    }
+
+    try {
+        // 3. Demanar a FileManagement l'estructura d'aquests elements
+        FolderInfo folderInfo = fileManagementClient.getFolderStructure(elementIds, false);
+        // 4. Afegir detalls de la compartició (propietari, etc.)
+        setDetails(folderInfo, map);
+        return folderInfo;
+    } catch (Exception e) {
+        e.printStackTrace();
+        return new FolderInfo();
+    }
+}
+\end{lstlisting}
+
+\subsubsection{UC-13A i UC-13B: Revocar accés i Deixar de compartir}
+
+Tant la revocació de l'accés per part del propietari (\textbf{UC-13A}) com l'acció de deixar de seguir un element per part del receptor (\textbf{UC-13B}) es gestionen a través del mateix endpoint: \texttt{DELETE /share/\{elementId\}/user/\{username\}}. La implementació distingeix entre els dos casos d'ús basant-se en qui fa la petició.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{@revoke_share.png}
+    \caption{Diagrama de flux per revocar o deixar de seguir un element (UC-13A/B).}
+\end{figure}
+
+El servei \texttt{revokeShare} implementa la següent lògica:
+\begin{enumerate}
+    \item \textbf{Obtenció de l'usuari a eliminar:} Es crida a \texttt{UserManagement} per obtenir l'ID de l'usuari que perdrà l'accés.
+    \item \textbf{Validació de permisos (condicional):} Si l'usuari que fa la petició (\texttt{requesterId}) no és el mateix que l'usuari a qui se li revoca l'accés (\texttt{userIdToRemove}), el sistema assumeix que és el propietari qui fa l'acció (UC-13A) i, per tant, valida que tingui permisos d'\texttt{ADMIN}. Si els dos IDs són iguals, significa que l'usuari està abandonant la compartició (UC-13B), i aquesta comprovació de permisos s'omet.
+    \item \textbf{Eliminació de regles i registres:} Es crida a \texttt{FileAccessControl} per eliminar la regla d'accés principal i, de manera recursiva, les de tots els fills. Paral·lelament, s'elimina el registre corresponent de la taula \texttt{SharedAccess}.
+    \item \textbf{Notificació asíncrona:} Finalment, es publica un missatge a RabbitMQ per notificar a \texttt{SyncService} que la compartició s'ha eliminat.
+\end{enumerate}
+
+\begin{lstlisting}[language=Java, caption={Lògica per revocar un accés a `FileSharingService`}]
+@Transactional
+public void revokeShare(UUID requesterId, UUID elementId, String usernameToRemove, String connectionId) {
+    // 1. Obtenció de l'usuari
+    UUID userIdToRemove = userManagementClient.getUserId(usernameToRemove);
+
+    // 2. Validació condicional de permisos
+    if (!requesterId.equals(userIdToRemove)) {
+        AccessResponse requesterAccess = fileAccessControlClient.getFileAccess(elementId, requesterId);
+        if (requesterAccess == null || requesterAccess.getAccessType() != 3) { // 3 = ADMIN
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin permission required...");
+        }
+    }
+    
+    // 3. Eliminació de regles i registres
+    fileAccessControlClient.deleteAccess(elementId, userIdToRemove);
+    sharedAccessRepository.deleteByElementIdAndUserId(elementId, userIdToRemove);
+
+    try {
+        List<UUID> children = fileManagementClient.getChildren(elementId);
+        revokeChildrenAccess(children, userIdToRemove);
+    } catch (FeignException.NotFound e) {}
+
+    // 4. Notificació
+    commandService.sendUnshared(elementId, connectionId, requesterId.toString());
+}
+\end{lstlisting}
+
+Aquest disseny dual en un sol mètode és eficient i reutilitza la lògica per a dos casos d'ús que, tot i ser conceptualment diferents per a l'usuari, tècnicament són molt similars.
+
+\subsection{Papelera i eliminació asíncrona (TrashService)}
+
+El microservei \texttt{TrashService} implementa la funcionalitat de la paperera de reciclatge. La seva responsabilitat no es limita a gestionar un estat temporal per als fitxers eliminats, sinó que també orquestra el procés d'eliminació permanent de dades, una operació crítica per a la integritat del sistema. La seva implementació dona servei als casos d'ús \textbf{UC-11} (Enviar a la paperera), \textbf{UC-17} (Restaurar) i \textbf{UC-12} (Eliminar permanentment).
+
+\subsubsection{UC-11 i UC-17: Borrat lògic i restauració d'elements}
+
+Una decisió fonamental del disseny és que enviar un element a la paperera no n'implica l'eliminació física immediata. En lloc d'això, es realitza un \textbf{borrat lògic} (\textit{soft delete}). Aquest procés es gestiona a través de l'endpoint \texttt{DELETE /files/\{elementId\}}, que el Gateway redirigeix al \texttt{TrashService}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{@move_to_trash.png}
+\end{figure}
+
+Com mostra el diagrama, el servei primer valida els permisos i després orquestra una operació en dues parts:
+\begin{enumerate}
+    \item Fa una crida síncrona a \texttt{FileManagement} perquè marqui l'element i tots els seus descendents com a "eliminats". Aquests continuen existint a la base de dades i al disc, però amb un indicador que els oculta de les vistes normals.
+    \item Per a cada element mogut, crea un registre a la seva pròpia base de dades, l'entitat \texttt{TrashRecord}. Aquest registre emmagatzema qui l'ha eliminat, la data i, crucialment, una data de caducitat (30 dies per defecte), a més d'un flag per saber si era l'element arrel de l'operació.
+\end{enumerate}
+
+\begin{lstlisting}[language=Java, caption={Mètode per moure un element a la paperera a `TrashService`}]
+public void moveToTrash(UUID userId, UUID connectionId, UUID elementId) {
+    try {
+        AccessResponse accessResponse = fileAccessControlClient.getFileAccess(elementId, userId);
+        if (accessResponse.getAccessType() <= AccessType.ADMIN.ordinal()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User does not have WRITE access to the element.");
+        }
+    } catch (Exception e) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Permission check failed for the element");
+    }
+
+    SetDeletedRequest request = new SetDeletedRequest(true);
+    SetDeletedResponse response;
+    try {
+        response = fileManagementClient.setElementDeletedState(userId, connectionId, elementId, request);
+        if (response == null || response.getElementIds() == null || response.getElementIds().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to move element to trash");
+        }
+    } catch (Exception e) {
+        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error communicating with file management service");
+    }
+
+    List<UUID> affectedIds = response.getElementIds();
+    for (UUID affectedId : affectedIds) {
+        boolean isRoot = affectedId.equals(elementId);
+        updateOrCreateRecord(userId, affectedId, isRoot);
+    }
+}
+\end{lstlisting}
+
+La restauració d'un element (\textbf{UC-17}), invocada amb \texttt{PUT /trash/\{elementId\}/restore}, simplement reverteix aquest procés: es torna a cridar \texttt{FileManagement} per marcar els elements com a no eliminats (\texttt{deleted=false}) i s'esborren els registres corresponents de la taula \texttt{TrashRecord}.
+
+\subsubsection{UC-12: Eliminació permanent i orquestració asíncrona}
+
+L'eliminació permanent o \textbf{borrat físic} (\textit{hard delete}) és una operació molt més complexa i dissenyada per ser resilient i completament traçable. Pot ser iniciada per l'usuari des de la paperera o automàticament per una tasca programada quan un element caduca. En ambdós casos, el procés comença canviant l'estat del \texttt{TrashRecord} a \texttt{PENDING\_DELETION} i orquestra una sèrie de crides síncrones i asíncrones amb un sistema de confirmació per garantir que cap dada residual quedi al sistema.
+
+El flux complet es pot dividir en tres fases:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{@permanent_delete_files.png}
+\end{figure}
+
+\begin{enumerate}
+    \item \textbf{Fase 1: Eliminació síncrona del contingut.} El primer pas, i l'únic síncron, és una crida a \texttt{FileManagement} per eliminar de manera irreversible el fitxer del disc i les seves metadades principals. Un cop confirmat, \texttt{TrashService} actualitza el \texttt{TrashRecord} corresponent, canviant el seu estat a \texttt{PENDING\_DELETION} i marcant el flag \texttt{manager} a \texttt{true}, indicant que aquesta part del procés s'ha completat.
+\end{enumerate}
+
+\begin{lstlisting}[language=Java, caption={Inici de l'eliminació permanent a `TrashService`}]
+public void deletePermanently(UUID userId, UUID elementId) {
+    TrashRecord trashRecord = trashRecordRepository.findByElementId(elementId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Element not found..."));
+
+    if (!trashRecord.getUserId().equals(userId)) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User does not have permission...");
+    }
+    try {
+        // Crida síncrona per eliminar el fitxer físic
+        SetDeletedResponse response = fileManagementClient.deleteElementPermanently(elementId);
+        
+        // Canvi d'estat per iniciar la purga asíncrona
+        List<TrashRecord> trashRecords = trashRecordRepository.findByUserIdAndElementIdIn(userId, response.getElementIds());
+        trashRecords.forEach(record -> {
+            record.setStatus(RecordStatus.PENDING_DELETION);
+            record.setManager(true); // Marca la part de FileManagement com a feta
+            record.setAccess(false);
+            record.setSharing(false);
+        });
+        trashRecordRepository.saveAll(trashRecords);
+
+    } catch (Exception e) { /* ... */ }
+}
+\end{lstlisting}
+
+\begin{enumerate}
+    \setcounter{enumi}{1}
+    \item \textbf{Fase 2: Neteja asíncrona amb reintent i confirmació.} Aquí entra en joc el mecanisme de tolerància a fallades gestionat per la tasca programada \texttt{processPendingDeletions}. Aquesta s'executa periòdicament, cerca tots els registres en estat \texttt{PENDING\_DELETION} i, per a cada flag de confirmació que estigui a \texttt{false} (\texttt{access} o \texttt{sharing}), reenvia el missatge de neteja corresponent a la cua de RabbitMQ.
+\end{enumerate}
+
+\begin{lstlisting}[language=Java, caption={Lògica de processament de pendents a `TrashService`}]
+public void processPendingDeletions() {
+    List<TrashRecord> pendingRecords = trashRecordRepository.findByStatus(RecordStatus.PENDING_DELETION);
+    
+    for (TrashRecord record : pendingRecords) {
+        // ... Lògica per notificar a SyncService quan tot ha acabat ...
+        
+        // Si la neteja d'accessos no s'ha confirmat, es reenvia la comanda
+        if(!record.isAccess()) { 
+            sender.removeAccess(record.getUserId(), record.getElementId());
+        }
+        // Si la neteja de comparticions no s'ha confirmat, es reenvia
+        if(!record.isSharing()) { 
+            sender.removeSharing(record.getUserId(), record.getElementId());
+        }
+    }
+}
+\end{lstlisting}
+
+Cada servei consumidor (\texttt{FileAccessControl}, \texttt{FileSharing}), després de processar la seva cua i eliminar les dades, envia un missatge de confirmació a la cua \texttt{CONFIRM\_DELETE}. El \texttt{TrashService} escolta aquesta cua i, en rebre un missatge, actualitza el flag booleà corresponent del \texttt{TrashRecord} a \texttt{true}.
+
+\begin{lstlisting}[language=Java, caption={Receptor de confirmacions a `TrashService`}]
+@RabbitListener(queues = RabbitConfig.CONFIRM_DELETE, messageConverter = "jackson2JsonMessageConverter")
+public void confirmDeleteAccess(Map<String, Object> payload) {
+    UUID elementId = UUID.fromString((String) payload.get("elementId"));
+    UUID userId = UUID.fromString((String) payload.get("userId"));
+    String service = (String) payload.get("service");
+    trashService.confirm(elementId, userId, service);
+}
+\end{lstlisting}
+
+\begin{enumerate}
+    \setcounter{enumi}{2}
+    \item \textbf{Fase 3: Neteja final del registre.} Un cop tots els serveis han confirmat la seva part de la neteja, el \texttt{TrashRecord} tindrà tots els seus flags (\texttt{manager}, \texttt{access}, \texttt{sharing}) a \texttt{true}. En aquest punt, el registre ja ha complert la seva funció. Una altra tasca programada, \texttt{clean()}, s'executa diàriament i esborra de la base de dades tots aquells \texttt{TrashRecord} que ja estiguin completament processats, mantenint el sistema net i eficient.
+\end{enumerate}
+
+Aquest disseny basat en una màquina d'estats per registre, reintents automàtics i un cicle de confirmació explícit, garanteix una eliminació de dades robusta, resilient i auditable a tot l'ecosistema de microserveis.
+
+\subsection{Servei de sincronització (SyncService)}
+
+El microservei \texttt{SyncService} és el component final de l'arquitectura del backend i el responsable d'una de les funcionalitats més complexes i importants del sistema: mantenir tots els clients sincronitzats en temps real (\textbf{UC-14}). La seva principal responsabilitat és gestionar les connexions WebSocket, processar els esdeveniments de canvi publicats per altres serveis i difondre les actualitzacions als clients corresponents.
+
+L'arquitectura del servei es basa en diversos components clau:
+\begin{itemize}
+    \item \textbf{Gestor de WebSockets:} Un \texttt{WebSocketHandler} que gestiona el cicle de vida de les connexions dels clients (web i escriptori).
+    \item \textbf{Consumidor de RabbitMQ:} Un \textit{listener} que se subscriu a la cua d'esdeveniments on altres microserveis (com \texttt{FileManagement} o \texttt{FileSharing}) publiquen canvis.
+    \item \textbf{Servei de Snapshots:} Un servei que manté a la base de dades una representació de l'arbre de fitxers de cada usuari (un "snapshot") i el reconstrueix cada cop que es produeix un canvi.
+\end{itemize}
+
+\subsubsection{Flux de connexió WebSocket}
+
+El procés de connexió s'inicia quan un client vol establir una comunicació en temps real. Com es va explicar a la secció del Gateway, aquest valida el token JWT i enriqueix la petició injectant l'ID de l'usuari i un ID de connexió únic a les capçaleres abans de redirigir la connexió a \texttt{SyncService}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Figures/flux/connect_websocket.png}
+\end{figure}
+
+Dins de \texttt{SyncService}, la configuració de Spring WebSocket s'encarrega de registrar els \textit{handlers} i un interceptor clau per a aquest procés.
+
+\begin{lstlisting}[language=Java, caption={Configuració del WebSocket a `SyncService`}]
+@Configuration
+@EnableWebSocket
+public class WebSocketConfig implements WebSocketConfigurer {
+    @Override
+    public void registerWebSocketHandlers(@NonNull WebSocketHandlerRegistry registry) {
+        RawWebSocketHandler handler = rawWebSocketHandler();
+        
+        // Endpoint per al client d'escriptori
+        registry.addHandler(handler, "/websocket")
+                .setAllowedOrigins("*")
+                .addInterceptors(new UserIdHandshakeInterceptor());
+                
+        // Endpoint per al client web
+        registry.addHandler(handler, "/websocket/web")
+                .setAllowedOrigins("*")
+                .addInterceptors(new UserIdHandshakeInterceptor());
+    }
+    
+    @Bean
+    public RawWebSocketHandler rawWebSocketHandler() {
+        return new RawWebSocketHandler();
+    }
+}
+\end{lstlisting}
+
+L'interceptor \texttt{UserIdHandshakeInterceptor} s'executa abans de l'establiment de la connexió i extreu l'ID de l'usuari i de la connexió de les capçaleres HTTP, injectant-los als atributs de la sessió WebSocket. Aquesta és una peça fonamental que permet associar cada connexió a un usuari concret.
+
+\begin{lstlisting}[language=Java, caption={Interceptor per extreure IDs d'usuari a `UserIdHandshakeInterceptor`}]
+@Override
+public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, 
+                             WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
+    try {
+        String userId = getHeaderValue(request, "X-User-Id");
+        String connectionId = getHeaderValue(request, "X-Connection-Id");
+        
+        if (userId != null && connectionId != null) {
+            attributes.put("userId", userId);
+            attributes.put("connectionId", connectionId);
+            return true;
+    } else {
+            return false;
+        }
+    } catch (Exception e) { return false; }
+}
+\end{lstlisting}
+
+Un cop la connexió arriba al \texttt{RawWebSocketHandler}, aquest guarda la sessió en un mapa en memòria, diferenciant si prové del client web o del d'escriptori. Aquesta distinció és clau, ja que l'estratègia de notificació varia: per a les connexions d'escriptori, en establir-se la connexió, s'envia immediatament un \textit{snapshot} complet de l'arbre de fitxers de l'usuari.
+
+Un altre aspecte fonamental del disseny és l'ús del \texttt{connectionId}. Aquest identificador únic, generat a cada inici de sessió i inclòs al token JWT, es propaga a totes les peticions i missatges asíncrons que s'originen en una connexió de client específica. La seva finalitat és evitar bucles de notificació infinits. Quan un client realitza una acció (p. ex., crear un fitxer), el canvi es propaga a través de RabbitMQ fins al \texttt{SyncService}, que el reenvia a tots els clients de l'usuari. No obstant això, el client que va originar l'acció no ha de rebre aquesta notificació, ja que ja ha actualitzat la seva pròpia vista localment.
+
+El \texttt{RawWebSocketHandler} implementa aquesta lògica de manera explícita: abans d'enviar una notificació a les sessions d'un usuari, comprova si l'identificador de la sessió coincideix amb el \texttt{connectionId} que ve amb el missatge de l'esdeveniment i, si és així, l'omet. Això garanteix que un usuari amb múltiples sessions (p. ex., el client web i el d'escriptori oberts alhora) rebi les actualitzacions a totes les seves pantalles, excepte a la que va iniciar el canvi.
+
+\begin{lstlisting}[language=Java, caption={Exclusió de la connexió origen a `RawWebSocketHandler`}]
+public void sendSnapshot(String userId, String message, String connectionId) throws IOException {
+    Map<String, WebSocketSession> sessions = snapshotSessions.get(userId);
+    if (sessions != null) {
+        for(String connection : sessions.keySet()) {
+            // Es comprova que no sigui la connexió que va originar el canvi
+            if(!connection.equals(connectionId)) {
+                if(sessions.get(connection) != null && sessions.get(connection).isOpen()) {
+                    sendMessage(sessions.get(connection), message);
+                }
+            }
+        }
+    }
+}
+\end{lstlisting}
+
+\subsubsection{Processament d'esdeveniments i actualització de l'estat}
+
+El nucli de la sincronització esta en el processament dels esdeveniments. Quan el consumidor de RabbitMQ rep un missatge (p. ex., "s'ha creat un fitxer"), invoca el \texttt{SnapshotService} per actualitzar la representació de l'arbre de fitxers a la base de dades.
+
+\begin{lstlisting}[language=Java, caption={Listener de RabbitMQ per processar comandes a `Receiver`}]
+@RabbitListener(queues = RabbitConfig.COMMAND_QUEUE, messageConverter = "jackson2JsonMessageConverter")
+public void processCommand(Map<String, Object> payload) {
+    try {
+        CommandRabbit command = new CommandRabbit(/* ... mapping from payload ... */);
+        
+        // La lògica de (des)compartir no afecta l'estructura de l'snapshot directament
+        if(!command.action().equals("unshared-element") && !command.action().equals("shared-element")) {
+            SnapshotEntity snapshot = snapshotService.processCommand(command);
+            // Envia el snapshot complet al client d'escriptori
+            websocketService.sendSnapshot(snapshot, command.userId(), command.connectionId());
+        }
+        // Envia una comanda simple al client web
+        websocketService.sendWebCommand(command.action(), command.userId(), command.connectionId(), command.elementId(), command.parentId());
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
+\end{lstlisting}
+
+El mètode \texttt{snapshotService.processCommand} és el cor de la lògica d'estat. Rep la comanda i modifica les entitats \texttt{SnapshotEntity} i \texttt{SnapshotElementEntity} per reflectir el canvi. Un dels aspectes més importants és el recàlcul de hashes: cada cop que un element canvia, es recalcula el seu hash i es propaga el canvi cap amunt, actualitzant el hash de totes les carpetes pare fins a l'arrel. Això permet que el client d'escriptori detecti un canvi en qualsevol part de l'arbre simplement comparant el hash de la carpeta arrel.
+
+\begin{lstlisting}[language=Java, caption={Recàlcul recursiu de hashes a `SnapshotService`}]
+private void recalculateHash(SnapshotElementEntity element) {
+    if (element != null && "folder".equals(element.getType())) {
+        String newHash = calculateFolderHash(element);
+        element.setHash(newHash);
+        snapshotElementRepository.save(element);
+        
+        if (element.getParent() != null) {
+            // Crida recursiva cap a l'arrel
+            recalculateHash(element.getParent());
+        }
+    }
+}
+
+private String calculateFolderHash(SnapshotElementEntity folder) {
+    if (folder.getContent() == null || folder.getContent().isEmpty()) {
+        return DigestUtils.sha256Hex("");
+    }
+    StringBuilder elementHash = new StringBuilder();
+    // Ordenar per nom garanteix un hash consistent
+    for (SnapshotElementEntity content : folder.getContent().stream().sorted(Comparator.comparing(SnapshotElementEntity::getName)).toList()) {
+        if (content.getHash() != null) {
+            elementHash.append(content.getHash());
+        }
+    }
+    return DigestUtils.sha256Hex(elementHash.toString());
+}
+\end{lstlisting}
+
+\subsubsection{Estratègies de difusió i punts clau}
+
+Un cop el \textit{snapshot} s'ha actualitzat, el \texttt{WebSocketService} s'encarrega de difondre el canvi. La lògica de difusió és diferent segons el tipus de client:
+\begin{itemize}
+    \item \textbf{Per al client web:} S'envia un esdeveniment simple, com \texttt{updated\_tree}, que indica al client que ha de tornar a demanar les dades de la carpeta afectada. Aquesta estratègia és lleugera i eficient per a un client que només visualitza una part de l'arbre de fitxers a la vegada.
+    \item \textbf{Per al client d'escriptori:} S'envia el \textit{snapshot} complet actualitzat. El client compara el nou hash de l'arrel amb el que tenia localment; si són diferents, substitueix tot el seu estat local pel nou snapshot. Això garanteix una consistència total amb el servidor.
+\end{itemize}
+
+Aquesta doble estratègia es pot veure clarament reflectida a la implementació del \texttt{WebSocketService}, que conté mètodes especialitzats per a cada tipus de client.
+
+\begin{lstlisting}[language=Java, caption={Enviament del snapshot complet al client d'escriptori a `WebSocketService`}]
+@Transactional
+public void sendSnapshot(SnapshotEntity snapshot, String userId, String connectionId) {
+    try {
+        SnapshotElementEntity root = snapshot.getElements().stream().filter(element -> element.getParent() == null).findFirst().orElse(null);
+        String snapshotMessage = createMessage("SNAPSHOT", "snapshot_update", convertElementToMap(root));
+        
+        webSocketHandler.sendSnapshot(userId, snapshotMessage, connectionId);
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
+\end{lstlisting}
+
+Aquest mètode, `sendSnapshot`, s'invoca quan el destinatari és el client d'escriptori. Construeix un missatge de tipus \texttt{SNAPSHOT} que conté l'arbre de fitxers complet serialitzat i utilitza el \texttt{webSocketHandler} per enviar-lo exclusivament a les connexions d'escriptori de l'usuari.
+
+\begin{lstlisting}[language=Java, caption={Enviament d'una comanda de refresc al client web a `WebSocketService`}]
+public void sendWebCommand(String action, String userId, String connectionId, String elementId, String parentId) {
+    try {
+        if(parentId == null || parentId.isEmpty()) {
+            parentId = fileManagementClient.getParentId(UUID.fromString(elementId)).toString();
+        }
+
+        String message = createMessage("COMMAND", "updated_tree", Map.of("elementId", elementId, "parentId", parentId, "section", getSection(action)));
+        
+        webSocketHandler.sendWebCommand(userId, message, connectionId);
+
+        List<SharedInfo> users = fileShareClient.getUsersShared(UUID.fromString(elementId));
+
+        message = createMessage("COMMAND", "updated_tree", Map.of("elementId", elementId, "parentId", parentId, "section", "shared"));
+        for(SharedInfo user : users) {
+            UUID id = userManagementClient.getUserId(user.getUsername());
+            webSocketHandler.sendWebCommand(id.toString(), message, "");
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
+\end{lstlisting}
+
+En canvi, el mètode `sendWebCommand` està dissenyat per al client web. En lloc d'enviar tot l'estat, crea un missatge de tipus \texttt{COMMAND} molt més lleuger. Aquest missatge conté únicament els identificadors necessaris perquè el client sàpiga quina part de la seva vista ha d'actualitzar, fent una nova petició per obtenir només les dades que han canviat. A més, aquest mètode s'encarrega de notificar a altres usuaris si el canvi afecta un element compartit.
+
+Per garantir la robustesa, he implementat mecanismes per gestionar la pèrdua de connexions (\textit{idle timeouts}) i una estratègia de reconnexió simple per part dels clients. El sistema es basa en la \textbf{consistència eventual}: tot i que poden existir petites latències, es garanteix que tots els clients acabaran rebent tots els canvis. La gestió de l'estat de les connexions en memòria és un punt crític; en un escenari de producció a gran escala, aquest estat s'hauria d'externalitzar a un magatzem compartit com Redis per permetre l'escalat horitzontal del propi \texttt{SyncService}. 
+
+\subsection{Refactor del codi}
+
+Durant el desenvolupament del projecte, vaig arribar a un punt on vaig haver de replantejar-me seriosament l'arquitectura del sistema i fer una refactorització important. Al principi, quan estava dissenyant les funcionalitats per compartir arxius i gestionar la paperera de reciclatge, vaig cometre un error en el disseny. Totes les peticions relacionades amb aquestes funcionalitats passaven pel \texttt{Gateway} i anaven directament al servei de \texttt{FileManagement}.
+
+En aquesta primera versió, les entitats de \texttt{FileManagement} tenien camps booleans i dates per controlar si un fitxer estava compartit o a la paperera, la data en què es va compartir o eliminar, i fins i tot quan s'havia de purgar definitivament. Tot i que aquest enfocament funcionava, no seguia el principi de separació de responsabilitats que és clau en una arquitectura de microserveis. En realitat, \texttt{FileManagement} estava fent de servei central, mentre que \texttt{FileSharing} i \texttt{TrashService} només feien tasques secundàries, en lloc de ser serveis independents.
+
+Quan em vaig adonar d'aquest error, vaig haver de parar el desenvolupament de noves funcionalitats per fer una refactorització gran. Això va implicar redissenyar com es movien les dades per assegurar que cada servei fos responsable només del seu àmbit. Ara, les peticions per compartir un fitxer van directament a \texttt{FileSharing}, que gestiona els seus propis registres, i les operacions de la paperera són només cosa de \texttt{TrashService}. Aquest canvi va requerir modificar rutes al Gateway, reescriure controladors, moure la lògica de negoci entre serveis i ajustar les crides internes. Tot i que aquesta refactorització va ser una inversió de temps considerable per corregir l'error inicial, era absolutament necessària per alinear la implementació amb els principis arquitectònics del projecte, assegurant una solució final més robusta, fàcil de mantenir i realment distribuïda.
+
+Una de les avantatges d'aquest disseny és que, malgrat l'error en la implementació al servidor, com totes les crides passen pel \texttt{Gateway} abans d'arribar al servei corresponent, la implementació del client web (en aquell moment l'únic implementat) no va necessitar pràcticament cap modificació. Això es deu al fet que la interfície externa de l'API es va mantenir pràcticament idèntica, tant pel que fa al cos JSON que s'enviava al servidor com a l'endpoint que es consumia. Aquesta consistència va permetre que el client web continués funcionant sense interrupcions, malgrat els canvis significatius en l'arquitectura del servidor.
+
+\section{Implementació del client web}
+
+\subsection{Introducció}
+El client web és una \textit{Single Page Application} (SPA) desenvolupada amb les tecnologies més modernes de l'ecosistema de JavaScript, com són React, Vite i TypeScript. La interfície d'usuari s'ha construït utilitzant el framework CSS \textbf{Tailwind CSS} per a un disseny àgil i personalitzable, juntament amb un conjunt de components reutilitzables i accessibles de \textbf{Radix UI}, que han estat encapsulats i estilitzats al directori \texttt{ui-new/src/components}. La gestió de l'estat global de l'aplicació es realitza mitjançant \textbf{Zustand}, una solució lleugera i potent, mentre que les operacions asíncrones, el cacheig de dades del servidor i les actualitzacions optimistes es gestionen amb la llibreria \textbf{TanStack React Query}, garantint una experiència d'usuari fluida i reactiva.
+
+L'arquitectura del codi font segueix un enfocament modular i organitzat, separant clarament les diferents responsabilitats: la lògica de negoci s'encapsula en \textit{hooks} reutilitzables, l'estat global en \textit{stores} de Zustand, les crides a l'API del backend s'abstrauen en serveis, i els components d'interfície són purs i centrats exclusivament en la representació visual.
+
+\subsubsection{Estructura de directoris del client web}
+El projecte del client web, ubicat a \texttt{ui-new/}, presenta una estructura de directoris clara i modular que separa les diferents responsabilitats de l'aplicació. A continuació, es detallen els directoris principals i el seu contingut:
+\begin{itemize}
+    \item \texttt{src/components/}: Aquest directori conté tots els components reutilitzables de React que conformen la interfície d'usuari. Alguns dels components més rellevants són:
+    \begin{itemize}
+        \item \textbf{Components de Tremor}: S'han integrat diversos components de la llibreria de components de React de codi obert Tremor \cite{tremor}, adaptats per a aquest projecte. Aquests inclouen \texttt{Accordion}, \texttt{Card}, \texttt{Dialog}, \texttt{Drawer}, \texttt{Input}, \texttt{Popover}, \texttt{Toast}, i \texttt{Tooltip}. Aquests components proporcionen una base sòlida i accessible per a la construcció d'interfícies d'usuari complexes.
+        \item \texttt{Button}: Un botó personalitzat amb diferents variants visuals (primari, secundari, fantasma, etc.).
+        \item \texttt{CreateNewFolderDialog}: Un diàleg modal per a la creació de noves carpetes.
+        \item \texttt{File}: Component que representa un fitxer o carpeta a la interfície, amb la seva icona i nom. Inclou subcomponents com \texttt{RenameDialog} i \texttt{ShareDialog} per a la gestió d'aquestes accions.
+        \item \texttt{Tabs} i \texttt{TabsSubHeader}: Components per a la creació de navegació per pestanyes.
+        \item \texttt{Toaster}: Component que gestiona la cua i visualització de notificacions (toasts).
+    \end{itemize}
+    \item \texttt{src/pages/}: Conté els components que representen les pàgines completes de l'aplicació, com ara:
+    \begin{itemize}
+        \item \texttt{AdminDashboard}: El panell d'administració d'usuaris.
+        \item \texttt{FileManager}: La pàgina principal de gestió de fitxers.
+        \item \texttt{Login} i \texttt{SignUp}: Les pàgines d'inici de sessió i registre.
+    \end{itemize}
+    \item \texttt{src/hooks/}: Aquest directori és fonamental per a la lògica de negoci, ja que conté els \textit{hooks} personalitzats de React que encapsulen la majoria de la complexitat:
+    \begin{itemize}
+        \item \texttt{useAuth}: Gestiona l'estat d'autenticació de l'usuari, incloent l'inici de sessió, el tancament de sessió i el registre.
+        \item \texttt{useFileOperations}: Conté tota la lògica per a les operacions de fitxers (crear, moure, copiar, eliminar, etc.), utilitzant TanStack Query per a les actualitzacions optimistes.
+        \item \texttt{useFileSelection}: Gestiona la selecció de fitxers i el porta-retalls (copiar/tallar).
+        \item \texttt{useShareManager}: Encapsula la lògica per a compartir fitxers i gestionar els permisos.
+        \item \texttt{useValidation}: Proporciona funcions per a la validació de formularis.
+    \end{itemize}
+    \item \texttt{src/layouts/}: Conté els components d'estructura de la pàgina, com \texttt{AppLayout}, que defineix la disposició general amb la barra lateral i la capçalera.
+    \item \texttt{src/lib/}: Un directori per a utilitats i configuracions generals:
+    \begin{itemize}
+        \item \texttt{api.ts}: Configura Axios i defineix els serveis per a interactuar amb l'API del backend (\texttt{authService}, \texttt{fileService}, etc.).
+        \item \texttt{utils.ts}: Funcions d'utilitat genèriques.
+        \item \texttt{websocket.ts}: Gestiona la connexió WebSocket per a les actualitzacions en temps real.
+    \end{itemize}
+    \item \texttt{src/store/}: Conté els \textit{stores} de Zustand per a la gestió de l'estat global, com ara \texttt{fileStore} (estat dels fitxers) i \texttt{fileSelectionStore} (estat de la selecció de fitxers).
+    \item \texttt{src/types/}: Defineix els tipus de TypeScript utilitzats a tota l'aplicació, garantint la consistència i la seguretat del tipat.
+\end{itemize}
+
+\subsection{Disseny Visual i Components de la Interfície}
+A continuació, es presenta una descripció visual detallada de la implementació final del client web. Aquesta secció té un doble objectiu: d'una banda, il·lustrar com els esbossos conceptuals presentats al \textbf{Capítol 8 (secció 8.5.1)} s'han materialitzat en una interfície funcional i interactiva; de l'altra, justificar les decisions de disseny preses durant la implementació que divergeixen o milloren les propostes inicials, sempre amb l'objectiu de perfeccionar l'experiència d'usuari.
+
+\subsubsection{Autenticació}
+El flux d'autenticació és el primer punt de contacte de l'usuari amb la plataforma. El disseny s'ha centrat en la claredat i la simplicitat, evitant distraccions per facilitar un accés ràpid i segur.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/login.png}
+        \caption{Pantalla d'inici de sessió.}
+        \label{fig:react-login-impl}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/register.png}
+        \caption{Pantalla de registre.}
+        \label{fig:react-registre-impl}
+    \end{minipage}
+\end{figure}
+
+Com es pot observar, la implementació final de les pantalles d'inici de sessió (\textbf{Figura \ref{fig:react-login-impl}}) i registre (\textbf{Figura \ref{fig:react-registre-impl}}) és una traducció fidel dels esbossos conceptuals presentats a les \textbf{Figures 8.21 i 8.22} del Capítol 8. El disseny final és minimalista i funcional, utilitzant un component de \texttt{Card} per enmarcar els formularis i millorar-ne la llegibilitat. Una millora funcional no detallada en la fase de disseny inicial és el sistema de validació de dades. A més de la validació de la lògica de negoci que es produeix en el moment de l'enviament del formulari, s'ha incorporat una validació prèvia al client. Com es pot apreciar a la \textbf{Figura \ref{fig:react-error-signup-impl}}. Això millora l'experiència d'usuari i redueix la càrrega del servidor.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Figures/ui-web/error_signup.png}
+    \caption{Exemple de validació nativa del navegador en el formulari de registre.}
+    \label{fig:react-error-signup-impl}
+\end{figure}
+
+\subsubsection{Escriptori Principal i Navegació}
+L'escriptori principal és el nucli de l'aplicació, on es centralitzen totes les funcionalitats de gestió d'arxius. A diferència del boceto general de la \textbf{Figura 8.23}, la implementació final opta per un \textit{layout} més net i dinàmic, on els components s'organitzen de manera fluida per adaptar-se a diferents mides de pantalla.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{Figures/ui-web/Folder_tree.png}
+    \caption{Detall de l'arbre de navegació.}
+    \label{fig:react-arbre-carpetes-impl}
+\end{figure}
+
+L'arbre de navegació lateral (Figura \ref{fig:react-arbre-carpetes-impl}) és una implementació fidel i funcional del concepte descrit a la \textbf{Figura 8.25}. Permet a l'usuari desplaçar-se de manera intuïtiva entre els seus arxius, la secció de "Compartits amb mi" i la "Paperera", distingint visualment la carpeta seleccionada.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/upload_file.png}
+        \caption{Diàleg del sistema per a la selecció d'arxius.}
+        \label{fig:react-upload-file-impl}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/notification.png}
+        \caption{Notificació emergent o toast.}
+        \label{fig:react-notification-impl}
+    \end{minipage}
+\end{figure}
+
+La pujada de fitxers es realitza mitjançant el diàleg natiu del sistema operatiu (Figura \ref{fig:react-upload-file-impl}, esquerra), oferint a l'usuari una experiència familiar i intuïtiva per seleccionar arxius i carpetes. Com a millora clau per al \textit{feedback} a l'usuari, s'han incorporat notificacions emergents o \textit{toasts} (Figura \ref{fig:react-notification-impl}, dreta). Aquestes s'utilitzen a tota l'aplicació per comunicar l'èxit o el fracàs de les operacions, proporcionant una resposta visual immediata.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/user_settings_dialog.png}
+        \caption{Modal de configuració del perfil d'usuari.}
+        \label{fig:react-user-settings-impl}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/user_settings_dialog_not_super_admin.png}
+        \caption{Vista per a un usuari estàndard.}
+        \label{fig:react-user-settings-user-impl}
+    \end{minipage}
+    \caption{Modal de configuració del perfil, amb vistes diferenciades per rol.}
+    \label{fig:react-user-settings-impl}
+\end{figure}
+
+Pel que fa a les accions globals, la \textbf{Figura \ref{fig:react-user-settings-impl}} mostra el modal de configuració del perfil, que correspon al disseny de la \textbf{Figura 8.28}. La implementació, però, és més avançada i dinàmica. El contingut s'adapta al rol de l'usuari per motius de seguretat. Com es pot veure, la vista per a un usuari estàndard (dreta) inclou un botó per eliminar el seu propi compte. En canvi, a la vista per a un usuari amb rol \texttt{SUPER\_ADMIN} (esquerra), aquest botó no hi és. Aquesta és una restricció deliberada per impedir que l'administrador principal es pugui eliminar a si mateix, la qual cosa deixaria el sistema sense un compte amb control total.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Figures/ui-web/new_folder_dialog.png}
+    \caption{Diàleg modal per a la creació d'una nova carpeta.}
+    \label{fig:react-new-folder-impl}
+\end{figure}
+
+La creació de noves carpetes, una de les "accions sobre la carpeta actual" esmentades a la \textbf{Figura 8.26}, es gestiona mitjançant un diàleg modal simple, com es mostra a la \textbf{Figura \ref{fig:react-new-folder-impl}}. Aquesta elecció de disseny minimitza la interrupció del flux de treball de l'usuari, ja que el diàleg apareix superposat al gestor de fitxers i requereix una acció directa (crear o cancel·lar) per continuar.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.24\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/sort_options.png}
+        \caption{Ordenar.}
+    \end{minipage}\hfill
+    \begin{minipage}{0.24\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/admin_panel_button.png}
+        \caption{Panell admin.}
+    \end{minipage}\hfill
+    \begin{minipage}{0.24\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/user_settings_button.png}
+        \caption{Configuració.}
+    \end{minipage}\hfill
+    \begin{minipage}{0.24\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/logout_button.png}
+        \caption{Tancar sessió.}
+    \end{minipage}
+    \caption{Controls globals de l'aplicació.}
+    \label{fig:react-global-controls-impl}
+\end{figure}
+
+Els controls per a les "opcions globals" de la \textbf{Figura 8.27} s'han implementat a la cantonada superior dreta de la interfície. Com es pot apreciar a la \textbf{Figura \ref{fig:react-global-controls-impl}}, el disseny final agrupa de manera lògica les opcions per ordenar el contingut, accedir al panell d'administració, a la configuració de l'usuari i per tancar la sessió, utilitzant icones minimalistes per mantenir una estètica neta i organitzada.
+
+\subsubsection{Interacció amb Elements}
+La interacció amb arxius i carpetes s'ha dissenyat per ser rica i contextual. El menú d'accions, que s'activa tant amb el clic dret com a través d'un botó dedicat, és una implementació directa del concepte de la \textbf{Figura 8.29} i ofereix totes les operacions rellevants per a l'element seleccionat.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/context_menu_right_click.png}
+        \caption{Clic dret.}
+    \end{minipage}\hfill
+    \begin{minipage}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/contex_menu_button.png}
+        \caption{Botó d'opcions.}
+    \end{minipage}\hfill
+    \begin{minipage}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/root_section_options.png}
+        \caption{Opcions a l'arrel.}
+    \end{minipage}
+    \caption{Menú contextual dinàmic.}
+    \label{fig:react-context-menu-impl}
+\end{figure}
+
+La \textbf{Figura \ref{fig:react-context-menu-impl}} mostra com el menú contextual apareix tant en fer clic dret sobre un element o les opcions que es mostren tant al fer click dert pero a cap element, com en prémer el botó d'opcions. Aquest menú és dinàmic i adapta les seves opcions al context, com per exemple a la seccio dels fitxer del propietari (\textit{root}), on permet crear nous elements.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/selection.png}
+        \caption{Selecció múltiple.}
+        \label{fig:react-selection-impl}
+    \end{minipage}\hfill
+    \begin{minipage}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/cut_file.png}
+        \caption{Feedback visual de "Tallar".}
+        \label{fig:react-cut-impl}
+    \end{minipage}\hfill
+    \begin{minipage}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/file_details.png}
+        \caption{Panell de detalls.}
+        \label{fig:react-details-impl}
+    \end{minipage}
+\end{figure}
+
+La implementació final inclou millores significatives d'usabilitat. S'ha implementat la selecció múltiple (Figura \ref{fig:react-selection-impl}) per realitzar operacions en lot, i es proporciona un \textit{feedback} visual clar per a accions com "Tallar", on l'element es mostra semitransparent (Figura \ref{fig:react-cut-impl}). Per a la visualització de detalls, es va decidir substituir el modal proposat a la \textbf{Figura 8.30} per un panell lateral o \textit{Drawer} (Figura \ref{fig:react-details-impl}). Aquesta decisió millora l'experiència en permetre a l'usuari consultar la informació sense perdre el context de la vista d'arxius. A més, com a resultat d'una millora proposada per un \textit{beta tester}, aquest panell mostra també la llista d'usuaris amb qui s'ha compartit un fitxer, oferint l'opció de modificar el seu nivell d'accés o deixar de compartir-lo. Això permet gestionar la compartició d'un element de forma més àgil, sense haver de navegar a la secció de fitxers compartits.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Figures/ui-web/rename_dialog.png}
+    \caption{Diàleg per canviar el nom d'un element.}
+    \label{fig:react-rename-impl}
+\end{figure}
+
+El diàleg per canviar el nom d'un element (\textbf{Figura \ref{fig:react-rename-impl}}) és una implementació directa i funcional del concepte mostrat a la \textbf{Figura 8.31}, proporcionant una manera ràpida i senzilla de realitzar aquesta operació comuna.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/move_dialog.png}
+        \caption{Vista inicial.}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/move_dialog_afterclick.png}
+        \caption{Vista amb carpeta desplegada.}
+    \end{minipage}
+    \caption{Modal per moure elements.}
+    \label{fig:react-move-impl}
+\end{figure}
+
+El diàleg per moure elements (\textbf{Figura \ref{fig:react-move-impl}}) és una evolució significativa del seu esbós inicial (\textbf{Figura 8.32}). La implementació final és molt més avançada, ja que presenta un arbre de carpetes completament navegable. Com es pot apreciar, l'usuari pot desplegar les subcarpetes (dreta) per seleccionar la ubicació de destí de manera precisa, una millora substancial d'usabilitat respecte a un simple camp de text. Aquest dialeg es utilitzable tant per els fitxers o carpetes dintre de la seccio \textit{root} com per la seccio de \textit{Compartits amb mi} on es poden moure els elements dintre de l'arbre de carpetes compartides amb l'usuari (desde la primera carpeta a l'arrel dels compartits fins l'ultim fill), aquesta limitacio es va posar per motius de seguretar per evitar que es moguin fitxers entre carpetes d'usuaris diferents sense permis explicit, de forma nativa a l'aplicacio.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/share_dialog.png}
+        \caption{Vista principal.}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/share_dialog_search.png}
+        \caption{Cerca d'usuaris.}
+    \end{minipage}
+    \caption{Modal de compartició d'arxius.}
+    \label{fig:react-share-impl}
+\end{figure}
+
+Finalment, el diàleg per compartir arxius (\textbf{Figura \ref{fig:react-share-impl}}) és substancialment més complet que el seu concepte a la \textbf{Figura 8.33}. La versió implementada permet buscar usuaris pel seu nom (dreta), assignar permisos específics de lectura o escriptura, i mostra una llista clara dels usuaris que ja tenen accés, amb opcions per modificar o revocar els seus permisos directament des de la mateixa interfície, oferint una gestió de compartició molt més potent, ja que permet compartir llistes d'elements d'una sola accio, evitant que l'usuari hagi de compartir un per un.
+
+\subsubsection{Seccions Específiques}
+Les seccions de la Paperera, els Elements Compartits i el Panell d'Administració disposen de vistes i opcions contextuals pròpies.
+
+\paragraph{Elements Compartits}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Figures/ui-web/shared_section_options.png}
+    \caption{Menú contextual a la secció "Compartit amb mi".}
+    \label{fig:react-shared-options-impl}
+\end{figure}
+El menú contextual per a un element a la secció "Compartit amb mi" (\textbf{Figura \ref{fig:react-shared-options-impl}}) és un exemple de la naturalesa dinàmica de la interfície. Com es va planejar a la \textbf{Figura 8.34}, les opcions disponibles ("Descargar", "Dejar de seguir", etc.) canvien en funció dels permisos (lectura o escriptura) que l'usuari tingui sobre l'element, oferint només les accions permeses.
+
+\paragraph{Paperera}
+La vista de la paperera (\textbf{Figura \ref{fig:react-trash-impl}}) implementa fidelment les opcions conceptualitzades a la \textbf{Figura 8.36}, oferint les accions de "Restaurar" i "Eliminar definitivament" per a cada element.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/ui-web/trash_section.png}
+    \caption{Opcions contextuals de la paperera.}
+    \label{fig:react-trash-impl}
+\end{figure}
+
+
+\paragraph{Panell d'Administració}
+El panell d'administració (\textbf{Figura \ref{fig:react-admin-impl}}) representa una de les millores més significatives respecte al seu disseny inicial (\textbf{Figura 8.37}). En lloc d'una simple llista, s'ha implementat una taula de dades completa. A més, la interfície és dinàmica i conscient dels permisos.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Figures/ui-web/admin_panel.png}
+    \caption{Panell d'administració d'usuaris.}
+    \label{fig:react-admin-impl}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Figures/ui-web/user_settings_admin.png}
+    \caption{Diàleg per a l'edició d'un usuari des del panell d'administració (vista SUPER\_ADMIN).}
+    \label{fig:react-edit-user-admin-impl}
+\end{figure}
+
+L'edició d'usuaris és una de les funcionalitats clau del panell. En seleccionar l'opció d'editar, s'obre un diàleg modal que permet modificar les dades de l'usuari, tal com il·lustra la \textbf{Figura \ref{fig:react-edit-user-admin-impl}}. La implementació estableix una clara jerarquia de permisos: mentre que un administrador estàndard (\texttt{ADMIN}) pot actualitzar informació bàsica, només un superadministrador (\texttt{SUPER\_ADMIN}) té l'autoritat per canviar rols o restablir contrasenyes. Aquesta segregació de privilegis, que reserva les accions més crítiques al rol més alt, és una mesura de seguretat fonamental. La decisió d'atorgar aquests poders al \texttt{SUPER\_ADMIN} es fonamenta en la seva funció com a responsable últim del sistema. Tot i que aquesta centralització de permisos representa un risc de seguretat calculat, es considera una capacitat indispensable per a la gestió d'incidències crítiques, com ara la recuperació de l'accés per a un usuari que hagi perdut la contrasenya. Aquesta responsabilitat és coherent amb el seu rol com a responsable de la integritat de les dades i del compliment de la normativa vigent.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/delete_user_valid.png}
+        \caption{Botó d'eliminació actiu.}
+        \label{fig:react-delete-valid-impl}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ui-web/super_user_not_delete.png}
+        \caption{Botó d'eliminació desactivat.}
+        \label{fig:react-delete-invalid-impl}
+    \end{minipage}
+    \caption{Comportament dinàmic del botó d'eliminació.}
+\end{figure}
+Com es pot veure, el botó "Delete" és interactiu quan es tenen permisos sobre l'usuari (esquerra), però es mostra desactivat i no és funcional quan s'intenta eliminar un compte protegit, com el del propi \texttt{SUPER\_ADMIN} (dreta). Aquesta restricció visual i funcional és una mesura de seguretat clau per garantir la integritat del sistema.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Figures/ui-web/delete_user_admin_confirm.png}
+    \caption{Diàleg de confirmació per a l'eliminació d'un usuari.}
+    \label{fig:react-delete-confirm-impl}
+\end{figure}
+Finalment, abans de qualsevol eliminació, es mostra un diàleg de confirmació per prevenir accions accidentals (\textbf{Figura \ref{fig:react-delete-confirm-impl}}), una mesura de seguretat afegida durant la implementació que no estava als esbossos inicials.
+
+\subsection{Implementació per Casos d'Ús}
+A continuació, es detalla com l'arquitectura del client web i els seus components es combinen per donar resposta als principals casos d'ús del sistema. Cada secció descriu el flux d'implementació, els fitxers clau implicats i fragments de codi rellevants que il·lustren les decisions tècniques més importants.
+
+\subsubsection{Gestió d'Usuaris}
+
+\paragraph{UC-01: Registre d'Usuari \& UC-02: Inici de Sessió}
+La funcionalitat d'autenticació constitueix el punt d'entrada a l'aplicació. Per a un usuari no autenticat, el component principal \texttt{App.tsx} actua com a gestor de l'enrutament, presentant un interruptor que permet alternar entre les vistes de login (\texttt{/login}) i registre (\texttt{/sign-up}). Aquestes vistes, implementades a \texttt{ui-new/src/pages/Login/index.tsx} i \texttt{ui-new/src/pages/SignUp/index.tsx} respectivament, es construeixen amb components reutilitzables com \texttt{Card} per a l'estructura, i \texttt{Input} i \texttt{Button} per als formularis.
+
+Quan l'usuari interactua amb el formulari, la funció \texttt{submit} del component corresponent orquestra el procés. Abans d'enviar cap dada, es realitza una validació completa dels camps mitjançant la lògica encapsulada al hook \texttt{ui-new/src/hooks/useValidation.ts}. Només si la validació és exitosa, s'invoca la lògica de negoci principal.
+
+El cervell de l'autenticació resideix al hook \texttt{ui-new/src/hooks/userAuth.tsx}. Les seves funcions \texttt{login} i \texttt{register} són les responsables de gestionar tot el flux. Aquestes funcions no interactuen directament amb la xarxa, sinó que deleguen la comunicació al servei \texttt{authService}, definit a \texttt{ui-new/src/lib/api.ts}, que s'encarrega de construir i enviar la petició HTTP al backend.
+
+Després d'una resposta exitosa del servidor, el hook \texttt{userAuth} executa una seqüència d'accions crucials per actualitzar l'estat del client: desa els tokens d'accés i de refresc al \texttt{localStorage}, obté les dades completes del perfil de l'usuari, actualitza l'estat global de l'aplicació i, finalment, estableix la connexió WebSocket per a la sincronització en temps real.
+
+\begin{lstlisting}[language=typescript, caption={Fragment de la funció `login` al hook `userAuth.tsx`}]
+const login = useCallback(async (username: string, password: string): Promise<boolean> => {
+  try {
+    if(!isLogin) {
+      const response = await authService.login(username, password);
+      
+      localStorage.setItem("accessToken", response.accessToken);
+      localStorage.setItem("refreshToken", response.refreshToken);
+      
+      const userData = await userService.getCurrentUser();
+      localStorage.setItem("username", userData.username);
+
+      setUser(userData);
+      setIsLogin(true);
+      websocketService.connect();
+    }
+    return true;
+  } catch (error) {
+    // ... maneig d'errors
+    return false;
+  }
+}, [notifications, isLogin]);
+\end{lstlisting}
+
+Un cop l'usuari està autenticat, per mantenir la sessió activa de manera eficient, s'utilitza un mecanisme arquitectònic clau: un interceptor d'Axios, configurat a \texttt{ui-new/src/lib/api.ts}. Aquest interceptor s'activa automàticament quan una petició a l'API falla amb un codi d'estat 401 (No autoritzat). En aquest moment, intenta renovar el token d'accés utilitzant el token de refresc. Si la renovació té èxit, la petició original es reintenta amb el nou token, un procés completament imperceptible per a l'usuari.
+
+\begin{lstlisting}[language=typescript, caption={Interceptor d'Axios per a la renovació automàtica de tokens a \texttt{api.ts}}]
+api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
+        const authRoutes = ['/users/auth/login', '/users/auth/keep-alive', '/users/auth/register'];
+        const refreshToken = localStorage.getItem('refreshToken');
+
+        if (error.response?.status === 401 && !originalRequest._retry && !authRoutes.includes(originalRequest.url) && refreshToken) {
+            originalRequest._retry = true;
+
+            try {
+                const response = await api.post('/users/auth/keep-alive', null, {
+                    headers: {
+                        'X-Refresh-Token': refreshToken
+                    }
+                });
+
+                const newAccessToken = response.headers['authorization']?.split(' ')[1];
+                const newRefreshToken = response.headers['x-refresh-token'];
+
+                if (newAccessToken && newRefreshToken) {
+                    localStorage.setItem('accessToken', newAccessToken);
+                    localStorage.setItem('refreshToken', newRefreshToken);
+
+                    originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+                    return api(originalRequest);
+                }
+            } catch (refreshError) {
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                localStorage.removeItem('username');
+                window.location.href = '/login';
+                return Promise.reject(refreshError);
+            }
+        }
+
+        return Promise.reject(error);
+    }
+);
+\end{lstlisting}
+
+He de destacar que l'estratègia actual d'emmagatzematge de tokens al \texttt{localStorage} va ser una solució temporal. Inicialment, vaig intentar implementar un sistema basat en cookies \texttt{HttpOnly} per al transport dels tokens. Aquesta tècnica no només és una pràctica de seguretat estàndard que protegeix contra atacs de Cross-Site Scripting (XSS) en fer que els tokens siguin inaccessibles des del JavaScript del client \cite{bitsrc_tokens_vs_cookies}, sinó que també s'alinea amb les exigències de la normativa de protecció de dades com el RGPD. Segons aquesta regulació, els identificadors en línia com els tokens es consideren dades personals i requereixen mesures tècniques per garantir-ne la seguretat \cite{gdpr_cookies}.
+
+No obstant això, vaig trobar dificultats tècniques en la comunicació amb el servidor. Per tal de no bloquejar el desenvolupament, vaig optar per l'emmagatzematge local com a solució intermèdia, amb la intenció de refactoritzar-la en un futur. La implementació d'un flux d'autenticació robust basat en cookies no només és una millor pràctica de seguretat altament recomanada \cite{auth0_token_best_practices}, sinó també un pas necessari per a un compliment més estricte de la normativa. A causa de les limitacions de temps, vaig haver de deixar aquesta tasca registrada com una millora futura, tal com es detalla al Capítol 12.
+
+\paragraph{UC-03: Tancament de Sessió}
+El procés de tancament de sessió és una mesura de seguretat fonamental, dissenyada per ser directa i robusta. Assegura que la sessió de l'usuari finalitzi de forma definitiva mitjançant la invalidació dels tokens d'accés al client, prevenint així l'accés no autoritzat al compte si el dispositiu queda desatès i protegint contra el segrest de sessió. El flux comença a la interfície d'usuari, concretament quan l'usuari fa clic sobre el botó de logout situat al component \texttt{ui-new/src/layouts/AppLayout/Header/index.tsx}. Aquesta integració directa, on l'esdeveniment \texttt{onClick} invoca directament la funció \texttt{logoutEndpoint}, simplifica el component visual, que només s'ha de preocupar de renderitzar el botó i connectar-lo a l'acció corresponent.
+
+La lògica central resideix al hook \texttt{ui-new/src/hooks/userAuth.tsx}, que proporciona la funció \texttt{logoutEndpoint}. Aquesta funció és la responsable de garantir una sortida neta i segura. Primer intenta notificar al backend mitjançant \texttt{authService.logout}. Independentment del resultat d'aquesta crida, ja que s'asumeix que el servidor rep la petició i fa les accions necessaries per el logout, el bloc \texttt{finally} s'encarrega d'eliminar tota la informació de sessió del \texttt{localStorage}. Finalment, reinicia l'estat global de l'aplicació, desconnecta la sessió WebSocket activa i redirigeix forçosament l'usuari a la pàgina d'inici de sessió.
+
+\begin{lstlisting}[language=typescript, caption={Fragment del component `Header` amb el botó de logout}]
+import { useAuth } from "../../../hooks/userAuth"
+
+const Header = ({setAdminOpen}: {setAdminOpen: (open: boolean) => void}) => {
+    const { logoutEndpoint, user } = useAuth();
+
+    return (
+        <div id="39" className="flex justify-end gap-2">
+            <Tooltip side="left" content="Logout" triggerAsChild={true}>
+                <Button variant="primary" className="p-2" onClick={logoutEndpoint}>
+                    <RiLogoutBoxRLine className="h-4 w-4" />
+                </Button>
+            </Tooltip>
+            {/* ... */}
+        </div>
+    )
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=typescript, caption={Funció `logoutEndpoint` al hook `userAuth.tsx`}]
+const logoutEndpoint = useCallback(async () => {
+  try {
+    await authService.logout();
+  } catch {
+    // S'ignora l'error per assegurar que el logout en el client sempre ocorri
+  } finally {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("username");
+    
+    setUser(null);
+    setIsLogin(false);
+    websocketService.disconnect();
+    window.location.href = "/login";
+  }
+}, []);
+\end{lstlisting}
+
+\paragraph{UC-04: Modificar Perfil \& UC-05: Eliminar Compte}
+La gestió del perfil d'usuari, que va des de la modificació de dades personals fins a l'eliminació permanent del compte, es consolida en una única narrativa de flux de dades per garantir una experiència d'usuari coherent i eficient. El procés s'inicia quan l'usuari accedeix a la configuració del seu perfil, una acció que renderitza el component intel·ligent \texttt{ui-new/src/components/UserSettings/index.tsx}. Aquest component actua com el nucli central de la funcionalitat, encapsulant tota la lògica necessària. En ser muntat, invoca immediatament el mètode \texttt{userService.getCurrentUser()}, definit a \texttt{ui-new/src/lib/api.ts}, per carregar les dades actuals de l'usuari i popular el formulari.
+
+Un aspecte clau d'aquest component és la seva estratègia de validació en temps real, dissenyada per oferir feedback instantani sense sobrecarregar el sistema. Mentre que la validació de formats bàsics per a la majoria de camps s'implementa a través del hook \texttt{ui-new/src/hooks/useValidation.ts}, la comprovació de la disponibilitat de camps únics com el nom d'usuari i el correu electrònic requereix una solució més sofisticada. Per evitar una gran quantitat de peticions a l'API amb cada pulsació de tecla, s'utilitza el hook \texttt{ui-new/src/hooks/useDebounce.ts}. Aquest retrasa l'execució de les funcions de validació (\texttt{userService.checkUsernameExists} i \texttt{userService.checkEmailExists}) fins que l'usuari ha deixat d'escriure durant un breu període. Aquesta tècnica millora dràsticament el rendiment i l'experiència d'usuari, evitant validacions innecessàries i oferint un indicador d'estat només quan és rellevant.
+
+\begin{lstlisting}[language=typescript, caption={Ús de `useDebounce` per a la validació a `UserSettings/index.tsx`}]
+// ...
+const debouncedUsername = useDebounce(userData.username, 500);
+const debouncedEmail = useDebounce(userData.email, 500);
+
+useEffect(() => {
+    const checkUsernameAvailability = async () => {
+        // No validar si el valor no ha canviat del original
+        if (!initialUserData || debouncedUsername === initialUserData.username) {
+            // ...
+            return;
+        }
+        // ...
+        try {
+            const isTaken = await userService.checkUsernameExists(debouncedUsername);
+            // Actualitzar estat de la validació
+        } catch {
+            // Gestionar error de la comprovació
+        }
+    };
+    if (debouncedUsername && isOpen) checkUsernameAvailability();
+}, [debouncedUsername, initialUserData, errors.username, isOpen]);
+// ... (codi similar per a la validació de l'email)
+\end{lstlisting}
+
+\textit{Nota: La implementació del hook \texttt{useDebounce} es va adaptar de l'article "Implementing a Debounce Hook in React" \cite{debounce_hook_react}. Aquesta millora va ser suggerida durant les sessions de proves beta per un tester amb experiència professional en React per tal d'optimitzar la interacció de l'usuari.}
+
+Un cop les dades són validades, el component gestiona les dues accions principals. La funció \texttt{handleUpdateProfile} orquestra l'actualització del perfil, cridant \texttt{userService.updateUserProfile} i, si l'usuari ha introduït una nova contrasenya, \texttt{userService.changePassword}. Per altra banda, la funció \texttt{handleDeleteAccount} gestiona l'eliminació del compte. Per seguretat, primer mostra un diàleg de confirmació que requereix que l'usuari escrigui el seu nom d'usuari. Un cop confirmat, invoca \texttt{userService.deleteAccount}. Un detall crucial és que, després d'una eliminació exitosa, crida la funció \texttt{logoutEndpoint} del hook \texttt{useAuth} per netejar completament la sessió del client i redirigir-lo a la pàgina d'inici de sessió.
+
+\begin{lstlisting}[language=typescript, caption={Orquestració de les crides a l'API a `UserSettings/index.tsx`}]
+const handleUpdateProfile = async () => {
+    // ... (validació final)
+    await userService.updateUserProfile(userData);
+    if (newPassword && oldPassword) {
+        await userService.changePassword(oldPassword, newPassword);
+    }
+    notifications.success("Profile updated");
+    // ...
+};
+
+const handleDeleteAccount = async () => {
+    if (deleteConfirmation !== userData.username) {
+        // ...
+        return;
+    }
+    try {
+        await userService.deleteAccount();
+        notifications.success("Account deleted");
+        logoutEndpoint(); // Funció del hook useAuth
+    } catch (error) {
+        notifications.error("Delete failed");
+    }
+};
+\end{lstlisting}
+
+Finalment, per a cada operació, ja sigui d'èxit o de fracàs, s'utilitzen notificacions tipus "toast" per proporcionar un feedback clar i immediat a l'usuari, tancant així el cicle d'interacció. El servei \texttt{userService} a \texttt{api.ts} abstrau les crides a l'API, proporcionant mètodes que mapegen directament als endpoints del backend per a una gestió de perfil clara i mantenible.
+
+\begin{lstlisting}[language=typescript, caption={Mètodes del `userService` a `lib/api.ts`}]
+export const userService = {
+    // ...
+    updateUserProfile: async (userData: { /* ... */ }) => {
+        const response = await api.put('/users/profile', userData);
+        return response.data;
+    },
+
+    changePassword: async (oldPassword: string, newPassword: string) => {
+        await api.put('/users/password', { oldPassword, newPassword });
+    },
+
+    deleteAccount: async () => {
+        await api.delete('/users');
+    }
+};
+\end{lstlisting}
+
+\subsubsection{Gestió d'Administració}
+\paragraph{UC-06, UC-07, UC-15, UC-16: Panell d'Administració}
+El panell d'administració representa una funcionalitat crítica per a la gestió d'usuaris del sistema, accessible exclusivament per a usuaris amb privilegis elevats.
+
+L'accés al panell s'inicia a través d'un botó situat a la capçalera de l'aplicació, implementat a \texttt{ui-new/src/layouts/AppLayout/Header/index.tsx}. Aquest component utilitza el hook \texttt{useAuth} per verificar els permisos de l'usuari i renderitza el botó d'accés només si l'usuari té el rol \texttt{ADMIN} o \texttt{SUPER\_ADMIN}:
+
+\begin{lstlisting}[language=typescript, caption={Renderitzat condicional del botó d'administració}]
+{(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
+    <Tooltip side="left" content="Admin Panel" triggerAsChild={true}>
+        <Button variant="primary" className="p-2" onClick={() => setAdminOpen(true)}> 
+            <RiAdminLine className="h-4 w-4" />
+        </Button>
+    </Tooltip>
+)}
+\end{lstlisting}
+
+Quan s'activa el botó, el component \texttt{AppLayout} actua com a orquestrador, gestionant la transició entre la vista principal de l'aplicació i el panell d'administració. Aquest canvi es realitza mitjançant un estat local \texttt{adminOpen} que renderitza condicionalment el component \texttt{AdminDashboard} en lloc de la interfície principal:
+
+\begin{lstlisting}[language=typescript, caption={Renderitzat condicional del panell d'administració a `AppLayout`}]
+    if(adminOpen) {
+		return (
+			<div className="flex h-screen bg-gray-100 relative">
+				<button
+					className="absolute top-6 right-8 z-50 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition-colors font-semibold"
+					onClick={() => setAdminOpen(false)}
+				>
+					Volver
+				</button>
+				<main className="flex-1 overflow-auto">
+					<AdminDashboard  />
+				</main>
+			</div>
+		);
+	}
+\end{lstlisting}
+
+El component \texttt{AdminDashboard} serveix com a punt central per a la gestió d'usuaris. En el seu muntatge, utilitza l'\texttt{adminService} per carregar la llista d'usuaris del sistema. La visualització d'aquesta informació es realitza mitjançant una taula interactiva que permet als administradors realitzar operacions de modificació i eliminació d'usuaris.
+
+La gestió d'usuaris es realitza a través de dos diàlegs especialitzats: \texttt{EditUserDialog} i \texttt{DeleteUserDialog}. El primer és particularment complex, ja que implementa validacions en temps real i restriccions basades en rols. Per exemple, la capacitat de modificar el rol d'un usuari està estrictament controlada:
+
+\begin{lstlisting}[language=typescript, caption={Control d'accés per a la modificació de rols}]
+    {isSuperAdmin && editForm.role !== 'SUPER_ADMIN' &&(
+        <>
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-300">Role</label>
+        <select
+          className="w-full rounded-md border border-input bg-background px-3 py-2"
+          value={editForm.role}
+          onChange={e => setEditForm(prev => ({ ...prev, role: e.target.value as 'USER' | 'ADMIN' | 'SUPER_ADMIN' }))}
+          disabled={!currentUser || currentUser && currentUser.role !== 'SUPER_ADMIN' || (currentUser.role === 'ADMIN' && user.role === 'ADMIN')}
+        >
+          <option value="USER">User</option>
+          <option value="ADMIN">Administrator</option>
+        </select>
+      </div>
+        </>
+      )}
+\end{lstlisting}
+
+Aquest fragment de codi il·lustra el control d'accés per a la modificació de rols. La lògica implementada assegura que només un usuari amb el rol de \texttt{SUPER\_ADMIN} pugui canviar el rol d'un altre usuari. A més, s'estableix una restricció clau: el \texttt{SUPER\_ADMIN} no pot modificar el seu propi rol. Aquesta decisió de disseny, al igual que impedir que es pugui eliminar el seu propi compte, té com a objectiu garantir que sempre hi hagi un, i només un, superadministrador com a màxim responsable de l'aplicació i les seves dades. La condició \texttt{isSuperAdmin \&\& editForm.role !== 'SUPER\_ADMIN'} del codi és la que materialitza aquesta regla, mostrant el selector de rol únicament quan es compleixen aquestes condicions.
+
+L'execució de les operacions d'administració es gestiona a través de funcions específiques al component \texttt{AdminDashboard}. Aquestes funcions no només realitzen les operacions sol·licitades sinó que també gestionen la retroalimentació a l'usuari i l'actualització de l'estat de l'aplicació:
+
+\begin{lstlisting}[language=typescript, caption={Gestió d'operacions administratives}]
+    const handleSaveEdit = async (updatedUser: Partial<AdminUser>) => {
+        if (!selectedUser) return;
+        try {
+            await adminService.updateUser(selectedUser.username, updatedUser);
+            
+            notifications.success("User updated");
+            setLoaded(false);
+            await loadUsers();
+            setIsEditDialogOpen(false);
+        } catch {
+            notifications.error("Update failed");
+        }
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!selectedUser) return;
+        try {
+            await adminService.deleteUser(selectedUser.username);
+            if(selectedUser.username === user?.username) {
+                logoutEndpoint();
+            }
+            
+            notifications.success("User deleted");
+            setLoaded(false);
+            await loadUsers(); 
+            setIsDeleteDialogOpen(false);
+        } catch {
+            notifications.error("Delete failed");
+        }
+    };
+\end{lstlisting}
+
+Un aspecte notable de la implementació és el tractament especial del cas d'auto-eliminació (\textbf{UC-07}). Quan un administrador elimina el seu propi compte, el sistema detecta aquesta situació i executa automàticament el procés de tancament de sessió mitjançant la funció \texttt{logoutEndpoint}.
+
+Tota la comunicació amb el servidor es realitza a través de l'\texttt{adminService}, definit a \texttt{ui-new/src/lib/api.ts}, que proporciona una capa d'abstracció per a totes les operacions administratives. Aquest servei gestiona les crides a l'API REST del backend, mantenint la coherència i la seguretat en totes les operacions d'administració.
+
+Com es pot veure, el botó "Delete" és interactiu quan es tenen permisos sobre l'usuari (\textbf{Figura \ref{fig:react-delete-valid-impl}}), però es mostra desactivat i no és funcional quan s'intenta eliminar un compte protegit, com el del propi \texttt{SUPER\_ADMIN} (\textbf{Figura \ref{fig:react-delete-invalid-impl}}). Aquesta restricció visual i funcional és una mesura de seguretat clau per garantir la integritat del sistema.
+
+Finalment, abans de qualsevol eliminació, es mostra un diàleg de confirmació per prevenir accions accidentals (\textbf{Figura \ref{fig:react-delete-confirm-impl}}), una mesura de seguretat afegida durant la implementació que no estava als esbossos inicials.
+
+\subsection{Gestió d'Arxius}
+El gestor d'arxius, implementat principalment al component \texttt{ui-new/src/pages/FileManager/index.tsx}, constitueix el nucli funcional de l'aplicació web.
+
+\paragraph{UC-08: Crear o Pujar Arxius i Carpetes}
+Aquesta funcionalitat permet als usuaris afegir nou contingut al seu espai de treball, ja sigui creant carpetes o pujant arxius i estructures de carpetes completes des del seu dispositiu.
+
+La interacció de l'usuari s'inicia en el component \texttt{ui-new/src/components/AddButton/index.tsx}, que presenta un botó que, en ser premut, desplega un \texttt{Popover} amb tres opcions: ``New folder'', ``Upload file'' i ``Upload folder''. Aquest component implementa una tècnica comuna per a la pujada d'arxius: conté dos elements \texttt{<input type="file">} ocults que s'activen per codi mitjançant referències (\texttt{useRef}) quan l'usuari selecciona les opcions corresponents. Per a la pujada de carpetes, l'atribut no estàndard \texttt{webkitdirectory} és clau, ja que instrueix el navegador perquè permeti la selecció de carpetes completes.
+
+L'opció ``New folder'' obre el diàleg modal \texttt{ui-new/src/components/CreateNewFolderDialog/index.tsx}, mentre que les opcions de pujada activen directament els respectius inputs ocults. Aquests components de la UI actuen com a mers disparadors: tota la lògica de negoci complexa resideix en el hook \texttt{ui-new/src/hooks/useFileOperations.ts}, que centralitza les operacions d'arxius. Les accions de l'usuari en la UI invoquen les funcions \texttt{createFolder}, \texttt{uploadFile} i \texttt{uploadFolder} proporcionades per aquest hook.
+
+\begin{lstlisting}[language=typescript, caption={Activació de la pujada de carpetes a `AddButton/index.tsx`}]
+const folderInputRef = useRef<HTMLInputElement>(null);
+    
+    const handleFolderUploadLocal = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+        if (!files || files.length === 0) {
+            return;
+        }
+        try {
+        uploadFolder({ files: Array.from(files), parentId: currentDirectory.id!.toString() });
+        } catch (error) {
+            console.error('[AddButton] Error uploading folder:', error);
+    }
+        event.target.value = '';
+};
+    
+    // JSX del component
+<input
+    type="file"
+    ref={folderInputRef}
+        className="hidden"
+        webkitdirectory=""
+        directory=""
+        multiple={false}
+        onChange={handleFolderUploadLocal}
+    />
+    <Button
+        variant="ghost"
+        className="w-full justify-start gap-2"
+        onClick={() => {
+            folderInputRef.current?.click();
+        }}
+    >
+        <RiFolderUploadLine className="h-4 w-4" />
+        Upload folder
+    </Button>
+\end{lstlisting}
+
+El hook \texttt{useFileOperations.ts} constitueix una peça clau de l'arquitectura del client, utilitzant el hook \texttt{useMutation} de TanStack Query per a totes les operacions d'escriptura. Això permet una gestió d'estat molt avançada, incloent-hi les \textbf{actualitzacions optimistes}, que milloren dràsticament la percepció de velocitat de l'usuari. El flux d'una actualització optimista segueix un patró consistent: l'\texttt{onMutate} s'executa abans de la crida a l'API, actualitzant la memòria cache local de TanStack Query de manera immediata i fent que la interfície reflecteixi el canvi a l'instant. Es guarda una còpia de l'estat previ per poder-lo revertir en cas d'error. Si la crida a l'API falla, l'\texttt{onError} reverteix l'actualització optimista restaurant l'estat previ. Si la crida té èxit, l'\texttt{onSuccess} invalida la memòria cache per assegurar que les dades locals se sincronitzin amb les dades definitives provinents del servidor.
+
+\begin{lstlisting}[language=typescript, caption={Implementació d'una mutació optimista a `useFileOperations.ts`}]
+const createFolderMutation = useMutation({
+    mutationFn: async ({ name, parentId }: { name: string, parentId: string }) => {
+      return fileService.createFolder(name, parentId);
+    },
+    onMutate: async ({ name, parentId }) => {
+      // 1. Cancel·lar queries per evitar que sobreescriguin l'actualització optimista
+      await queryClient.cancelQueries({ queryKey: [QUERY_KEYS.CURRENT_DIRECTORY, parentId] });
+      await queryClient.cancelQueries({ queryKey: [QUERY_KEYS.FOLDER_STRUCTURE] });
+      
+      // 2. Guardar l'estat previ
+      const previousDirectory = queryClient.getQueryData([QUERY_KEYS.CURRENT_DIRECTORY, parentId]) as FileItem;
+      const previousStructure = queryClient.getQueryData([QUERY_KEYS.FOLDER_STRUCTURE]);
+      
+      // 3. Crear el nou objecte i actualitzar la UI de forma optimista
+      const newFolder: FileItem = {
+        id: `temp-${Date.now()}`,
+        name: generateUniqueName(name, previousDirectory.subfolders?.map((f: FileItem) => f.name) || [], name, true),
+        type: 'folder',
+        parent: parentId,
+        subfolders: []
+      };
+
+      const directoryCopy = JSON.parse(JSON.stringify(previousDirectory));
+      directoryCopy.subfolders = [...(directoryCopy.subfolders || []), newFolder];
+      queryClient.setQueryData([QUERY_KEYS.CURRENT_DIRECTORY, parentId], directoryCopy);
+      
+      return { previousDirectory, previousStructure };
+    },
+    onError: (err, variables, context) => {
+      // Revertir en cas d'error
+      if (context?.previousDirectory) {
+        queryClient.setQueryData([QUERY_KEYS.CURRENT_DIRECTORY, variables.parentId], context.previousDirectory);
+      }
+      if (context?.previousStructure) {
+        queryClient.setQueryData([QUERY_KEYS.FOLDER_STRUCTURE], context.previousStructure);
+      }
+      notifications.error('Error creating folder');
+    },
+    onSuccess: () => {
+      notifications.success('Folder created');
+      refreshAll(); // Sincronitzar amb el servidor
+    }
+});
+\end{lstlisting}
+
+Les funcions de mutació dins del hook són les que finalment comuniquen amb el backend a través dels mètodes corresponents del \texttt{fileService} (definits a \texttt{ui-new/src/lib/api.ts}), que s'encarreguen de la comunicació HTTP. La pujada de carpetes presenta una complexitat addicional: la funcionalitat \texttt{uploadFolderMutation} ha de processar la llista de fitxers (\texttt{FileList}) que proporciona el navegador, reconstruir l'estructura de directoris en el client i enviar-la de forma recursiva al backend per recrear-la.
+
+Aquesta implementació recursiva, si bé és robusta per a gestionar estructures de carpetes complexes, introdueix un important coll d'ampolla de rendiment. Cada fitxer dins de la carpeta es tradueix en una petició HTTP independent, la qual cosa pot generar una càrrega excessiva al backend en pujar directoris amb un gran volum d'elements. L'API actual no suporta operacions de pujada per lots (\textit{batch uploads}), una limitació tècnica que impedeix una solució més eficient. L'optimització d'aquest flux s'ha identificat com un treball futur, tal com s'exposa al Capítol 12.
+
+\paragraph{UC-09A/B/C: Operacions amb Arxius (Renomenar, Moure, Copiar)}
+Aquest conjunt de funcionalitats cobreix les manipulacions més habituals sobre els elements del gestor d'arxius, com canviar el nom, moure'ls de lloc o duplicar-los.
+
+El cervell que orquestra aquestes operacions resideix al \texttt{ui-new/src/store/fileSelectionStore.ts}, un store de Zustand que actua com a nucli centralitzat de l'estat. Aquest store gestiona un registre dels fitxers que l'usuari té seleccionats (\texttt{selectedFiles}) i, a més, actua com un porta-retalls virtual, emmagatzemant els fitxers copiats o tallats (\texttt{clipboard}) juntament amb l'estat de l'operació (\texttt{isCut}).
+
+Per alimentar aquesta llista de fitxers seleccionats, la interfície ofereix múltiples mètodes d'interacció. El hook \texttt{ui-new/src/hooks/useSelecto.ts}, que integra la llibreria \texttt{Selecto.js}, permet a l'usuari dibuixar un quadre de selecció amb el ratolí per seleccionar diversos elements de forma intuïtiva. A més, s'han implementat dreceres de teclat per a una navegació eficient: el hook \texttt{ui-new/src/hooks/useFileSelection.ts} exposa la funció \texttt{selectArrowKeys}, que permet expandir o moure la selecció utilitzant les tecles de fletxa, mentre que \texttt{ui-new/src/hooks/useFileShortcuts.ts} gestiona la drecera \texttt{Ctrl+A} per seleccionar tots els elements del directori. Tots aquests mecanismes convergeixen en la modificació de l'estat \texttt{selectedFiles} dins del \texttt{fileSelectionStore}. Aquesta arquitectura desacobla la lògica de selecció de la d'acció, permetent que la resta de funcionalitats operin sobre la selecció actual sense necessitat de conèixer com s'ha generat.
+
+
+Per determinar quins elements són seleccionables, el hook \texttt{useSelecto.ts} configura la llibreria \texttt{Selecto.js} perquè apunti a qualsevol element que tingui la classe CSS \texttt{.file-item}. Cada component \texttt{File} assigna aquesta classe al seu element principal, un component \texttt{Card}, fent-lo així un objectiu vàlid per a la selecció.
+
+Aquesta connexió permet que l'estil de cada fitxer reaccioni dinàmicament a l'estat de la selecció. Per exemple, quan un fitxer és seleccionat o marcat per a ser tallat, el component \texttt{File} actualitza les seves classes CSS amb Tailwind per reflectir visualment aquest canvi. Aquesta reactivitat s'aconsegueix mitjançant hooks personalitzats que se subscriuen a l'store de Zustand.
+
+\begin{lstlisting}[language=typescript, caption={Estils dinàmics del component `File` a `index.tsx`}]
+const File = ({ file }: FileProps) => {
+  // ...
+  const isItemSelected = useIsItemSelected(file);
+  const isCutFile = useIsCutFile(file);
+  // ...
+  return (
+    <Card
+      className={cx(
+        "file-item flex flex-col items-center justify-center p-2 rounded-lg cursor-pointer",
+        isItemSelected ? "bg-blue-100 border-blue-300" : "hover:bg-gray-100",
+        isCutFile && "opacity-50"
+      )}
+      // ...
+    >
+      {/* ... contingut del fitxer ... */}
+    </Card>
+  );
+};
+\end{lstlisting}
+
+\begin{lstlisting}[language=typescript, caption={Implementació dels hooks `useIsItemSelected` i `useIsCutFile` a `fileSelectionStore.ts`}]
+export function useIsItemSelected(file: FileItem) {
+  return useFileSelectionStore((state) => state.selectedFilesIds.some(f => f === file.id));
+}
+
+function isCutFile(file: FileItem, state: FileSelectionState) {
+  const res = Array.from(state.clipboard).filter(f => f.id === file.id);
+  return res.length > 0 && state.isCut;
+}
+
+export function useIsCutFile(file: FileItem) {
+  return useFileSelectionStore((state) => isCutFile(file, state));
+}
+\end{lstlisting}
+
+El fragment de codi anterior mostra com els booleans \texttt{isItemSelected} i \texttt{isCutFile} s'utilitzen per aplicar classes condicionalment. Aquests booleans no són estats locals del component, sinó el resultat de dos hooks personalitzats, \texttt{useIsItemSelected} i \texttt{useIsCutFile}. Aquests hooks implementen un patró de subscripció selectiva a l'store de Zustand (\texttt{fileSelectionStore}).
+
+Aquest mecanisme és clau per a l'eficiència de la interfície. Quan l'usuari selecciona un fitxer, l'estat \texttt{selectedFiles} de l'store canvia. Zustand notifica només aquells components que estan subscrits a aquesta part específica de l'estat. En aquest cas, només els components \texttt{File} afectats (el que s'acaba de seleccionar i el que s'acaba de deseleccionar) rebran el nou valor del hook \texttt{isItemSelected} i es tornaran a renderitzar per actualitzar el seu estil. La resta de fitxers a la graella no es veuen afectats i no es renderitzen de nou, evitant així càlculs innecessaris i mantenint una experiència d'usuari fluida, fins i tot en directoris amb centenars d'elements.
+
+Les accions de l'usuari s'inicien des de diversos punts d'entrada que utilitzen aquest estat centralitzat. El menú contextual (\texttt{ui-new/src/components/FileManagerContextMenu/index.tsx}) proporciona les opcions visuals. Paral·lelament, el hook \texttt{ui-new/src/hooks/useFileShortcuts.ts} afegeix un \textit{listener} global per a dreceres com \texttt{Ctrl+C} o \texttt{Ctrl+X}, que criden les funcions \texttt{copyFiles} o \texttt{cutFiles} de l'store. Finalment, el component \texttt{ui-new/src/pages/FileManager/index.tsx} utilitza \texttt{dnd-kit} per a la funcionalitat d'arrossegar i deixar anar. Cal destacar que, tot i que la lògica permet operacions amb múltiples fitxers mitjançant arrossegar i deixar anar, la representació visual actualment només mostra un únic element sent arrossegat. Aquesta és una millora pendent que s'exposa al Capítol 12.
+
+Independentment del disparador utilitzat, l'execució final de la lògica de negoci es delega sempre a les mutacions definides al hook \texttt{ui-new/src/hooks/useFileOperations.ts}. Per al \textbf{renombrament (UC-09A)}, l'opció del menú contextual obre el diàleg \texttt{ui-new/src/components/File/RenameDialog.tsx}. En confirmar el nou nom, una funció de callback al \texttt{FileManager/index.tsx} (\texttt{handleRename}) invoca la mutació \texttt{updateItem} del hook. Per al \textbf{moviment (UC-09B)}, tant l'acció d'arrossegar i deixar anar com la confirmació des del diàleg de selecció de carpeta acaben cridant a la mutació \texttt{moveItem}. Per a les operacions de \textbf{copiar i enganxar (UC-09C)}, la drecera \texttt{Ctrl+V} al \texttt{useFileShortcuts.ts} llegeix el contingut del \texttt{fileSelectionStore} i invoca la mutació \texttt{pasteFiles}. Aquesta única mutació gestiona tant la còpia (\texttt{fileService.copyElement}) com el tallat (\texttt{fileService.moveElement}), basant-se en el valor del booleà \texttt{isCut} de l'store.
+
+\begin{lstlisting}[language=typescript, caption={Gestió del Drag \& Drop a `FileManager/index.tsx`}]
+const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveDragItem(null);
+    
+    if (!over || active.id === over.id) {
+        return;
+      }
+    if(!active.data.current || !over.data.current) {
+      return;
+    }
+    
+    const draggedItem = active.data.current.file as FileItem;
+    const dropTarget = over.data.current.file as FileItem;
+    if (dropTarget && dropTarget.id) {
+        try {
+            if (draggedItem.id !== dropTarget.id && draggedItem.id !== dropTarget.parent && dropTarget.type === 'folder') {
+                const itemsToMove = selectedFiles.length > 0 && selectedFiles.some(f => f === draggedItem)
+                ? selectedFiles
+                : [draggedItem];
+            await fileOperations.moveItem({
+                items: itemsToMove, 
+                toFolderId: dropTarget.id.toString(), 
+                    fromFolderId: fileOperations.currentDirectory.id || 'root'
+            });
+            notifications.success('Items moved successfully');
+            }
+        } catch {
+            notifications.error('Could not move the item');
+        }
+    }
+}, [selectedFiles, fileOperations, notifications]);
+\end{lstlisting}
+
+\begin{lstlisting}[language=typescript, caption={Gestió de dreceres de teclat a `useFileShortcuts.ts`}]
+useEffect(() => {
+  const handleKeyDown = async (event: KeyboardEvent) => {
+    if (event.ctrlKey || event.metaKey) {
+      switch (event.key.toLowerCase()) {
+        case 'c':
+          event.preventDefault();
+          if(isInRoot || (isInShared && currentDirectory.shared && currentDirectory.accessLevel !== 'READ')) {
+          copyFiles(currentDirectory.id!.toString());
+          } else {
+            notifications.error("You don't have permission to copy files");
+          }
+          break;
+
+        case 'x':
+          event.preventDefault();
+          if(isInRoot || (isInShared && currentDirectory.shared && currentDirectory.accessLevel !== 'read')) {
+          cutFiles(currentDirectory.id!.toString());
+          } else {
+            notifications.error("You don't have permission to cut files");
+          }
+          break;
+
+        case 'v':
+          event.preventDefault();
+          if(isInRoot || (isInShared && currentDirectory.accessLevel !== 'read')) {
+          const items = Array.from(clipboard);
+          if(items.length > 0) {
+              pasteFiles({items: items, targetFolderId: currentDirectory.id!.toString(), prevParentId: clipboardParentId, isCut: isCut});
+            }
+            if(isCut) {
+              setClipboardFiles(new Set(), undefined);
+            }
+          } else {
+            notifications.error("You don't have permission to paste files");
+          }
+          break;
+      }
+    }
+  };
+
+  window.addEventListener('keydown', handleKeyDown);
+  return () => window.removeEventListener('keydown', handleKeyDown);
+}, [selectedFiles, currentDirectory, clipboard, isCut, clipboardParentId, /* ... */]);
+\end{lstlisting}
+
+Totes aquestes mutacions (\texttt{updateItem}, \texttt{moveItem}, \texttt{pasteFiles}) segueixen el patró d'\textbf{actualització optimista} implementat amb TanStack Query, proporcionant una resposta visual immediata a l'usuari mentre la comunicació amb el backend es processa en segon pla. 
+
+\paragraph{UC-10: Eliminar Arxiu (Moure a la Paperera)}
+Quan eliminem un arxiu des de la vista principal del gestor, no l'estem esborrant per sempre, sinó que el movem a la paperera de reciclatge, com si fos un pas intermedi.
+
+Podem començar a eliminar un arxiu de dues maneres: fent clic amb el botó dret per obrir el menú contextual a \texttt{ui-new/src/components/FileManagerContextMenu/index.tsx} o simplement prement la tecla \texttt{Delete}. El hook \texttt{ui-new/src/hooks/useFileShortcuts.ts} s'encarrega de capturar quan premem \texttt{Delete} i, igual que el menú contextual, crida la funció \texttt{deleteItem} del hook \texttt{ui-new/src/hooks/useFileOperations.ts}. Això fa que, independentment de com decidim eliminar l'arxiu, l'experiència sigui la mateixa.
+
+El que fa que aquesta funcionalitat sigui interessant és la lògica dual de la mutació \texttt{deleteItemMutation}. El que passa quan eliminem un arxiu depèn totalment de la secció on estem, informació que ens proporciona el \texttt{ui-new/src/store/fileContextStore.ts}. Aquest store ens diu on som (\texttt{root}, \texttt{shared} o \texttt{trash}), i això permet que la mateixa acció (prémer \texttt{Delete} o fer clic a "Eliminar") faci coses diferents segons el context.
+
+\begin{lstlisting}[language=typescript, caption={Gestió de la tecla Delete a `useFileShortcuts.ts`}]
+} else if (event.key === 'Delete') {
+  event.preventDefault();
+  if (fileContext.section === 'shared') {
+    revokeAccess({items: selectedFiles})
+  } else {
+    deleteItem({items: selectedFiles, section: fileContext.section});
+  }
+  clearSelection();
+}
+\end{lstlisting}
+
+Dins de la funció \texttt{mutationFn} de la mutació \texttt{deleteItemMutation}, un simple condicional decideix què fer. Si estem a la secció \texttt{'root'}, es crida a \texttt{fileService.deleteElement}, que mou l'element a la paperera al backend. Però si estem a la secció \texttt{'trash'}, es crida a \texttt{trashService.deleteItem}, que esborra l'element de manera permanent. Aquest disseny ens permet utilitzar la mateixa interfície d'usuari per a dues operacions molt diferents, fent que la lògica sigui més senzilla als components de la interfície mentre mantenim la complexitat al nivell de servei.
+
+\begin{lstlisting}[language=typescript, caption={Lògica dual de la mutació d'eliminació a `useFileOperations.ts`}]
+const deleteItemMutation = useMutation({
+  mutationFn: async ({ items, section }: { items: FileItem[], section: 'root' | 'trash' | 'shared' }) => {
+    try {
+      if(section === 'root') {
+        return Promise.all(items.map(item => fileService.deleteElement(item.id!.toString())));
+      } else if(section === 'trash') {
+        return Promise.all(items.map(item => trashService.deleteItem(item.id!.toString())));
+      } else {
+        notifications.error('Cannot delete items from this section');
+        return;
+      }
+    } catch (error) {
+      console.error('Error deleting items:', error);
+      notifications.error('Error deleting items');
+      return;
+    }
+  },
+  onSuccess: (_, variables) => {
+    notifications.success(
+      variables.section === 'root' 
+        ? 'Items moved to trash correctly'
+        : 'Items deleted permanently'
+    );
+    refreshAll();
+  }
+  // ... onMutate i onError per a l'actualització optimista
+});
+\end{lstlisting}
+
+Igual que les altres mutacions del sistema, \texttt{deleteItemMutation} utilitza el patró d'actualització optimista de TanStack Query. Quan eliminem un element, aquest desapareix de la interfície immediatament gràcies a l'\texttt{onMutate}, que actualitza la cache local, mentre que l'operació real es fa en segon pla. Les notificacions d'èxit ens donen un feedback específic segons el tipus d'operació: "Items moved to trash correctly" per al moviment a la paperera o "Items deleted permanently" per a l'esborrat definitiu.
+
+\subsection{Compartició d'Arxius}
+\paragraph{UC-13, UC-13A, UC-13B: Compartir, Deixar de Compartir i Veure Compartits}
+Aquesta funcionalitat permet als usuaris compartir els seus arxius i carpetes amb altres, gestionar els permisos i veure els elements que altres han compartit amb ells.
+
+La navegació entre les diferents seccions del gestor d'arxius (\texttt{root}, \texttt{shared}, \texttt{trash}) es gestiona a través d'un canvi de context en lloc d'un canvi de ruta. L'usuari inicia aquesta navegació fent clic a les icones corresponents a la barra lateral, implementada al component \texttt{ui-new/src/components/FileDirectorySidebar/index.tsx}. Aquesta acció invoca la funció \texttt{handleNavigateToSection}, que actualitza l'estat global a través del \texttt{ui-new/src/store/fileContextStore.ts}, establint la secció activa. Aquest canvi de context fa que el hook \texttt{useFileOperations} obtingui les dades del directori arrel corresponent a la secció seleccionada, poblant la vista principal amb els fitxers i carpetes adequats.
+
+\begin{lstlisting}[language=typescript, caption={Navegació entre seccions a `FileDirectorySidebar/index.tsx`}]
+const handleNavigateToSection = useCallback(async (section: 'root' | 'shared' | 'trash', e: React.MouseEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  try {
+    let folder: FileItem;
+    switch (section) {
+      case 'root':
+        folder = await fileService.getRootFolder();
+        break;
+      case 'shared':
+        folder = await sharingService.getSharedRootFolder();
+        folder.id = "shared";
+        break;
+      case 'trash':
+        folder = await trashService.getTrashRootFolder();
+        folder.id = "trash";
+        break;
+    }
+    await setCurrentDirectory(folder);
+    fileContext.setSection(section);
+  } catch {
+    notifications.error('Loading error');
+  }
+}, [fileContext, setCurrentDirectory, notifications]);
+\end{lstlisting}
+
+Un cop dins d'una secció, l'usuari pot navegar per l'arbre de directoris fent clic als elements de la barra lateral (\texttt{ui-new/src/components/FileDirectorySidebarItem/index.tsx}) o fent doble clic sobre una carpeta a la vista principal (\texttt{ui-new/src/components/File/index.tsx}). Ambdues accions invoquen la funció \texttt{setCurrentDirectory} del hook \texttt{useFileOperations}, que carrega el contingut de la carpeta seleccionada i actualitza la vista.
+
+La funció \texttt{setCurrentDirectory} és fonamental per a la gestió de l'estat de la navegació. Aquesta funció actualitza manualment la memòria cache de TanStack Query mitjançant \texttt{queryClient.setQueryData}, establint la carpeta seleccionada com el nou directori actual. Aquest procés actualitza l'estat global a Zustand a través de \texttt{setStoreCurrentDirectory} i persisteix l'ID del directori a la \texttt{sessionStorage} per mantenir l'estat entre recàrregues de la pàgina.
+
+Aquesta acció desencadena l'execució de la query \texttt{currentDirectoryQuery}, que utilitza el hook \texttt{useQuery} per obtenir les dades completes del directori des del backend. La clau d'aquesta query (\texttt{queryKey}) és un array que inclou l'identificador del directori actual, assegurant que cada directori tingui la seva pròpia entrada a la memòria cache. La configuració \texttt{staleTime} de 5 minuts indica a TanStack Query que consideri les dades a la memòria cache com a "fresques" durant aquest període, evitant crides innecessàries a l'API si l'usuari torna a un directori visitat recentment.
+
+\begin{lstlisting}[language=typescript, caption={Gestió del directori actual amb `useQuery` a `useFileOperations.ts`}]
+const setCurrentDirectory = async (folder: FileItem) => {
+  if (folder.id) {
+    const newId = folder.id.toString();
+    setStoreCurrentDirectory(folder);
+    safeSessionStorage.setItem(STORAGE_KEYS.CURRENT_DIRECTORY_ID, newId);
+  }
+  
+  await queryClient.setQueryData([QUERY_KEYS.CURRENT_DIRECTORY, folder.id], folder);
+  setStoreCurrentDirectory(folder);
+};
+
+const currentDirectoryQuery = useQuery({
+  queryKey: [QUERY_KEYS.CURRENT_DIRECTORY, currentDirectory.id],
+  queryFn: () => {
+    if(section === 'trash') {
+      return fileService.getFolderById(currentDirectory.id, true);
+    } else {
+      return fileService.getFolderById(currentDirectory.id, false);
+    }
+  }, 
+  staleTime: 1000 * 60 * 5,
+  enabled: !!localStorage.getItem('accessToken') && !!currentDirectory.id,
+});
+\end{lstlisting}
+
+Aquest mecanisme de memòria cache és essencial per a una experiència de navegació fluida. Quan l'usuari navega a un directori ja visitat, les dades es carreguen instantàniament des de la memòria cache, eliminant la latència de la xarxa. La dada només es torna a demanar al servidor si ha passat el \texttt{staleTime} o si la memòria cache s'invalida manualment després d'una operació (com crear o eliminar un fitxer), assegurant un equilibri òptim entre rendiment i consistència de les dades.
+
+\begin{lstlisting}[language=typescript, caption={Navegació per doble clic a `File/index.tsx`}]
+const handleDoubleClick = async () => {
+  if (file.type === 'folder') {
+    fileOperations.setCurrentDirectory(file);
+  } else {
+    // ... lògica per descarregar fitxers
+  }
+};
+\end{lstlisting}
+
+L'acció de compartir s'inicia des del menú contextual, que obre el component \texttt{ui-new/src/components/File/ShareDialog.tsx}, el centre neuràlgic de la gestió de permisos. Cal destacar que aquesta funcionalitat només està disponible per a fitxers i carpetes propis de l'usuari, és a dir, quan es troba a la secció \texttt{root}. En obrir-se el diàleg, aquest utilitza el hook \texttt{ui-new/src/hooks/useShareManager.ts} per carregar l'estat actual dels permisos per a tots els fitxers seleccionats, una informació que es desa per a una comparació posterior.
+
+Una de les optimitzacions clau d'aquesta funcionalitat rau en la lògica de la funció \texttt{share}, passada com a callback \texttt{onShare} des de \texttt{FileManager/index.tsx}. En lloc d'enviar simplement l'estat final dels permisos, aquesta funció realitza una operació de "diferència" entre l'estat original (guardat en obrir el diàleg) i l'estat final (quan l'usuari fa clic a "Share"). El codi itera sobre l'estat final per identificar nous permisos o modificacions, i sobre l'estat original per identificar permisos revocats. Això genera una llista precisa de les accions necessàries (\texttt{shareWithUser}, \texttt{handleUpdateAccess}, \texttt{handleUnshareToUser}), minimitzant el nombre de crides a l'API.
+
+\begin{lstlisting}[language=typescript, caption={Lògica de comparació de permisos a `FileManager/index.tsx`}]
+const share = useCallback(async (userAccess: {username: string, fileId: string, accessType: 'READ' | 'WRITE' }[], originalSharedAccess: Map<string, {username: string, fileId: string, accessType: 'READ' | 'WRITE' }[]>) => {
+  const promises = [];
+  if(originalSharedAccess.size > 0) { 
+    for (const access of userAccess) {
+      if(!originalSharedAccess.has(access.username) || !originalSharedAccess.get(access.username)!.some(a => a.fileId === access.fileId)) {
+        promises.push(shareManager.shareWithUser(access.fileId, access.username, access.accessType));
+      } else if(originalSharedAccess.get(access.username)!.some(a => a.fileId === access.fileId && a.accessType !== access.accessType)) {
+        promises.push(shareManager.handleUpdateAccess(access.fileId, access.username, access.accessType));
+      }
+    }
+    for (const user of originalSharedAccess.keys()) {
+      if(!userAccess.some(a => a.username === user)) {
+        originalSharedAccess.get(user)!.forEach(a => {
+          promises.push(shareManager.handleUnshareToUser(a.fileId, user));
+        });
+      } else {
+        originalSharedAccess.get(user)!.forEach(a => {
+          if(!userAccess.some(access => access.username === user && access.fileId === a.fileId)) {
+            promises.push(shareManager.handleUnshareToUser(a.fileId, user));
+          }
+        });
+      }
+    }
+    await Promise.all(promises);
+  } else {
+    for (const access of userAccess) {
+      promises.push(shareManager.shareWithUser(access.fileId, access.username, access.accessType));
+    }
+    await Promise.all(promises);
+  }
+}, [shareManager]);
+\end{lstlisting}
+
+Aquesta optimització va ser una millora directa basada en el feedback d'un \textit{beta tester}, que va assenyalar que compartir múltiples fitxers amb múltiples usuaris era un procés lent i afarragós. La funció de comparació utilitza el hook \texttt{useShareManager} com a intermediari, que conté funcions més granulars que són les que finalment criden als mètodes corresponents del \texttt{sharingService}.
+
+\begin{lstlisting}[language=typescript, caption={Funció per compartir amb un usuari a `useShareManager.ts`}]
+const shareWithUser = useCallback(async (fileId: string, username: string, accessType: 'READ' | 'WRITE' = 'READ') => {
+  if (!username) {
+    console.error("Please enter a username");
+    return false;
+  }
+  try {
+    await sharingService.shareFile(fileId, username, accessType);   
+    notifications.success('Item shared successfully');
+    console.log(`File ${fileId} shared with ${username} with access type ${accessType}`);
+    return true;
+  } catch (error) {
+    console.error('Error sharing file:', error);
+    notifications.error('Could not share item');
+    return false;
+  }
+}, []);
+\end{lstlisting}
+
+A més de mostrar els fitxers compartits, la secció \texttt{shared} ofereix opcions contextuals diferents. El menú contextual \texttt{ui-new/src/components/FileManagerContextMenu/index.tsx} adapta les seves opcions a la secció activa, mostrant l'opció "Stop seeing" quan l'usuari es troba a la secció de compartits. Aquesta acció invoca la funció \texttt{revokeAccess} del hook \texttt{useFileOperations}, que s'encarrega de revocar el permís de l'usuari sobre el fitxer seleccionat, eliminant-lo de la seva vista de compartits.
+
+Aquesta adaptabilitat s'aconsegueix mitjançant una sèrie de renderitzats condicionals dins del component, que comproven la secció activa (\texttt{isInRoot}, \texttt{isInTrash}, \texttt{isInShared}) i si s'ha seleccionat un fitxer per mostrar només les accions pertinents.
+
+\begin{lstlisting}[language=typescript, caption={Renderitzat condicional de les opcions del menú a `FileManagerContextMenu/index.tsx`}]
+const handleUnshare = useCallback(async () => {
+  if (!file) return;
+  
+  await revokeAccess({items: selectedFiles});
+  onClose();
+}, [file, selectedFiles, onClose, revokeAccess]);
+// ... //
+<div className="min-w-[220px] p-1">
+  {/* Opcions quan NO hi ha cap fitxer seleccionat (Crear, Pujar, Enganxar...) */}
+  {!file && (isInRoot || (isInShared && currentDirectory.accessLevel === 'WRITE')) ? (
+    <>
+      <div onClick={() => setIsCreateFolderOpen(true)}>
+        <RiFolderLine />
+        <span>New folder</span>
+      </div>
+      {/* ... Altres opcions de creació i enganxar ... */}
+    </>
+  ) : (
+    <>
+      {/* Opcions quan SÍ hi ha un fitxer seleccionat */}
+
+      {/* Opcions per a la secció ROOT */}
+      {isInRoot && (
+        <>
+          <div onClick={handleCopy}><span>Copy</span></div>
+          <div onClick={handleCut}><span>Cut</span></div>
+          <div onClick={() => setOpenShareDialog(true)}><span>Share</span></div>
+          <div onClick={handleDelete}><span>Delete</span></div>
+        </>
+      )}
+
+      {/* Opcions per a la secció TRASH */}
+      {isInTrash && (
+        <>
+          <div onClick={handleRestore}><span>Restore</span></div>
+          <div onClick={handleDelete}><span>Delete permanently</span></div>
+        </>
+      )}
+      
+      {/* Opcions per a la secció SHARED (renderitzades per una funció auxiliar) */}
+      {isInShared && renderSharedOptions()}
+
+      {/* Opció comuna per veure detalls si només hi ha un fitxer seleccionat */}
+      {selectedFiles.length === 1 && (
+        <div onClick={handleDetails}><span>Details</span></div>
+      )}
+    </>
+  )}
+</div>
+\end{lstlisting}
+
+Cal destacar que, de manera similar a l'operació de pujada de carpetes, el procés de compartir múltiples fitxers amb múltiples usuaris no està optimitzat per a grans volums de dades. Tot i que és menys probable que un usuari modifiqui milers de permisos manualment a través de la interfície, l'arquitectura actual realitza una crida a l'API per a cada modificació individual de permís. L'optimització d'aquest flux mitjançant operacions per lots (\textit{batch operations}) es considera una de les millores futures, tal com es detalla al Capítol 12.

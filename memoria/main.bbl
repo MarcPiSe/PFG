@@ -1,0 +1,641 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.2 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{none/global//global/global}
+    \entry{baeldung-spring-alternatives}{online}{}
+      \name{author}{1}{}{%
+        {{hash=d58b26d9f7600672080ebf3851115e45}{%
+           family={Baeldung},
+           familyi={B\bibinitperiod}}}%
+      }
+      \strng{namehash}{d58b26d9f7600672080ebf3851115e45}
+      \strng{fullhash}{d58b26d9f7600672080ebf3851115e45}
+      \strng{bibnamehash}{d58b26d9f7600672080ebf3851115e45}
+      \strng{authorbibnamehash}{d58b26d9f7600672080ebf3851115e45}
+      \strng{authornamehash}{d58b26d9f7600672080ebf3851115e45}
+      \strng{authorfullhash}{d58b26d9f7600672080ebf3851115e45}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Why Choose Spring as Your Java Framework?}
+      \field{urlday}{15}
+      \field{urlmonth}{11}
+      \field{urlyear}{2023}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://www.baeldung.com/spring-why-to-choose
+      \endverb
+      \verb{url}
+      \verb https://www.baeldung.com/spring-why-to-choose
+      \endverb
+    \endentry
+    \entry{dbengines-comparison}{online}{}
+      \name{author}{1}{}{%
+        {{hash=03784a7c5600d29113972955e602a944}{%
+           family={{DB-Engines}},
+           familyi={D\bibinitperiod}}}%
+      }
+      \strng{namehash}{03784a7c5600d29113972955e602a944}
+      \strng{fullhash}{03784a7c5600d29113972955e602a944}
+      \strng{bibnamehash}{03784a7c5600d29113972955e602a944}
+      \strng{authorbibnamehash}{03784a7c5600d29113972955e602a944}
+      \strng{authornamehash}{03784a7c5600d29113972955e602a944}
+      \strng{authorfullhash}{03784a7c5600d29113972955e602a944}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{System Properties Comparison MySQL vs. Oracle vs. PostgreSQL}
+      \field{urlday}{15}
+      \field{urlmonth}{11}
+      \field{urlyear}{2023}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://db-engines.com/en/system/MySQL;Oracle;PostgreSQL
+      \endverb
+      \verb{url}
+      \verb https://db-engines.com/en/system/MySQL;Oracle;PostgreSQL
+      \endverb
+    \endentry
+    \entry{cloudamqp-rabbitmq-kafka}{online}{}
+      \name{author}{1}{}{%
+        {{hash=61bab6abec1f4fb2b0bc30260bbba879}{%
+           family={{CloudAMQP}},
+           familyi={C\bibinitperiod}}}%
+      }
+      \strng{namehash}{61bab6abec1f4fb2b0bc30260bbba879}
+      \strng{fullhash}{61bab6abec1f4fb2b0bc30260bbba879}
+      \strng{bibnamehash}{61bab6abec1f4fb2b0bc30260bbba879}
+      \strng{authorbibnamehash}{61bab6abec1f4fb2b0bc30260bbba879}
+      \strng{authornamehash}{61bab6abec1f4fb2b0bc30260bbba879}
+      \strng{authorfullhash}{61bab6abec1f4fb2b0bc30260bbba879}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{When to use RabbitMQ or Apache Kafka}
+      \field{urlday}{15}
+      \field{urlmonth}{11}
+      \field{urlyear}{2023}
+      \field{year}{2023}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://www.cloudamqp.com/blog/when-to-use-rabbitmq-or-apache-kafka.html
+      \endverb
+      \verb{url}
+      \verb https://www.cloudamqp.com/blog/when-to-use-rabbitmq-or-apache-kafka.html
+      \endverb
+    \endentry
+    \entry{kinsta_github_stats}{online}{}
+      \name{author}{1}{}{%
+        {{hash=decafb142daf7c33ebf5933025f8789f}{%
+           family={Holcombe},
+           familyi={H\bibinitperiod},
+           given={J.},
+           giveni={J\bibinitperiod}}}%
+      }
+      \strng{namehash}{decafb142daf7c33ebf5933025f8789f}
+      \strng{fullhash}{decafb142daf7c33ebf5933025f8789f}
+      \strng{bibnamehash}{decafb142daf7c33ebf5933025f8789f}
+      \strng{authorbibnamehash}{decafb142daf7c33ebf5933025f8789f}
+      \strng{authornamehash}{decafb142daf7c33ebf5933025f8789f}
+      \strng{authorfullhash}{decafb142daf7c33ebf5933025f8789f}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Estadísticas Clave de GitHub en 2025 (Usuarios, Empleados y Tendencias)}
+      \field{year}{2025}
+      \verb{urlraw}
+      \verb https://kinsta.com/es/blog/github-estadisticas/
+      \endverb
+      \verb{url}
+      \verb https://kinsta.com/es/blog/github-estadisticas/
+      \endverb
+    \endentry
+    \entry{SpringBootDocs}{online}{}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{labeltitlesource}{title}
+      \field{title}{Spring Boot Reference Guide}
+      \field{year}{2023}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://spring.io/projects/spring-boot
+      \endverb
+      \verb{url}
+      \verb https://spring.io/projects/spring-boot
+      \endverb
+    \endentry
+    \entry{ReactDocs}{online}{}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{labeltitlesource}{title}
+      \field{title}{React Documentation}
+      \field{year}{2023}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://react.dev
+      \endverb
+      \verb{url}
+      \verb https://react.dev
+      \endverb
+    \endentry
+    \entry{TauriDocs}{online}{}
+      \field{sortinit}{7}
+      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
+      \field{labeltitlesource}{title}
+      \field{title}{Tauri Documentation}
+      \field{year}{2023}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://tauri.app
+      \endverb
+      \verb{url}
+      \verb https://tauri.app
+      \endverb
+    \endentry
+    \entry{SvelteDocs}{online}{}
+      \field{sortinit}{8}
+      \field{sortinithash}{a231b008ebf0ecbe0b4d96dcc159445f}
+      \field{labeltitlesource}{title}
+      \field{title}{Svelte Documentation}
+      \field{year}{2023}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://svelte.dev
+      \endverb
+      \verb{url}
+      \verb https://svelte.dev
+      \endverb
+    \endentry
+    \entry{DockerDocs}{online}{}
+      \field{sortinit}{9}
+      \field{sortinithash}{0a5ebc79d83c96b6579069544c73c7d4}
+      \field{labeltitlesource}{title}
+      \field{title}{Docker Documentation}
+      \field{year}{2023}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://docs.docker.com
+      \endverb
+      \verb{url}
+      \verb https://docs.docker.com
+      \endverb
+    \endentry
+    \entry{PostgreSQLDocs}{online}{}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labeltitlesource}{title}
+      \field{title}{PostgreSQL Documentation}
+      \field{year}{2023}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://www.postgresql.org/docs/
+      \endverb
+      \verb{url}
+      \verb https://www.postgresql.org/docs/
+      \endverb
+    \endentry
+    \entry{RabbitMQDocs}{online}{}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labeltitlesource}{title}
+      \field{title}{RabbitMQ Tutorials}
+      \field{year}{2023}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://www.rabbitmq.com
+      \endverb
+      \verb{url}
+      \verb https://www.rabbitmq.com
+      \endverb
+    \endentry
+    \entry{RadixUIDocs}{online}{}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labeltitlesource}{title}
+      \field{title}{Radix UI Primitives}
+      \field{year}{2023}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://www.radix-ui.com/primitives/docs
+      \endverb
+      \verb{url}
+      \verb https://www.radix-ui.com/primitives/docs
+      \endverb
+    \endentry
+    \entry{TremorDocs}{online}{}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labeltitlesource}{title}
+      \field{title}{Tremor React Components}
+      \field{year}{2023}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://www.tremor.so
+      \endverb
+      \verb{url}
+      \verb https://www.tremor.so
+      \endverb
+    \endentry
+    \entry{ReactQueryDocs}{online}{}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labeltitlesource}{title}
+      \field{title}{TanStack React Query}
+      \field{year}{2023}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://tanstack.com/query
+      \endverb
+      \verb{url}
+      \verb https://tanstack.com/query
+      \endverb
+    \endentry
+    \entry{ZustandDocs}{online}{}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labeltitlesource}{title}
+      \field{title}{Zustand State Manager}
+      \field{year}{2023}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://github.com/pmndrs/zustand
+      \endverb
+      \verb{url}
+      \verb https://github.com/pmndrs/zustand
+      \endverb
+    \endentry
+    \entry{DndKitDocs}{online}{}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labeltitlesource}{title}
+      \field{title}{dnd-kit Documentation}
+      \field{year}{2023}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://dndkit.com
+      \endverb
+      \verb{url}
+      \verb https://dndkit.com
+      \endverb
+    \endentry
+    \entry{SelectoDocs}{online}{}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labeltitlesource}{title}
+      \field{title}{Selecto Library}
+      \field{year}{2023}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://daybrush.com/selecto/
+      \endverb
+      \verb{url}
+      \verb https://daybrush.com/selecto/
+      \endverb
+    \endentry
+    \entry{RemixIconDocs}{online}{}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labeltitlesource}{title}
+      \field{title}{Remix Icon Library}
+      \field{year}{2023}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://remixicon.com
+      \endverb
+      \verb{url}
+      \verb https://remixicon.com
+      \endverb
+    \endentry
+    \entry{UseHooksTS}{online}{}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labeltitlesource}{title}
+      \field{title}{useDebounce Hook - usehooks-ts}
+      \field{year}{2023}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://usehooks-ts.com/react-hook/use-debounce
+      \endverb
+      \verb{url}
+      \verb https://usehooks-ts.com/react-hook/use-debounce
+      \endverb
+    \endentry
+    \entry{appleton-vdom}{online}{}
+      \name{author}{1}{}{%
+        {{hash=8faf73e86645de12136be02681800488}{%
+           family={Appleton},
+           familyi={A\bibinitperiod},
+           given={Maggie},
+           giveni={M\bibinitperiod}}}%
+      }
+      \strng{namehash}{8faf73e86645de12136be02681800488}
+      \strng{fullhash}{8faf73e86645de12136be02681800488}
+      \strng{bibnamehash}{8faf73e86645de12136be02681800488}
+      \strng{authorbibnamehash}{8faf73e86645de12136be02681800488}
+      \strng{authornamehash}{8faf73e86645de12136be02681800488}
+      \strng{authorfullhash}{8faf73e86645de12136be02681800488}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{What the Fork is the React Virtual DOM}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://maggieappleton.com/react-vdom/
+      \endverb
+      \verb{url}
+      \verb https://maggieappleton.com/react-vdom/
+      \endverb
+    \endentry
+    \entry{jones-dataflow}{online}{}
+      \name{author}{1}{}{%
+        {{hash=7599546573eb97152c169abbfb60b7e7}{%
+           family={Jones},
+           familyi={J\bibinitperiod},
+           given={William},
+           giveni={W\bibinitperiod}}}%
+      }
+      \strng{namehash}{7599546573eb97152c169abbfb60b7e7}
+      \strng{fullhash}{7599546573eb97152c169abbfb60b7e7}
+      \strng{bibnamehash}{7599546573eb97152c169abbfb60b7e7}
+      \strng{authorbibnamehash}{7599546573eb97152c169abbfb60b7e7}
+      \strng{authornamehash}{7599546573eb97152c169abbfb60b7e7}
+      \strng{authorfullhash}{7599546573eb97152c169abbfb60b7e7}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Conceptualizing React Components through Data flow Diagrams}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://medium.com/@williamjonescodes/conceptualizing-react-through-data-flow-diagrams-91d0518d3d59
+      \endverb
+      \verb{url}
+      \verb https://medium.com/@williamjonescodes/conceptualizing-react-through-data-flow-diagrams-91d0518d3d59
+      \endverb
+    \endentry
+    \entry{react-visualized}{online}{}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labeltitlesource}{title}
+      \field{title}{React Visualized}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://react.gg/visualized
+      \endverb
+      \verb{url}
+      \verb https://react.gg/visualized
+      \endverb
+    \endentry
+    \entry{mit-license}{online}{}
+      \name{author}{1}{}{%
+        {{hash=35d827e2a8f2127b88fab45ef43a4f09}{%
+           family={{Open Source Initiative}},
+           familyi={O\bibinitperiod}}}%
+      }
+      \strng{namehash}{35d827e2a8f2127b88fab45ef43a4f09}
+      \strng{fullhash}{35d827e2a8f2127b88fab45ef43a4f09}
+      \strng{bibnamehash}{35d827e2a8f2127b88fab45ef43a4f09}
+      \strng{authorbibnamehash}{35d827e2a8f2127b88fab45ef43a4f09}
+      \strng{authornamehash}{35d827e2a8f2127b88fab45ef43a4f09}
+      \strng{authorfullhash}{35d827e2a8f2127b88fab45ef43a4f09}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{MIT License}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://opensource.org/license/mit
+      \endverb
+      \verb{url}
+      \verb https://opensource.org/license/mit
+      \endverb
+    \endentry
+    \entry{incibe-aviso}{online}{}
+      \name{author}{1}{}{%
+        {{hash=b5ad2317f287bf06cab68e1b1c7406b8}{%
+           family={{INCIBE}},
+           familyi={I\bibinitperiod}}}%
+      }
+      \strng{namehash}{b5ad2317f287bf06cab68e1b1c7406b8}
+      \strng{fullhash}{b5ad2317f287bf06cab68e1b1c7406b8}
+      \strng{bibnamehash}{b5ad2317f287bf06cab68e1b1c7406b8}
+      \strng{authorbibnamehash}{b5ad2317f287bf06cab68e1b1c7406b8}
+      \strng{authornamehash}{b5ad2317f287bf06cab68e1b1c7406b8}
+      \strng{authorfullhash}{b5ad2317f287bf06cab68e1b1c7406b8}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Cómo redactar un aviso legal}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://www.incibe.es/protege-tu-empresa/blog/como-redactar-aviso-legal
+      \endverb
+      \verb{url}
+      \verb https://www.incibe.es/protege-tu-empresa/blog/como-redactar-aviso-legal
+      \endverb
+    \endentry
+    \entry{aepd-informar}{online}{}
+      \name{author}{1}{}{%
+        {{hash=8e996482e2df3bd53e26d8f5b62920d2}{%
+           family={{Agencia Española de Protección de Datos}},
+           familyi={A\bibinitperiod}}}%
+      }
+      \strng{namehash}{8e996482e2df3bd53e26d8f5b62920d2}
+      \strng{fullhash}{8e996482e2df3bd53e26d8f5b62920d2}
+      \strng{bibnamehash}{8e996482e2df3bd53e26d8f5b62920d2}
+      \strng{authorbibnamehash}{8e996482e2df3bd53e26d8f5b62920d2}
+      \strng{authornamehash}{8e996482e2df3bd53e26d8f5b62920d2}
+      \strng{authorfullhash}{8e996482e2df3bd53e26d8f5b62920d2}
+      \field{extraname}{1}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Guía para el cumplimiento del deber de informar}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://www.aepd.es/es/documento/guia-deber-informar.pdf
+      \endverb
+      \verb{url}
+      \verb https://www.aepd.es/es/documento/guia-deber-informar.pdf
+      \endverb
+    \endentry
+    \entry{aepd-ropa}{online}{}
+      \name{author}{1}{}{%
+        {{hash=8e996482e2df3bd53e26d8f5b62920d2}{%
+           family={{Agencia Española de Protección de Datos}},
+           familyi={A\bibinitperiod}}}%
+      }
+      \strng{namehash}{8e996482e2df3bd53e26d8f5b62920d2}
+      \strng{fullhash}{8e996482e2df3bd53e26d8f5b62920d2}
+      \strng{bibnamehash}{8e996482e2df3bd53e26d8f5b62920d2}
+      \strng{authorbibnamehash}{8e996482e2df3bd53e26d8f5b62920d2}
+      \strng{authornamehash}{8e996482e2df3bd53e26d8f5b62920d2}
+      \strng{authorfullhash}{8e996482e2df3bd53e26d8f5b62920d2}
+      \field{extraname}{2}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Modelo de registro de actividades de tratamiento}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://www.aepd.es/es/documento/actuaciones-tratamiento-responsables.pdf
+      \endverb
+      \verb{url}
+      \verb https://www.aepd.es/es/documento/actuaciones-tratamiento-responsables.pdf
+      \endverb
+    \endentry
+    \entry{ens-rd311}{online}{}
+      \name{author}{1}{}{%
+        {{hash=a5e4c87aa1b1ad044d4566421e02f784}{%
+           family={{BOE}},
+           familyi={B\bibinitperiod}}}%
+      }
+      \strng{namehash}{a5e4c87aa1b1ad044d4566421e02f784}
+      \strng{fullhash}{a5e4c87aa1b1ad044d4566421e02f784}
+      \strng{bibnamehash}{a5e4c87aa1b1ad044d4566421e02f784}
+      \strng{authorbibnamehash}{a5e4c87aa1b1ad044d4566421e02f784}
+      \strng{authornamehash}{a5e4c87aa1b1ad044d4566421e02f784}
+      \strng{authorfullhash}{a5e4c87aa1b1ad044d4566421e02f784}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Real Decreto 311/2022, Esquema Nacional de Seguridad}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://www.boe.es/buscar/act.php?id=BOE-A-2022-14698
+      \endverb
+      \verb{url}
+      \verb https://www.boe.es/buscar/act.php?id=BOE-A-2022-14698
+      \endverb
+    \endentry
+    \entry{vadillo-web-legal}{online}{}
+      \name{author}{1}{}{%
+        {{hash=4f94d8651db2370d2397c3cd3e6e07d0}{%
+           family={{Grupo Vadillo Asesores}},
+           familyi={G\bibinitperiod}}}%
+      }
+      \strng{namehash}{4f94d8651db2370d2397c3cd3e6e07d0}
+      \strng{fullhash}{4f94d8651db2370d2397c3cd3e6e07d0}
+      \strng{bibnamehash}{4f94d8651db2370d2397c3cd3e6e07d0}
+      \strng{authorbibnamehash}{4f94d8651db2370d2397c3cd3e6e07d0}
+      \strng{authornamehash}{4f94d8651db2370d2397c3cd3e6e07d0}
+      \strng{authorfullhash}{4f94d8651db2370d2397c3cd3e6e07d0}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{¿Qué aspectos legales debe cumplir una página web?}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://www.grupovadillo.com/aspectos-legales-pagina-web/
+      \endverb
+      \verb{url}
+      \verb https://www.grupovadillo.com/aspectos-legales-pagina-web/
+      \endverb
+    \endentry
+    \entry{tailwind-css}{online}{}
+      \name{author}{1}{}{%
+        {{hash=766d42c0267fcbdbbd0d67b32f6642ff}{%
+           family={{Tailwind Labs Inc.}},
+           familyi={T\bibinitperiod}}}%
+      }
+      \strng{namehash}{766d42c0267fcbdbbd0d67b32f6642ff}
+      \strng{fullhash}{766d42c0267fcbdbbd0d67b32f6642ff}
+      \strng{bibnamehash}{766d42c0267fcbdbbd0d67b32f6642ff}
+      \strng{authorbibnamehash}{766d42c0267fcbdbbd0d67b32f6642ff}
+      \strng{authornamehash}{766d42c0267fcbdbbd0d67b32f6642ff}
+      \strng{authorfullhash}{766d42c0267fcbdbbd0d67b32f6642ff}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Tailwind CSS}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://tailwindcss.com/
+      \endverb
+      \verb{url}
+      \verb https://tailwindcss.com/
+      \endverb
+    \endentry
+    \entry{radix-ui}{online}{}
+      \name{author}{1}{}{%
+        {{hash=4af44ed0e42dc586f14591c4e92cbea7}{%
+           family={{WorkOS}},
+           familyi={W\bibinitperiod}}}%
+      }
+      \strng{namehash}{4af44ed0e42dc586f14591c4e92cbea7}
+      \strng{fullhash}{4af44ed0e42dc586f14591c4e92cbea7}
+      \strng{bibnamehash}{4af44ed0e42dc586f14591c4e92cbea7}
+      \strng{authorbibnamehash}{4af44ed0e42dc586f14591c4e92cbea7}
+      \strng{authornamehash}{4af44ed0e42dc586f14591c4e92cbea7}
+      \strng{authorfullhash}{4af44ed0e42dc586f14591c4e92cbea7}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Radix UI}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://www.radix-ui.com/
+      \endverb
+      \verb{url}
+      \verb https://www.radix-ui.com/
+      \endverb
+    \endentry
+    \entry{tauri-app}{online}{}
+      \name{author}{1}{}{%
+        {{hash=3b185c250b064420790b79b44f42e30b}{%
+           family={{Tauri}},
+           familyi={T\bibinitperiod}}}%
+      }
+      \strng{namehash}{3b185c250b064420790b79b44f42e30b}
+      \strng{fullhash}{3b185c250b064420790b79b44f42e30b}
+      \strng{bibnamehash}{3b185c250b064420790b79b44f42e30b}
+      \strng{authorbibnamehash}{3b185c250b064420790b79b44f42e30b}
+      \strng{authornamehash}{3b185c250b064420790b79b44f42e30b}
+      \strng{authorfullhash}{3b185c250b064420790b79b44f42e30b}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Tauri Framework}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://tauri.app/
+      \endverb
+      \verb{url}
+      \verb https://tauri.app/
+      \endverb
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

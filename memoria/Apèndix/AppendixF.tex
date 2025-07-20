@@ -1,0 +1,227 @@
+% !TEX root = ../main.tex
+
+\chapter{Algoritmes rellevants del client de Tauri}
+
+\section{Gestió de Sincronització}
+
+\subsection{Algoritme de Cua de Sincronització}
+\begin{lstlisting}[language=JavaScript]
+class SyncQueueManager {
+    private queue: SyncTask[] = [];
+    
+    public async addFileToQueue(path: string, taskType: SyncTaskType, priority: SyncTaskPriority = SyncTaskPriority.MEDIUM) {
+        const fileMetadata = await invoke<any>('get_file_metadata_command', { path });
+        
+        const existingTaskIndex = this.queue.findIndex(
+            task => task.path === path && task.status === 'pending'
+        );
+        
+        if (existingTaskIndex >= 0) {
+            this.queue[existingTaskIndex].priority = priority;
+            this.queue[existingTaskIndex].createdAt = new Date();
+            this.queue[existingTaskIndex].type = taskType;
+            this.queue[existingTaskIndex].metadata = {
+                ...this.queue[existingTaskIndex].metadata,
+                localHash: fileMetadata.hash,
+                localModified: new Date(fileMetadata.last_modified * 1000),
+                size: fileMetadata.size
+            };
+            
+            this.sortQueue();
+            return;
+        }
+        
+        const task: SyncTask = {
+            id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            type: taskType,
+            path: path,
+            priority: priority,
+            status: 'pending',
+            createdAt: new Date(),
+            retryCount: 0,
+            metadata: {
+                localHash: fileMetadata.hash,
+                localModified: new Date(fileMetadata.last_modified * 1000),
+                size: fileMetadata.size
+            }
+        };
+        
+        this.queue.push(task);
+        this.sortQueue();
+        this.updateTasksCountUI();
+    }
+}
+\end{lstlisting}
+\textbf{Importància:} Gestiona la cua de sincronització de manera eficient, prioritzant tasques i evitant duplicats.
+
+\section{Monitoratge de Rendiment}
+
+\subsection{Algoritme de Monitoratge de Recursos}
+\begin{lstlisting}[language=JavaScript]
+export class PerformanceMonitor {
+    private metrics: PerformanceMetric[] = [];
+    private maxMetrics = 1000;
+
+    private async collectMetrics() {
+        const metrics = await invoke<Record<string, number>>('get_performance_metrics');
+        this.metrics.push({
+            timestamp: Date.now(),
+            type: 'memory',
+            value: metrics.memory_usage
+        });
+        
+        if (this.metrics.length > this.maxMetrics) {
+            this.metrics = this.metrics.slice(-this.maxMetrics);
+        }
+    }
+
+    public analyzePerformance(): Record<string, number> {
+        return {
+            avgMemory: this.calculateAverage('memory'),
+            maxMemory: this.calculateMax('memory'),
+            avgCPU: this.calculateAverage('cpu'),
+            maxCPU: this.calculateMax('cpu')
+        };
+    }
+}
+\end{lstlisting}
+\textbf{Importància:} Monitoritza i analitza el rendiment de l'aplicació en temps real, mantenint un historial limitat de mètriques.
+
+\section{Utilitats}
+
+\subsection{Algoritme de Format de Mida d'Arxius}
+\begin{lstlisting}[language=JavaScript]
+export function formatBytes(bytes: number): string {
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    let size = bytes;
+    let unitIndex = 0;
+
+    while (size >= 1024 && unitIndex < units.length - 1) {
+        size /= 1024;
+        unitIndex++;
+    }
+
+    return `${size.toFixed(1)} ${units[unitIndex]}`;
+}
+\end{lstlisting}
+\textbf{Importància:} Converteix mides d'arxius a un format llegible per l'usuari, adaptant-se automàticament a la unitat més adequada.
+
+\subsection{Algoritme de Format de Durada}
+\begin{lstlisting}[language=JavaScript]
+export function formatDuration(ms: number): string {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+
+    if (hours > 0) {
+        return `${hours}h ${minutes % 60}m`;
+    } else if (minutes > 0) {
+        return `${minutes}m ${seconds % 60}s`;
+    } else {
+        return `${seconds}s`;
+    }
+}
+\end{lstlisting}
+\textbf{Importància:} Formata durades en mil·lisegons a un format llegible per l'usuari, adaptant-se a la magnitud del temps.
+
+\section{Sincronització de Fitxers}
+
+\subsection{Algoritme de Comparació de Fitxers}
+\begin{lstlisting}[language=JavaScript]
+private async requestFileComparison() {
+    const localFiles = await db.files.toArray();
+    
+    const filesList = localFiles.map(file => ({
+        path: file.path,
+        hash: file.hash,
+        lastModified: file.lastModified.getTime()
+    }));
+    
+    this.addTask({
+        id: `file-comparison-${Date.now()}`,
+        type: SyncTaskType.RESOLVE_CONFLICT,
+        path: '/',
+        priority: SyncTaskPriority.HIGH,
+        status: 'pending',
+        createdAt: new Date(),
+        retryCount: 0,
+        metadata: {}
+    });
+    
+    this.processQueue();
+}
+\end{lstlisting}
+\textbf{Importància:} Gestiona la comparació de fitxers entre el client i el servidor per detectar canvis i conflictes.
+
+\section{Seguretat}
+
+\subsection{Algoritme de Criptografia}
+\begin{lstlisting}[language=Java]
+pub fn compute_hash(data: &[u8]) -> Result<String, anyhow::Error> {
+    let mut hasher = Sha256::new();
+    hasher.update(data);
+    let result = hasher.finalize();
+    Ok(format!("{:x}", result))
+}
+\end{lstlisting}
+\textbf{Importància:} Implementa el càlcul de hash SHA-256 per a la verificació d'integritat dels fitxers i dades sensibles.
+
+\section{Gestió d'Estat}
+
+\subsection{Algoritme de Gestió d'Estat Global}
+\begin{lstlisting}[language=JavaScript]
+interface SyncState {
+    isLoading: boolean;
+    lastSyncTime: Date | null;
+    isPaused: boolean;
+    files: Record<string, FileItem>;
+    selectedFileId: string | null;
+    syncQueue: {
+        total: number;
+        pending: number;
+        processing: number;
+        completed: number;
+        failed: number;
+        paused: number;
+        showPanel: boolean;
+    };
+    transferProgress: Record<string, number>;
+    syncSettings: {
+        maxConcurrentTasks: number;
+        conflictResolution: 'ask_user' | 'overwrite' | 'skip';
+        autoSync: boolean;
+        chunkSize: number;
+    };
+}
+\end{lstlisting}
+\textbf{Importància:} Defineix l'estructura d'estat global de l'aplicació, gestionant la sincronització, la interfície d'usuari i la configuració.
+
+\section{Animacions i Interfície}
+
+\subsection{Algoritme de Barra de Progrés}
+\begin{lstlisting}[language=JavaScript]
+const ProgressBar: React.FC = () => {
+    return (
+        <div className="space-y-4">
+            {operations.map((operation) => (
+                <motion.div
+                    key={operation.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white dark:bg-gray-800 rounded-lg shadow p-4"
+                >
+                    <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                        <motion.div
+                            className={`h-2.5 rounded-full ${getStatusColor(operation.status)}`}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${operation.progress}%` }}
+                            transition={{ duration: 0.3 }}
+                        />
+                    </div>
+                </motion.div>
+            ))}
+        </div>
+    );
+};
+\end{lstlisting}
+\textbf{Importància:} Implementa una barra de progrés animada per mostrar l'estat de les operacions de sincronització, utilitzant animacions suaus per millorar l'experiència d'usuari. 

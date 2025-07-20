@@ -1,0 +1,325 @@
+% Indicate the main file. Must go at the beginning of the file.
+% !TEX root = ../main.tex
+
+%-------------------------------------------------------------------------------
+% CHAPTER 5
+%-------------------------------------------------------------------------------
+
+\chapter{Marc de treball i conceptes previs}
+
+\section{Introducció}
+
+Aquest Treball de Fi de Grau s'ha desenvolupat de manera independent, sense el suport d'una organització externa, amb l'objectiu d'aprofundir en la construcció de sistemes distribuïts moderns, així com un repte tècnic personal en afrontar un projecte de gran magnitud i complexitat amb múltiples llenguatges i tecnologies. El seguiment acadèmic ha anat a càrrec del professor \textbf{Josep Soler} (tutor del projecte).
+
+El desenvolupament del client d'escriptori es va realitzar en col·laboració molt estreta amb \textbf{Jawad Adbellaoui}, qui va aportar la seva experiència en Tauri i Rust. Aquesta col·laboració va ser clau per assolir un resultat funcional i em va permetre aprendre de primera mà bones pràctiques en tecnologies emergents.
+
+Al llarg del capítol es descriuen les eines i tecnologies que conformen la pila de desenvolupament. Cada una es presenta especificant el seu propòsit, la motivació de la seva elecció i el seu paper dins l'arquitectura global. Totes elles són de codi obert i d'ús gratuït, fet que reforça la sostenibilitat econòmica discutida al Capítol~2.
+
+%-------------------------------------------------------------------------------
+\section{Entorn de desenvolupament}
+%-------------------------------------------------------------------------------
+
+El treball s'ha dut a terme principalment en un portàtil amb \textbf{Ubuntu 22.04 LTS} (kernel 5.15) i l'editor \textbf{Visual Studio Code} com a IDE principal. La Taula~\ref{tab:versions} —inclosa al final d'aquest capítol— detalla les versions exactes dels llenguatges, marcs i eines utilitzades. Per a les proves inicials de l'API es va utilitzar \textbf{Postman}, tot i que el flux de validació va passar ràpidament a la pròpia aplicació web a mesura que el frontend va guanyar funcionalitat.
+
+%-------------------------------------------------------------------------------
+\section{Eines de desenvolupament}
+%-------------------------------------------------------------------------------
+
+\subsection*{Sistema operatiu}
+Ubuntu 22.04 LTS proporciona un entorn estable, actualitzat i àmpliament documentat. El seu gestor de paquets \emph{apt} i la compatibilitat amb contenidors \texttt{docker-ce} van facilitar la instal·lació de dependències i la creació d'entorns reproduïbles.
+
+\subsection*{Git i GitHub}
+Git és un sistema de control de versions distribuït creat per Linus Torvalds el 2005. La seva arquitectura descentralitzada permet treballar sense connexió, conservar l'històric complet a cada clon i afavorir fluxos paral·lels mitjançant branques lleugeres. GitHub afegeix a Git funcionalitats col·laboratives (\emph{pull requests}, revisions de codi i GitHub Actions) i ha servit d'eix per a la integració contínua i el desplegament automatitzat del projecte.
+
+\subsection*{Visual Studio Code}
+Visual Studio Code (VS Code) és un editor multiplataforma, lleuger i extensible. Amb extensions com \emph{Rust Analyzer}, \emph{Spring Tools} i suport integrat per a TypeScript, ha permès una experiència de desenvolupament unificada per al \emph{backend} en Java i els clients en React i Tauri/Svelte.
+
+\subsection*{Node.js}
+Node.js és un entorn d'execució que permet fer servir JavaScript fora del navegador, principalment al servidor. Gràcies a Node.js, es poden crear aplicacions i scripts que s'executen directament a la màquina, com ara eines de desenvolupament, servidors web o processos d'automatització. En aquest projecte, Node.js s'utilitza per executar scripts que ajuden a preparar l'entorn i per donar suport a la construcció i execució del frontend web.
+
+\subsection*{pnpm}
+pnpm (performant npm) és un gestor de paquets per a Node.js, dissenyat per ser ràpid i eficient en l'ús de l'espai en disc. A diferència de npm, que pot duplicar paquets, pnpm utilitza un magatzem de contingut adreçable on només es desa una versió de cada paquet. Després, crea enllaços simbòlics (symlinks) a la carpeta \texttt{node\_modules} del projecte. Aquest enfocament no només redueix dràsticament l'espai en disc necessari, sinó que també accelera significativament els temps d'instal·lació. En aquest projecte, s'ha estandarditzat l'ús de pnpm per gestionar totes les dependències dels frontends (\texttt{@ui-new} i \texttt{@desktop}) i per executar scripts útils durant el desenvolupament i la construcció de les aplicacions, garantint consistència i eficiència.
+
+\subsection*{Postman}
+Postman és una eina gràfica molt utilitzada per desenvolupar, provar i documentar APIs REST. Permet enviar peticions HTTP (GET, POST, PUT, DELETE, etc.) a un servidor, veure les respostes, gestionar col·leccions de peticions i validar el comportament dels endpoints de manera ràpida i visual. Això facilita la detecció d'errors, la comprovació de contractes i la col·laboració entre equips de backend i frontend.
+
+En aquest projecte, Postman es va utilitzar durant les primeres iteracions per dissenyar i provar les peticions a l'API REST, assegurant que els endpoints funcionaven correctament i que les respostes complien l'estructura esperada. A mesura que el frontend va madurar i va guanyar funcionalitat, les proves es van traslladar a la pròpia interfície web, reduint la dependència de Postman i agilitzant el flux de validació.
+
+\subsection*{Scripts d'instal·lació}
+Els scripts \texttt{setup.sh} (Bash) i \texttt{setup.ps1} (PowerShell) automatitzen la preparació de l'entorn: descàrrega de dependències, construcció de contenidors Docker i configuració de variables. Així es garanteix la reproduïbilitat de l'entorn amb una sola comanda.
+
+%-------------------------------------------------------------------------------
+\section{Frontend web}
+%-------------------------------------------------------------------------------
+
+\subsection*{React}
+React (2013) és una biblioteca JavaScript de codi obert creada per Facebook per facilitar la construcció d'interfícies d'usuari (UI) complexes de manera eficient, escalable i mantenible. El seu model es basa en la composició de components: unitats independents i reutilitzables que encapsulen tant la lògica com la presentació, afavorint la reutilització, la testabilitat i la separació de responsabilitats.
+
+Una de les innovacions clau de React és el \emph{Virtual DOM}, una representació en memòria de l'estructura del DOM real. Quan l'estat d'un component canvia, React genera un nou arbre virtual i calcula la diferència respecte a l'anterior (\emph{diffing algorithm}). Només les parts modificades s'actualitzen al DOM real mitjançant el procés de \emph{reconciliació}, minimitzant operacions costoses i millorant el rendiment, especialment en aplicacions dinàmiques o amb moltes actualitzacions.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\linewidth]{Figures/Browser-DOM-Virtual-DOM.png}
+\caption{Procés de reconciliació a React: arbre virtual \textrightarrow{} diff \textrightarrow{} pegat sobre el DOM.}
+\label{fig:react-virtual-dom}
+\end{figure}
+
+El flux de dades en React és unidireccional (de pares a fills), cosa que simplifica el raonament sobre l'estat i redueix la probabilitat d'efectes col·laterals. Les dades es passen als components fills mitjançant \emph{props}, mentre que l'estat local es gestiona dins de cada component. Per compartir estat entre components no relacionats jeràrquicament, es pot utilitzar el context de React o gestors d'estat externs com Zustand.
+
+Amb la introducció dels \emph{hooks}, la gestió de l'estat i dels efectes col·laterals es pot fer de manera funcional, sense recórrer a classes. Hooks com \texttt{useState}, \texttt{useEffect} o \texttt{useContext} permeten encapsular lògica reutilitzable i millorar la llegibilitat i mantenibilitat del codi.
+
+React destaca també per la seva integració amb l'ecosistema JavaScript modern i una comunitat molt activa. Llibreries com TanStack React Query, Zustand, Radix UI o Vite cobreixen des de la gestió eficient de dades asíncrones fins a l'accessibilitat i l'optimització del frontend. Això permet abordar projectes professionals de qualsevol escala, des de prototips fins a sistemes grans i robustos.
+
+A més, React facilita paradigmes avançats com la renderització al servidor (SSR), les aplicacions d'una sola pàgina (SPA) i la integració amb WebSockets per a temps real. La seva filosofia de considerar la UI com una funció de l'estat (\( UI = f(state) \)) simplifica la gestió de la complexitat i afavoreix la previsibilitat del comportament de l'aplicació. Tot plegat fa de React una eina idònia per a projectes que requereixen manteniment, escalabilitat i un alt grau d'interactivitat.
+
+
+\subsection*{TypeScript}
+TypeScript (2012) amplia JavaScript amb tipatge estàtic i característiques orientades a objectes. El \emph{transpiler} \texttt{tsc} prevé errors en temps de compilació i facilita l'autocompletat, millorant la robustesa entre client i servidor.
+
+\subsection*{Vite}
+Vite és una eina que ajuda a posar en marxa i construir aplicacions web de manera molt ràpida i senzilla. Durant el desenvolupament, permet veure els canvis a l'instant cada vegada que es modifica el codi, sense haver d'esperar llargues càrregues. Això fa que programar sigui molt més àgil i còmode. Quan arriba el moment de publicar l'aplicació, Vite s'encarrega d'ordenar i optimitzar tots els fitxers perquè la web es carregui ràpidament als usuaris. En aquest projecte, Vite ha estat fonamental per poder desenvolupar i provar la interfície web de forma eficient i sense complicacions.
+
+\subsection*{Tailwind CSS}
+Tailwind CSS és un framework de CSS utilitari que permet construir interfícies d'usuari modernes i responsives mitjançant l'ús de classes predefinides molt específiques (com \texttt{p-4}, \texttt{text-lg}, \texttt{bg-blue-500}, etc.). A diferència dels frameworks tradicionals basats en components o temes, Tailwind aposta per una filosofia "utility-first", on cada classe aplica un sol estil CSS, la qual cosa permet escriure el disseny directament a l'HTML o JSX de cada component.
+
+Aquesta aproximació té diversos avantatges: elimina la necessitat d'escriure fulls d'estil personalitzats per a cada component, redueix la duplicació de codi i facilita la coherència visual a tota l'aplicació. A més, Tailwind facilita la creació de dissenys responsius i adaptatius gràcies a la seva sintaxi per a punts de trencament i variants d'estat (hover, focus, dark mode, etc.).
+
+Un dels punts forts de Tailwind és el seu procés de "purge" o depuració: durant la construcció de l'aplicació, Tailwind analitza tot el codi font i elimina automàticament les classes que no s'utilitzen, generant un fitxer CSS final molt lleuger i optimitzat per a producció. Això millora el rendiment de càrrega i l'experiència d'usuari, especialment en aplicacions grans.
+
+En aquest projecte, Tailwind CSS ha permès desenvolupar una interfície moderna, coherent i altament personalitzable, accelerant el procés de maquetació i assegurant una bona experiència visual.
+
+\subsection*{Radix UI}
+Radix UI és una llibreria de components d'interfície d'usuari per a React, centrada en l'accessibilitat i la composició. A diferència d'altres biblioteques, Radix UI proporciona components "headless", és a dir, sense estils visuals predefinits, de manera que el desenvolupador pot aplicar el seu propi disseny sense perdre funcionalitat ni accessibilitat. Tots els components compleixen les directrius ARIA i gestionen automàticament focus, navegació per teclat i altres requisits d'accessibilitat, la qual cosa garanteix que l'aplicació sigui usable per a tothom. A més, Radix UI facilita la creació de diàlegs, menús, popovers i altres elements complexos sense haver de preocupar-se pels detalls interns de gestió d'estat o focus. En aquest projecte, Radix UI s'ha utilitzat per implementar diàlegs i menús accessibles, assegurant una experiència d'usuari coherent i inclusiva.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\linewidth]{Figures/5.png}
+\caption{Diàleg basat en Radix amb focus i navegació accessibles.}
+\label{fig:radix-dialog}
+\end{figure}
+
+\subsection*{React Query}
+React Query (actualment TanStack Query) és una llibreria per a la gestió eficient de dades asíncrones en aplicacions React. La seva funció principal és facilitar la consulta, la memòria cache i la sincronització de dades provinents d'APIs o serveis externs. React Query permet definir "queries" declaratives que s'executen automàticament quan el component es renderitza, gestionant l'estat de càrrega, error i dades sense necessitat de codi addicional. A més, manté una memòria cache intel·ligent que evita peticions innecessàries i actualitza automàticament les dades quan detecta canvis, aplicant estratègies com "stale-while-revalidate". Això simplifica molt la gestió de dades remotes, millora el rendiment i redueix la complexitat del codi, especialment en aplicacions amb moltes consultes o dades en temps real. En aquest projecte, React Query ha estat clau per mantenir la UI sincronitzada amb el backend i gestionar l'estat de les peticions de manera robusta i eficient.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\linewidth]{Figures/architecture.png}
+\caption{Circuit de dades a React Query: memòria cache \textrightarrow{} fetch \textrightarrow{} revalidate.}
+\label{fig:react-query}
+\end{figure}
+
+El funcionament intern de React Query es pot entendre millor amb l'ajuda de la imatge anterior. Al centre del sistema hi ha el \textbf{QueryClient}, que gestiona totes les opcions i la configuració global. Aquest client conté una \textbf{QueryCache}, que és la memòria cache on es desen totes les dades de les consultes (queries) realitzades a l'API o backend.
+
+Quan un component React utilitza el hook \texttt{useQuery}, crea un \textbf{Query Observer} que s'encarrega de subscriure's a una consulta concreta dins la memòria cache. Si la dada ja existeix a la cache, el component la rep immediatament; si no, React Query fa la petició a l'API i desa la resposta a la cache per a futures consultes. Això permet que diversos components puguin compartir i reutilitzar dades sense repetir peticions innecessàries.
+
+A més, la memòria cache es pot sincronitzar amb un emmagatzematge extern (com LocalStorage) mitjançant els \textbf{Persistors}, de manera que les dades es conserven encara que l'usuari recarregui la pàgina. Tot aquest sistema garanteix que l'estat de les dades a la UI estigui sempre actualitzat, gestionant automàticament la recàrrega, la invalidació i la revalidació de la informació segons sigui necessari.
+
+Aquesta arquitectura fa que React Query sigui molt eficient i robust per a la gestió de dades asíncrones en aplicacions React modernes.
+
+\subsection*{Zustand}
+
+Zustand és una llibreria lleugera per a la gestió d'estat global en aplicacions React.  
+A diferència de solucions més pesades com Redux, ofereix una API molt minimalista basada en \emph{hooks}: cada \textit{store} és, de fet, un \texttt{hook} creat amb \verb|create()|.  
+Els components consumeixen l'estat cridant aquest \texttt{hook} i poden subscriure's només a la porció que necessiten, cosa que evita re–renderitzacions innecessàries i millora el rendiment.  
+Internament, Zustand utilitza \emph{proxies} per detectar canvis i notificar únicament els components afectats, facilita la divisió en \emph{slices} per escalar grans projectes i disposa de \emph{middleware} per persistir, registrar o desfer canvis.  
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{Figures/diagram.png}
+  \caption{Diagrama de flux de Zustand en una aplicació React: els components llegeixen o actualitzen l'estat a través dels \emph{hooks}, que deleguen l'operació al \emph{store}; quan aquest actualitza l'estat, només notifica els components subscrits.}
+  \label{fig:zustand-flow}
+\end{figure}
+
+Com es veu al diagrama~\ref{fig:zustand-flow}, el flux és extremadament directe:
+
+\begin{enumerate}[label=\arabic*.]
+  \item \textbf{Components React} criden el \textit{hook} del \textit{store} per llegir l'estat o executar accions.
+  \item El \textbf{\textit{hook}} retorna l'estat sol·licitat i exposa les accions definides dins el \textit{store}.
+  \item Les \textbf{accions} invocades fan \verb|set()| o \verb|get()| per modificar l'estat.
+  \item El \textbf{\textit{store}} actualitza l'estat i notifica només els components subscrits al tros de dades canviat, provocant el re–render corresponent.
+\end{enumerate}
+
+Aquesta simplicitat permet separar la lògica d'estat dels components, millorar la testabilitat i mantenir el codi net. 
+
+En el projecte actual, Zustand s'utilitza per gestionar l'estat global relacionat amb la navegació d'arxius, la selecció múltiple i el context de visualització. Aquesta aproximació permet mantenir la UI sincronitzada i reactiva, simplificant la gestió de l'estat entre components i facilitant la implementació de funcionalitats avançades com la selecció múltiple, el porta-retalls i la navegació entre seccions.
+
+\subsection*{@dnd-kit i Selecto}
+@dnd-kit és una llibreria modular que abstrau la complexitat de les interaccions d'arrossegar i deixar anar (drag \& drop) mitjançant sensors que detecten esdeveniments del ratolí, tàctils i de teclat. La seva arquitectura basada en contexts i proveïdors permet implementar funcionalitats avançades com l'ordenació de llistes o el moviment entre contenidors de forma declarativa.
+
+Per altra banda, Selecto ofereix una API per implementar selecció múltiple mitjançant un rectangle o llaç de selecció, similar al que trobem en aplicacions d'escriptori. Permet configurar la detecció de col·lisions, filtrar elements seleccionables i personalitzar l'aparença visual del llaç.
+
+La combinació d'aquestes dues llibreries ha permès implementar una experiència d'usuari molt similar a la d'un explorador d'arxius natiu, on es poden seleccionar múltiples elements arrossegant el ratolí i després moure'ls a altres carpetes mitjançant drag \& drop, tot mantenint una implementació neta i mantenible.
+
+\subsection*{WebSocket API}
+L'aplicació utilitza WebSocket, un protocol de comunicació que estableix una connexió bidireccional persistent entre el client web React i el servidor. A diferència del protocol HTTP tradicional, on el client ha de fer peticions explícites per obtenir dades, WebSocket manté un canal obert que permet al servidor enviar informació al client en qualsevol moment. Aquesta característica és especialment útil en la nostra interfície web per implementar funcionalitats en temps real, com la sincronització automàtica quan altres usuaris modifiquen arxius o la recepció instantània de notificacions del sistema.
+
+%-------------------------------------------------------------------------------
+\section{Backend i microserveis}
+%-------------------------------------------------------------------------------
+
+\subsection*{Java 17}
+Java és un llenguatge de programació orientat a objectes àmpliament utilitzat en el desenvolupament d'aplicacions empresarials, sistemes distribuïts i serveis web. La seva principal característica és la portabilitat: el codi Java es compila a bytecode, que pot ser executat en qualsevol plataforma que disposi d'una màquina virtual Java (JVM), independentment del sistema operatiu o el maquinari. Això facilita la creació d'aplicacions escalables i mantenibles, ja que el mateix codi pot desplegar-se en entorns molt diversos sense modificacions. Java ofereix un sistema de tipus fort, gestió automàtica de memòria mitjançant recollida d'escombraries (garbage collection) i una àmplia biblioteca estàndard per a operacions de xarxa, persistència, concurrència i seguretat. A més, la comunitat Java disposa d'un ecosistema ric en frameworks i eines que acceleren el desenvolupament i garanteixen la robustesa de les aplicacions. En el context d'aquest projecte, Java s'utilitza com a llenguatge principal per implementar els microserveis del backend, aprofitant la seva maduresa, estabilitat i suport a llarg termini.
+
+\subsection*{Spring Boot}
+Spring Boot és un framework que simplifica la creació d'aplicacions Java basades en Spring, especialment microserveis. Proporciona una configuració automàtica intel·ligent i una estructura d'aplicació predefinida, permetent als desenvolupadors centrar-se en la lògica de negoci en lloc de la configuració manual. Un dels seus avantatges clau és la capacitat de generar microserveis autosuficients, que inclouen un servidor Tomcat embegut, eliminant la necessitat de desplegar arxius WAR en servidors externs. Els \emph{starters} de Spring Boot encapsulen conjunts de dependències habituals, facilitant la integració de tecnologies com bases de dades, seguretat, missatgeria o REST. A més, ofereix eines per monitoritzar, provar i desplegar serveis de manera eficient. En aquest projecte, Spring Boot serveix de base per a cada microservei, assegurant una inicialització ràpida, una gestió coherent de dependències i una arquitectura modular i escalable.
+
+\subsection*{Spring Data JPA}
+Spring Data JPA és un framework que facilita la persistència de dades en bases de dades relacionals mitjançant el patró ORM (Object-Relational Mapping). Permet definir entitats Java que es corresponen amb taules de la base de dades i proporciona una API per realitzar operacions CRUD (crear, llegir, actualitzar, eliminar) sense escriure SQL manualment. Una de les seves funcionalitats més potents és la generació automàtica de consultes JPQL a partir de la nomenclatura dels mètodes (per exemple, \texttt{findByUsernameAndStatus}), la qual cosa accelera el desenvolupament i redueix errors. A més, integra mecanismes per a la gestió de transaccions, la paginació, la ordenació i la validació d'entitats. En el projecte, Spring Data JPA s'utilitza per accedir i manipular les dades de cada microservei, assegurant una persistència robusta, coherent i fàcilment testejable.
+
+\subsection*{Eureka}
+
+Eureka és el servei de descobriment que manté un registre viu i coherent de tots els microserveis desplegats.  
+Cada instància, tan bon punt s'aixeca, es registra automàticament al servidor i, mitjançant petits \emph{heartbeats} periòdics, confirma que continua disponible. Així, qualsevol altre servei —o bé el Gateway— pot consultar el registre per obtenir l'adreça més recent i balancejar les peticions sense codificar IPs fixes. Aquesta capacitat d'autodescobriment garanteix resiliència i escalabilitat en entorns on les instàncies poden aparèixer o desaparèixer dinàmicament durant pics de càrrega, actualitzacions o fallades.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{Figures/netflix-eureka-service-discovery.png}
+  \caption{Flux de descobriment amb Eureka: els microserveis \emph{Mail} i \emph{Address} es registren al servidor; quan el primer necessita localitzar el segon, consulta el registre i obté l'URL actual abans de fer la crida.}
+  \label{fig:eureka-flow}
+\end{figure}
+
+La figura~\ref{fig:eureka-flow} mostra aquest procés en acció. Quan el \emph{Mail Service} s'inicialitza (quadrat de l'esquerra) envia la seva sol·licitud de registre al servidor Eureka, igual que fa l'\emph{Address Service} (quadrat de la dreta). Un cop registrats, tots dos renoven la seva entrada de forma periòdica. Quan l'usuari demana enviar un correu, el \emph{Mail Service} no necessita conèixer prèviament on s'està executant l'\emph{Address Service}; simplement interroga el registre, rep l'adreça actual i executa la petició HTTP. Si l'instància canvia de port o se'n desplega una altra, la propera consulta ja retornarà la nova ubicació sense cap intervenció manual. D'aquesta manera, Eureka actua com un directori telefònic dinàmic dels microserveis i assegura que la comunicació interna sigui fluida, flexible i tolerant a fallades: un pilar imprescindible en la nostra arquitectura distribuïda.
+
+\subsection*{Spring Cloud Gateway}
+
+Spring Cloud Gateway és el punt d'entrada reactiu i altament eficient de la nostra arquitectura de microserveis.  
+Actua com a \emph{reverse proxy} basat en Netty: rep totes les peticions externes, avalua predicats i filtres declarats en el \texttt{application.yml}, i redirigeix cada sol·licitud al microservei pertinent.  
+Aquesta porta única permet centralitzar l'autenticació amb JWT, aplicar \emph{rate-limiting}, reescriure capçaleres o rutes i, alhora, protegir la xarxa interna de microserveis.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{Figures/MIGMOD-174-SpringCloudServicesArchitetcure.jpg}
+  \caption{Flux de Spring Cloud Gateway: totes les peticions externes passen pel \emph{Gateway}, que aplica filtres i distribueix el trànsit cap als microserveis; alhora, es coordina amb el \emph{Config Server} per obtenir la configuració, amb \emph{Service Discovery} per registrar i descobrir instàncies, i amb Zipkin per a la traça distribuïda.}
+  \label{fig:gateway-flow}
+\end{figure}
+
+Com il·lustra la figura~\ref{fig:gateway-flow}, les sol·licituds de l'usuari arriben primer al bloc verd de \emph{Spring Cloud Gateway}, on s'executen predicats (paths, mètodes, host, etc.) i filtres (autenticació, límit de peticions, logging).  
+Si la petició compleix els criteris, el Gateway la deriva —amb equilibri de càrrega— al microservei corresponent, que prèviament s'ha registrat al servidor de descoberta.  
+Mentrestant, la configuració dinàmica es recupera del \emph{Config Server} i la traça de cada salt es diposita a Zipkin.  
+D'aquesta manera, aconseguim un punt de control únic, reaccionant amb baixa latència fins i tot sota alta concurrència, i simplificant la seguretat i l'observabilitat de tot l'ecossistema.
+
+\subsection*{PostgreSQL}
+PostgreSQL és un sistema de gestió de bases de dades relacional d'alt rendiment, de codi obert i reconegut per la seva robustesa, extensibilitat i compliment estricte dels principis ACID (Atomicitat, Consistència, Aïllament i Durabilitat). Ofereix suport avançat per a tipus de dades complexos, incloent-hi columnes JSONB, que és un tipus de dada natiu de PostgreSQL que permet emmagatzemar documents JSON de manera binària i optimitzada, per a l'emmagatzematge eficient de documents semiestructurats, així com arrays, enums i tipus definits per l'usuari. Permet la creació de consultes SQL complexes, vistes, funcions i triggers, i implementa mecanismes de control de concurrència multiversió (MVCC) per garantir l'accés simultani sense bloquejos. PostgreSQL destaca també per la seva capacitat d'escalar tant verticalment com horitzontalment, la integració amb extensions (com PostGIS per a dades geoespacials) i el suport natiu per a transaccions distribuïdes. En aquest projecte, PostgreSQL s'executa dins d'un contenidor Docker amb volum persistent, assegurant la integritat i la disponibilitat de les dades fins i tot en cas de reinici o migració de l'entorn.
+
+\subsection*{Spring AMQP i RabbitMQ}
+
+\subsection*{RabbitMQ}
+
+RabbitMQ és un sistema de missatgeria basat en el protocol AMQP 0-9-1 que introdueix un intermediari
+(\emph{message broker}) entre productors i consumidors.  
+Aquesta capa intermèdia permet que els microserveis es
+comuniquin de manera asíncrona i totalment desacoblada: cada missatge s'envia a un \emph{exchange},
+que el distribueix a una o més cues (\emph{queues}) segons els \emph{bindings} i les claus de \textit{routing}
+definides.  
+Gràcies a la persistència de missatges, les confirmacions i els reintents, el broker pot retenir
+els esdeveniments fins que el consumidor estigui disponible, absorbint pics de càrrega sense perdre
+informació i permetent escalar productors i consumidors de forma independent.
+
+\begin{figure}[H]
+\centering
+  \includegraphics[width=0.9\linewidth]{Figures/rabbitmq-exchanges-and-queues.png}
+  \caption{Esquema de RabbitMQ: un productor publica missatges a l'\emph{exchange}, que els
+  encamina cap a les cues vinculades mitjançant \emph{bindings} i claus de \textit{routing};
+  cada consumidor processa els missatges de la seva cua de manera independent.}
+\label{fig:rabbitmq-flow}
+\end{figure}
+
+Tal com es veu a la figura~\ref{fig:rabbitmq-flow}, el productor només necessita conèixer
+l'\emph{exchange} al qual publicar; un cop el missatge arriba al broker, el ruteig cap a les cues
+es fa de forma declarativa i dinàmica.  
+Els consumidors, al seu torn, extreuen missatges de les cues que els pertoquen i confirmen la recepció
+quan els han processat. Aquest patró elimina dependències rígides entre serveis, facilita
+l'equilibri de càrrega i garanteix la fiabilitat fins i tot si algun component deixa de respondre
+momentàniament.
+
+\subsection*{Spring AMQP}
+
+Spring AMQP és un conjunt de llibreries de l'ecosistema Spring que proporciona una abstracció d'alt nivell per treballar amb sistemes de missatgeria compatibles amb AMQP, com RabbitMQ. Simplifica la integració amb el broker mitjançant la configuració declarativa de cues, intercanvis i lligams, i ofereix una API orientada a missatges per enviar i rebre dades de manera tipada i segura. Spring AMQP gestiona automàticament la serialització i deserialització d'objectes Java, la gestió de connexions, la confirmació de missatges i la implementació de mecanismes de reintent en cas d'errors temporals. A més, permet definir \emph{listeners} asíncrons que processen missatges de manera concurrent, millorant l'escalabilitat i la reactivitat del sistema. En aquest projecte, la combinació de RabbitMQ i Spring AMQP permet implementar fluxos d'esdeveniments robustos, desacoblar microserveis i garantir la fiabilitat en la comunicació interna.
+
+\subsection*{Spring Cloud OpenFeign}
+Spring Cloud OpenFeign és una llibreria que permet crear clients REST declaratius a partir d'interfícies Java, simplificant la comunicació entre microserveis. Amb OpenFeign, només cal definir una interfície amb anotacions que descriuen els endpoints remots (\texttt{@GetMapping}, \texttt{@PostMapping}, etc.), i el framework genera automàticament la implementació que realitza les crides HTTP corresponents. Això elimina la necessitat de gestionar manualment la serialització, la construcció d'URLs o la gestió d'errors bàsics, i permet una integració més neta i tipada amb altres serveis.
+
+OpenFeign suporta la injecció d'interceptors personalitzats, que permeten afegir capçaleres comunes (com \texttt{Authorization} amb JWT, \texttt{X-Request-Id}, etc.) a totes les peticions de manera centralitzada. També facilita la gestió de la signatura i validació de tokens JWT, la propagació de contextos de seguretat i la implementació de patrons de resiliència com \emph{retry} o \emph{circuit breaker} mitjançant integració amb Resilience4j. A més, permet configurar codificadors i decodificadors personalitzats per adaptar-se a formats de dades específics (JSON, XML, etc.), i ofereix suport per a la documentació automàtica dels clients.
+
+En aquest projecte, OpenFeign s'utilitza per connectar microserveis interns de manera segura i eficient, garantint la coherència en la gestió de capçaleres, l'autenticació i la traçabilitat de les peticions. Aquesta aproximació declarativa redueix el codi repetitiu, millora la mantenibilitat i facilita l'escalabilitat de l'arquitectura.
+
+\subsection*{Spring Security}
+Spring Security és el marc de seguretat de referència per a aplicacions Spring. Proporciona mecanismes robustos per a l'autenticació i l'autorització, permetent definir regles d'accés a nivell de rutes, mètodes o recursos. Al nostre projecte, Spring Security s'encarrega de validar cada petició que arriba al Gateway, assegurant que només els usuaris autenticats i amb els permisos adequats puguin accedir als microserveis interns. La configuració es realitza de manera declarativa, integrant filtres personalitzats per a la validació de tokens i la gestió de rols d'usuari.
+
+\subsection*{JWT (JSON Web Token)}
+JWT és un estàndard per a la transmissió segura d'informació entre parts com a objectes JSON signats digitalment. En aquest sistema, cada usuari rep un token JWT després d'autenticar-se correctament. Aquest token, signat amb un algorisme de criptografia asimètrica (RSA), conté la informació essencial de l'usuari (identitat, rols, data d'expiració, etc.) i s'envia en cada petició posterior al Gateway. L'ús de JWT elimina la necessitat de mantenir estat de sessió al servidor, ja que tota la informació rellevant viatja dins del token, i permet escalar el sistema de manera eficient. A més, la signatura criptogràfica garanteix la integritat i autenticitat del token, reduint la latència i millorant la seguretat global de la plataforma.
+
+%-------------------------------------------------------------------------------
+\section{Client d'escriptori}
+%-------------------------------------------------------------------------------
+
+\subsection*{Tauri}
+Tauri és un framework modern per al desenvolupament d'aplicacions d'escriptori multiplataforma que aprofita tecnologies web (HTML, CSS, JavaScript/TypeScript) per a la interfície d'usuari, però genera binaris natius extremadament lleugers (\textless{}15 MB, en comparació amb els \textgreater{}100 MB d'Electron). Utilitza la WebView nativa del sistema operatiu (com WebView2 a Windows, WKWebView a macOS i WebKitGTK a Linux), la qual cosa redueix significativament el consum de memòria i recursos, i minimitza el temps de descàrrega i instal·lació. A més, Tauri proporciona una API segura per accedir a funcionalitats del sistema (fitxers, xarxa, notificacions, etc.) mitjançant un pont entre el codi web i el backend natiu escrit en Rust. Aquesta arquitectura permet mantenir una superfície d'atac reduïda, actualitzacions ràpides i una millor integració amb el sistema operatiu, tot garantint la seguretat i la privacitat de l'usuari.
+
+\subsection*{Svelte}
+Svelte és un framework per al desenvolupament d'interfícies d'usuari que es distingeix d'altres solucions com React o Vue perquè trasllada la major part del processament al moment de la compilació. En comptes de fer servir un \emph{virtual DOM} i gestionar les actualitzacions de manera reactiva durant l'execució, Svelte transforma els components en codi JavaScript imperatiu optimitzat que manipula directament el DOM. Aquesta aproximació permet que les aplicacions s'iniciïn més ràpidament i consumeixin menys recursos, aspectes especialment rellevants en aplicacions d'escriptori on la rapidesa i l'eficiència són fonamentals. Svelte facilita la creació de components reutilitzables, la gestió d'estat reactiu i la integració amb llibreries externes, tot mantenint una sintaxi senzilla i declarativa. En aquest projecte, Svelte s'ha utilitzat per construir la interfície del client d'escriptori,aprofitant la seva eficiència i la facilitat d'integració amb Tauri.
+
+\subsection*{Rust}
+Rust és un llenguatge de programació de sistemes reconegut per la seva seguretat de memòria, absència de condicions de carrera i alt rendiment. El seu sistema de propietat i préstec (\emph{ownership \& borrowing}) evita errors comuns com accessos a memòria nul·la o dobles alliberaments sense necessitat de recollida d'escombraries (\emph{garbage collector}). En el context de Tauri, Rust s'utilitza per implementar el backend natiu de l'aplicació d'escriptori, gestionant operacions sensibles com l'accés a fitxers, la comunicació amb la xarxa, la criptografia i la integració amb APIs del sistema operatiu. Aquesta elecció garanteix que les operacions crítiques siguin ràpides, segures i fiables, i permet aprofitar l'ecosistema de llibreries de Rust per a funcionalitats avançades. A més, la interoperabilitat entre Rust i el frontend web de Tauri es realitza mitjançant canals segurs, assegurant la separació de privilegis i la protecció davant vulnerabilitats.
+
+Una de les capacitats clau implementades a Rust és la monitorització del sistema d'arxius local mitjançant la llibreria \texttt{notify}. Aquesta eina permet detectar en temps real qualsevol canvi que es produeixi a la carpeta sincronitzada (creació, modificació o eliminació de fitxers i directoris). Quan es detecta un esdeveniment, el backend de Rust ho comunica a la interfície i inicia el procés de sincronització amb el servidor, garantint així que l'estat local i remot es mantinguin sempre consistents, una funcionalitat essencial per a una experiència d'usuari fluida i fiable.
+
+%-------------------------------------------------------------------------------
+\section{Utilitats addicionals}
+%-------------------------------------------------------------------------------
+
+\subsection*{Docker}
+
+Docker és una plataforma de virtualització lleugera que empaqueta cada microservei amb totes les seves dependències dins d'un contenidor aïllat.  
+En comptes de virtualitzar maquinari complet —com fan les màquines virtuals (VM)— Docker aprofita funcionalitats del nucli de Linux ( \emph{namespaces} i \emph{cgroups} ) per crear espais d'usuari independents que comparteixen el mateix nucli del sistema host.  
+D'aquesta manera, cada contenidor arrenca en pocs segons, ocupa molt menys disc i memòria, i s'executa de forma idèntica en qualsevol entorn, eliminant el típic "works on my machine".  
+El procés de construcció, definit al \texttt{Dockerfile}, garanteix traçabilitat i reproduïbilitat: la mateixa imatge es pot desplegar localment o en producció sense sorpreses.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.45\linewidth]{Figures/117345_64a37d970df643f3a3d634fbb71c91a8~mv2.png}
+  \caption{Arquitectura basada en el nucli compartit: Docker Engine s'executa directament sobre el nucli de Linux i crea contenidors que comparteixen aquest nucli però disposen d'espais de noms i control de recursos propis; per contra, cada VM carrega un sistema operatiu complet sobre l'hipervisor.}
+  \label{fig:docker-arch}
+\end{figure}
+
+La figura~\ref{fig:docker-arch} mostra com el motor de Docker actua com una capa fina entre el sistema operatiu host i els contenidors.  
+El nucli (en blau) roman únic per a totes les instàncies, mentre que cada contenidor (en taronja) inclou només la capa d'aplicacions.  
+Aquesta construcció aprofita que totes les distribucions Linux comparteixen el mateix nucli, convertint Docker en una "pseudo màquina virtual" ultralleugera que pot crear-se i destruir-se ràpidament, fet que facilita tant l'escalat automàtic com els desplegaments sense temps mort.  
+En resum, amb Docker garantim portabilitat, consistència i una gestió d'infraestructura tan declarativa com el codi que hi corre. Això també dóna l'avantatge que es pot crear una configuració única perquè les aplicacions mai tinguin el problema d'estar en un entorn sense alguna configuració o eina que necessitin per funcionar, el que dóna la seguretat que sempre podran funcionar independentment de l'entorn on s'executin.
+
+\subsection*{Docker Compose}
+Docker Compose és una eina que permet definir i gestionar aplicacions multi-contenidor mitjançant un únic fitxer de configuració YAML (\texttt{compose.yml}). En aquest fitxer es descriuen tots els serveis que formen part de l'arquitectura (per exemple, base de dades, backend, frontend, serveis de missatgeria, etc.), així com les xarxes virtuals i els volums persistents que utilitzen. Compose permet especificar variables d'entorn, dependències entre serveis, ordres d'inicialització i polítiques de reinici, facilitant la coordinació i l'orquestració de tot el sistema. Amb una sola comanda (\texttt{docker compose up}), es poden aixecar tots els contenidors de manera coherent, garantint que la infraestructura es desplega de forma consistent tant en entorns de desenvolupament com de producció. Això simplifica enormement la posada en marxa, les proves i el manteniment de l'ecosistema de microserveis.
+
+%-------------------------------------------------------------------------------
+\section{Versionat de dependències}
+%-------------------------------------------------------------------------------
+
+\begin{table}[H]
+\centering
+\caption{Resum de versions efectives}
+\label{tab:versions}
+\begin{tabular}{@{}p{5cm}p{3cm}@{}}
+\toprule
+\textbf{Tecnologia} & \textbf{Versió} \\
+\midrule
+Java & 17 \\
+Spring Boot & 3.2.5 \\
+Spring Cloud Gateway & 2023.0.1 \\
+Spring Security & 6.2.4\footnote{Inclosa a Spring Boot 3.2.5} \\
+PostgreSQL & 14.18 \\
+RabbitMQ & 4.1.2 \\
+React & 18.2.0 \\
+TypeScript & 5.2.2 \\
+Vite & 5.0.0 \\
+Tailwind CSS & 3.3.5 \\
+React Query & 5.52.2 \\
+Zustand & 5.0.4 \\
+Tauri & 1.5 \\
+Svelte & 5.0.0 \\
+Docker & 27.0.3 \\
+Docker Compose & 3.8 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%-------------------------------------------------------------------------------
+

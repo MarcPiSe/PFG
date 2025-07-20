@@ -1,0 +1,133 @@
+% !TEX root = ../main.tex
+
+\chapter{Algoritmes rellevants del servidor}
+
+\section{Gestió d'Arxius i Carpetes}
+
+\subsection{Verificació d'ancestres en l'estructura de carpetes}
+\begin{lstlisting}[language=Java]
+public boolean esMovimentValid(String folderId, String targetId) {
+    if (folderId.equals(targetId)) return false;
+    Folder target = folderRepository.findById(targetId);
+    if (target == null || target.getParentId() == null) return true;
+    return esMovimentValid(folderId, target.getParentId());
+}
+\end{lstlisting}
+\textbf{Importància:} Evita cicles i corrupció en l'estructura jeràrquica de carpetes.
+
+\subsection{Construcció recursiva de l'estructura de carpetes}
+\begin{lstlisting}[language=Java]
+public List<Folder> obtenirEstructura(String rootId) {
+    List<Folder> estructura = new ArrayList<>();
+    Folder root = folderRepository.findById(rootId);
+    if (root != null) {
+        estructura.add(root);
+        afegirFills(root, estructura);
+    }
+    return estructura;
+}
+
+private void afegirFills(Folder pare, List<Folder> estructura) {
+    List<Folder> fills = folderRepository.findByParentId(pare.getId());
+    for (Folder fill : fills) {
+        if (!fill.isDeleted()) {
+            estructura.add(fill);
+            afegirFills(fill, estructura);
+        }
+    }
+}
+\end{lstlisting}
+\textbf{Importància:} Permet construir la jerarquia completa de carpetes per a la navegació.
+
+\section{Gestió de Compartició}
+
+\subsection{Compartició recursiva de carpetes}
+\begin{lstlisting}[language=Java]
+public void shareFile(SharedRequest sharedRequest, UUID userId) {
+    checkFilesChildren(sharedRequest.getFiles(), userId);
+    shareFile(sharedRequest.getElementId(), userId, sharedRequest.isRoot());
+}
+
+private void checkFilesChildren(List<UUID> files, UUID userId) {
+    for (UUID fileId : files) {
+        Optional<SharedAccess> sharedAccess = sharedAccessRepository.findById(fileId);
+        if (sharedAccess.isEmpty()) {
+            shareFile(fileId, userId, false);
+        }
+    }
+}
+\end{lstlisting}
+\textbf{Importància:} Gestiona la compartició recursiva de carpetes i els seus continguts.
+
+\section{Gestió de la Paperera}
+
+\subsection{Processament de registres de paperera}
+\begin{lstlisting}[language=Java]
+public void addRecord(UUID userId, TrashRequest trashRequest) {
+    TrashRecord trashRecord = new TrashRecord(userId, trashRequest.getElementId(), true);
+    List<TrashRecord> records = new ArrayList<>();
+    records.add(trashRecord);
+    trashRequest.getIds().forEach(id -> 
+        records.add(new TrashRecord(userId, id, false)));
+    trashRecordRepository.saveAll(records);
+}
+\end{lstlisting}
+\textbf{Importància:} Gestiona l'eliminació temporal d'arxius i carpetes.
+
+\subsection{Limpieza automàtica de la paperera}
+\begin{lstlisting}[language=Java]
+public void removeExpiredRecords() {
+    List<TrashRecord> records = trashRecordRepository
+        .findByExpirationDateLessThanEqual(new Date());
+    records.forEach(record -> {
+        sender.removeAccess(record.getUserId(), record.getElementId());
+        sender.removeManagement(record.getUserId(), record.getElementId());
+        sender.removeSharing(record.getUserId(), record.getElementId());
+    });
+}
+\end{lstlisting}
+\textbf{Importància:} Elimina automàticament els registres expirats de la paperera.
+
+\section{Control d'Accés}
+
+\subsection{Verificació de permisos d'accés}
+\begin{lstlisting}[language=Java]
+public int getFileAccessType(UUID fileId, UUID userId) {
+    Optional<AccessRule> accessRule = accessRuleRepository
+        .findByElementIdAndUserId(fileId, userId);
+    return accessRule.map(rule -> rule.getAccessType().ordinal())
+        .orElseGet(() -> 0);
+}
+\end{lstlisting}
+\textbf{Importància:} Gestiona els permisos d'accés als arxius i carpetes.
+
+\section{Historial d'Accions}
+
+\subsection{Paginació i ordenació d'historial}
+\begin{lstlisting}[language=Java]
+public Page<HistoryRecord> getHistoryByUser(UUID userId, String sortOrder, 
+    int page, int size) {
+    PageRequest pageRequest = PageRequest.of(page, size);
+    if ("desc".equalsIgnoreCase(sortOrder)) {
+        return historyRepository.findByUserIdOrderByActionDateDesc(userId, pageRequest);
+    } else {
+        return historyRepository.findByUserIdOrderByActionDateAsc(userId, pageRequest);
+    }
+}
+\end{lstlisting}
+\textbf{Importància:} Permet consultar l'historial d'accions amb paginació i ordenació.
+
+\section{Autenticació d'Usuaris}
+
+\subsection{Registre d'usuaris}
+\begin{lstlisting}[language=Java]
+public void register(UserRegisterRequest userInfoRequest) {
+    UserEntity user = new UserEntity();
+    user.setUsername(userInfoRequest.getUsername());
+    user.setPassword(passwordEncoder.encode(userInfoRequest.getPassword()));
+    user = userRepository.save(user);
+    fileManagementClient.createRoot(user.getId());
+    userManagementClient.creteUser(user.getId(), userRequest(userInfoRequest));
+}
+\end{lstlisting}
+\textbf{Importància:} Gestiona el procés complet de registre d'usuaris, incloent la creació de l'estructura inicial. 

@@ -1,0 +1,248 @@
+% !TEX root = ../main.tex
+
+\chapter{Algoritmes rellevants del frontend}
+
+\section{Navegacio d'Arxius}
+
+\subsection{Algoritme de Seleccio amb Teclat}
+\begin{lstlisting}[language=JavaScript]
+export const useFileSelection = () => {
+    const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
+    const [lastSelected, setLastSelected] = useState<string | null>(null);
+
+    const handleKeySelection = (
+        event: KeyboardEvent,
+        files: FileItem[],
+        currentIndex: number
+    ) => {
+        if (event.shiftKey && lastSelected) {
+            const lastIndex = files.findIndex(f => f.id === lastSelected);
+            const start = Math.min(lastIndex, currentIndex);
+            const end = Math.max(lastIndex, currentIndex);
+            
+            const newSelection = new Set(selectedFiles);
+            for (let i = start; i <= end; i++) {
+                newSelection.add(files[i].id);
+            }
+            setSelectedFiles(newSelection);
+        } else if (event.ctrlKey || event.metaKey) {
+            const newSelection = new Set(selectedFiles);
+            const fileId = files[currentIndex].id;
+            
+            if (newSelection.has(fileId)) {
+                newSelection.delete(fileId);
+            } else {
+                newSelection.add(fileId);
+            }
+            setSelectedFiles(newSelection);
+        } else {
+            setSelectedFiles(new Set([files[currentIndex].id]));
+        }
+        
+        setLastSelected(files[currentIndex].id);
+    };
+};
+\textbf{Importancia:} Implementa una seleccio intel.ligent d'arxius utilitzant tecles de fletxa, similar als exploradors de fitxers natius.
+
+\section{Gestio de Carpetes}
+
+\subsection{Algoritme de Creacio Optimista d'Estructura}
+\begin{lstlisting}[language=JavaScript]
+export const useFileOperations = () => {
+    const createOptimisticStructure = (structure: UploadedTree): FileItem => {
+        const folder: FileItem = {
+            id: `temp-${Date.now()}`,
+            name: structure.name,
+            type: 'folder',
+            parent: parentId,
+            size: 0,
+            mimeType: 'application/x-folder',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            subfolders: []
+        }
+
+        if(structure.folders.size > 0) {
+            folder.subfolders = Array.from(structure.folders.values())
+                .map(createOptimisticStructure);
+        }
+        if(structure.files.length > 0) {
+            folder.files = structure.files.map(fileToFileItem);
+        }
+        return folder;
+    };
+};
+\end{lstlisting}
+\textbf{Importancia:} Millora l'experiencia d'usuari durant les pujades de carpetes, mantenint la consistencia de l'estat.
+
+\section{Gestio d'Estat}
+
+\subsection{Algoritme de Sincronitzacio d'Estat}
+\begin{lstlisting}[language=JavaScript]
+export const useSyncState = () => {
+    const [localState, setLocalState] = useState<AppState>(initialState);
+    const [pendingChanges, setPendingChanges] = useState<Change[]>([]);
+    const [isSyncing, setIsSyncing] = useState(false);
+
+    const syncState = async () => {
+        if (isSyncing || pendingChanges.length === 0) return;
+        
+        setIsSyncing(true);
+        const changes = [...pendingChanges];
+        
+        try {
+            const response = await api.syncChanges(changes);
+            
+            setLocalState(prev => {
+                const newState = { ...prev };
+                response.confirmedChanges.forEach(change => {
+                    applyChange(newState, change);
+                });
+                return newState;
+            });
+            
+            setPendingChanges(prev => 
+                prev.filter(change => 
+                    !response.confirmedChanges.includes(change)
+                )
+            );
+        } catch (error) {
+            handleSyncError(error);
+        } finally {
+            setIsSyncing(false);
+        }
+    };
+};
+\end{lstlisting}
+\textbf{Importancia:} Gestiona la sincronitzacio d'estat entre el client i el servidor, assegurant la consistencia dels canvis.
+
+\section{Interficie d'Usuari}
+
+\subsection{Algoritme de Renderitzat Virtual}
+\begin{lstlisting}[language=JavaScript]
+export const useVirtualList = <T extends { id: string }>(
+    items: T[],
+    itemHeight: number,
+    containerHeight: number
+) => {
+    const [scrollTop, setScrollTop] = useState(0);
+    
+    const visibleItems = useMemo(() => {
+        const startIndex = Math.floor(scrollTop / itemHeight);
+        const visibleCount = Math.ceil(containerHeight / itemHeight);
+        const endIndex = Math.min(
+            startIndex + visibleCount + 1,
+            items.length
+        );
+        
+        return items.slice(startIndex, endIndex).map(item => ({
+            ...item,
+            style: {
+                position: 'absolute',
+                top: startIndex * itemHeight,
+                height: itemHeight
+            }
+        }));
+    }, [items, itemHeight, containerHeight, scrollTop]);
+};
+\end{lstlisting}
+\textbf{Importancia:} Optimitza el rendiment en llistes llargues mitjancant el renderitzat virtual d'elements.
+
+\section{Gestio de Cache}
+
+\subsection{Algoritme de Cache d'Arxius}
+\begin{lstlisting}[language=JavaScript]
+export const useFileCache = () => {
+    const [cache, setCache] = useState<Map<string, CachedFile>>(new Map());
+    const [cacheSize, setCacheSize] = useState(0);
+    const MAX_CACHE_SIZE = 100 * 1024 * 1024; // 100MB
+
+    const addToCache = async (fileId: string, file: File) => {
+        const fileSize = file.size;
+        
+        if (cacheSize + fileSize > MAX_CACHE_SIZE) {
+            await cleanupCache(fileSize);
+        }
+        
+        const cachedFile: CachedFile = {
+            id: fileId,
+            data: file,
+            timestamp: Date.now(),
+            size: fileSize
+        };
+        
+        setCache(prev => new Map(prev).set(fileId, cachedFile));
+        setCacheSize(prev => prev + fileSize);
+    };
+
+    const cleanupCache = async (requiredSpace: number) => {
+        const entries = Array.from(cache.entries())
+            .sort((a, b) => a[1].timestamp - b[1].timestamp);
+            
+        let freedSpace = 0;
+        const newCache = new Map(cache);
+        
+        for (const [id, file] of entries) {
+            if (freedSpace >= requiredSpace) break;
+            
+            newCache.delete(id);
+            freedSpace += file.size;
+        }
+        
+        setCache(newCache);
+        setCacheSize(prev => prev - freedSpace);
+    };
+};
+\end{lstlisting}
+\textbf{Importancia:} Gestiona el cache d'arxius per millorar el rendiment i reduir les carregues al servidor.
+
+\section{Utilitats}
+
+\subsection{Algoritme de Debounce}
+\begin{lstlisting}[language=JavaScript]
+export function useDebounce<T>(value: T, delay: number): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedValue(value);
+        }, delay);
+
+        return () => {
+            clearTimeout(timer);
+        };
+    }, [value, delay]);
+
+    return debouncedValue;
+}
+\end{lstlisting}
+\textbf{Importancia:} Optimitza el rendiment limitant la frequencia d'actualitzacions en operacions frequents.
+
+\subsection{Algoritme de Comparacio Profunda}
+\begin{lstlisting}[language=JavaScript]
+const deepCompare = (obj1: ComparableObject | ComparableValue | ComparableValue[], 
+    obj2: ComparableObject | ComparableValue | ComparableValue[]): boolean => {
+    if (obj1 === obj2) return true;
+    if (typeof obj1 !== 'object' || typeof obj2 !== 'object') return false;
+    if (obj1 === null || obj2 === null) return false;
+
+    if (Array.isArray(obj1)) {
+        if (!Array.isArray(obj2)) return false;
+        if (obj1.length !== obj2.length) return false;
+        return obj1.every((item, index) => deepCompare(item, obj2[index]));
+    }
+
+    const keys1 = Object.keys(obj1 as ComparableObject);
+    const keys2 = Object.keys(obj2 as ComparableObject);
+
+    if (keys1.length !== keys2.length) return false;
+
+    return keys1.every(key => {
+        if (!keys2.includes(key)) return false;
+        const val1 = (obj1 as ComparableObject)[key];
+        const val2 = (obj2 as ComparableObject)[key];
+        return deepCompare(val1, val2);
+    });
+};
+\end{lstlisting}
+\textbf{Importancia:} Permet comparar objectes complexos de manera eficient per detectar canvis en l'estat de l'aplicacio. 

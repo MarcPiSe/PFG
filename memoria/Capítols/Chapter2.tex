@@ -1,0 +1,71 @@
+% Indicate the main file. Must go at the beginning of the file.
+% !TEX root = ../main.tex
+
+%-------------------------------------------------------------------------------
+% CHAPTER 2
+%-------------------------------------------------------------------------------
+
+\chapter{Estudi de viabilitat}
+
+\section{Viabilitat t\`ecnica}
+
+Per desenvolupar aquest projecte vaig optar per eines i llenguatges amb els quals ja comptava amb experi\`encia pr\`evia o que oferien clars avantatges t\`ecnics. En el backend vaig utilitzar Java amb Spring Boot a causa de la seva maduresa, extensibilitat i que ja havia treballat amb aquest entorn a nivell professional. Aquesta elecci\'o em va permetre aplicar bones pr\`actiques de desenvolupament, integrant biblioteques com MapStruct o Spring Cloud per millorar la productivitat i la mantenibilitat del codi.
+
+Per a la interf\'icie web vaig seleccionar React amb Vite i Tailwind CSS. React em va permetre construir una aplicaci\'o reactiva, modular i reutilitzable, mentre que Vite va millorar notablement els temps d'arrencada i rec\`arrega en calent durant el desenvolupament. L'elecci\'o de Tailwind CSS es va justificar per la seva efici\`encia en la definici\'o d'estils directament des del codi dels components, sense necessitat d'arxius CSS separats.
+
+Pel que fa al client d'escriptori, vaig decidir utilitzar Tauri amb Svelte. Tot i que inicialment vaig considerar reutilitzar la interf\'icie de React, finalment vaig optar per Svelte pel seu menor consum de recursos. Svelte no inclou un runtime, la qual cosa genera binaris m\'es lleugers i amb menor \'us de mem\`oria, especialment rellevant en entorns d'escriptori. Aquesta decisi\'o es va basar en la documentaci\'o de Tauri i en el consell d'una persona del meu entorn amb una gran quantitat d'experi\`encia en desenvolupament d'aplicacions Tauri a nivell personal.
+
+L'arquitectura es recolza en microserveis, que s'orquestren mitjan\c{c}ant Docker i Docker Compose. El fitxer \texttt{compose.yml} defineix els seg\"uents serveis:
+
+\begin{itemize}
+  \item \textbf{user-auth}: gesti\'o d'autenticaci\'o i tokens.
+  \item \textbf{user-management}: gesti\'o de dades d'usuari.
+  \item \textbf{file-access}: control d'acc\'es a arxius.
+  \item \textbf{file-sharing}: compartici\'o d'arxius entre usuaris.
+  \item \textbf{trash}: paperera de reciclatge.
+  \item \textbf{file-manager}: pujada, desc\`arrega i metainformaci\'o de fitxers i carpetes.
+  \item \textbf{sync}: gesti\'o de sincronitzaci\'o en temps real.
+  \item \textbf{gateway}: punt d'entrada unificat per al client web i d'escriptori.
+  \item \textbf{eureka}: descobriment de serveis.
+  \item \textbf{postgres}: base de dades.
+  \item \textbf{rabbitmq}: sistema de missatgeria per a comunicaci\'o as\'incrona.
+\end{itemize}
+
+Aquesta configuraci\'o permet aixecar tota la infraestructura amb una sola comanda, garantint que l'entorn de proves \'es reprodu\"ible i est\`andard en tots els desplegaments, a m\'es de fer l'entorn agn\`ostic al sistema operatiu que l'ha de c\'orrer, gr\`acies a les capacitats dels contenidors Docker. 
+La base de dades PostgreSQL es comparteix entre serveis, per\`o cadascun gestiona les seves pr\`opies taules, evitant depend\`encies creuades. Aquesta va ser una decisi\'o de disseny per seguir les bones pr\`actiques de disseny de microserveis.
+RabbitMQ permet una comunicaci\'o desacoblada entre serveis que requereixen notificaci\'o o processament en segon pla, com la sincronitzaci\'o o el buidatge de la paperera.
+
+L'entorn de desenvolupament es va basar en VSCode com a IDE principal, aprofitant la seva extensió per a Java, el suport per a React i el terminal integrat. Les proves es van realitzar inicialment amb Postman i, més endavant, mitjançant una llista de proves funcionals mantinguda manualment (documentada al fitxer \texttt{tests.md}) per garantir la cobertura de totes les funcionalitats del sistema tant al backend com al frontend.
+
+\section{Viabilitat econ\`omica}
+
+El cost econòmic del projecte ha estat nul. Totes les eines utilitzades són de codi obert i gratuïtes. Java, React, Vite, Svelte, Tauri, Docker, Git, VSCode i Postman no requereixen llicències de pagament. A més, el projecte s'ha desenvolupat en un ordinador personal ja disponible, equipat amb un processador Intel i7 i 32\,GB de RAM, de manera que no ha calgut adquirir maquinari addicional.
+
+Tampoc es preveuen costos de manteniment, ja que les eines emprades són estables, àmpliament documentades i un estàndard de la indústria, fet que n'afavoreix el suport a llarg termini i la possibilitat d'incorporar col·laboradors externs.
+
+\section{Viabilitat humana}
+
+Aquest projecte s'ha desenvolupat de forma individual. Initially vaig planificar dedicar les tardes i els caps de setmana durant diversos mesos, amb una estimació d'unes 640 hores de treball en total. Tot i que aquesta planificació va resultar massa optimista i no es va seguir de manera exacta, considero que el temps real invertit ha estat raonable i que, si s'hagués mantingut, hauria estat suficient per finalitzar el projecte, com es detalla al Capítol~4.
+
+El projecte també es va concebre com una oportunitat per aprendre noves tecnologies. Es va fixar l'objectiu explícit d'aprofundir en l'ús de React, experimentar amb arquitectures basades en microserveis, treballar de prop amb tecnologies consolidades com RabbitMQ o Eureka i explorar eines fins aleshores desconegudes com Svelte, Rust i Tauri.
+
+L'organització del treball va incloure l'ús de Git per al control de versions. El codi final està disponible en un repositori dedicat al projecte. El repositori original, utilitzat durant les primeres fases del desenvolupament, es va allotjar en un compte personal vinculat a altres projectes privats; per això es va decidir migrar-lo a un nou repositori exclusiu per a la seva difusió pública.
+
+\section{Viabilitat legal}
+
+Tot i que el projecte s'ha desenvolupat tenint en compte el marc legal vigent (RGPD i LOPDGDD), cal remarcar que es tracta d'una eina de codi obert destinada a ser desplegada i gestionada per tercers. Per tant, la responsabilitat última sobre el compliment de la normativa de protecció de dades recau en l'usuari o organització que decideixi utilitzar la plataforma en un entorn real.
+
+Per facilitar aquest compliment, el projecte inclou plantilles base d'avís legal i política de privacitat (ubicades al directori \texttt{/legal}), que han de ser revisades i adaptades per qui desplegui la solució. Tot i això, en aquesta versió, el sistema no implementa totes les mesures tècniques avançades de seguretat (com el xifratge de dades en trànsit), per la qual cosa es recomana aplicar les mesures addicionals necessàries segons la normativa.
+
+El projecte es publica sota llicència MIT, que en permet l'ús, la modificació i la redistribució sense restriccions, sempre que es conservi l'avís de llicència. La inclusió de les plantilles legals esmentades, juntament amb la llicència permissiva, busca oferir una base sòlida per a un ús responsable i legal de l'eina.
+
+\section{Conclusi\'o}
+
+Considero que el projecte és tècnicament viable gràcies a l'experiència prèvia en les tecnologies seleccionades, l'ús d'eines madures i la modularitat de l'arquitectura. A més, el fet d'utilitzar exclusivament eines de codi obert elimina qualsevol barrera econòmica.
+
+El temps dedicat al projecte, molt superior al previst, posa de manifest que la planificació inicial era massa ambiciosa. La magnitud de la feina va ser més gran de l'esperada, i cal admetre que, fins i tot amb una gestió del temps perfecta, l'abast del projecte probablement superava el que era realista finalitzar en el termini d'un TFG, com es detalla al Capítol~4.
+
+Tot i que el sistema no disposa actualment d'eines de monitoratge ni de logs estructurats, aquest aspecte es contempla com una millora futura que s'abordarà al Capítol~12.
+
+En conjunt, el projecte s'emmarca dins dels recursos disponibles per a un Treball Final de Grau. Les tecnologies emprades i la llicència oberta faciliten que la plataforma sigui adoptada, estesa i millorada fàcilment per altres desenvolupadors o usuaris interessats.
+
