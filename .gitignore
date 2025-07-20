@@ -40,3 +40,6 @@ installers/
 # Temporary files
 tmp/
 temp/ 
+
+*.jar
+
